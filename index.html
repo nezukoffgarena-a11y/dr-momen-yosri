@@ -1103,6 +1103,7 @@ const Admin={
       Admin.switchSection('lessons');
     };
     if(file){
+      if(file.size>50*1024*1024){showToast(Lang.get()==='ar'?'حجم الفيديو أكبر من 50MB. استخدم رابط YouTube أو embed بدلها.':'Video too large. Use YouTube link or embed instead.','error');if(btn){btn.disabled=false;btn.textContent=editId?'حفظ التعديلات':'إضافة الدرس'};return}
       var reader=new FileReader();
       reader.onload=function(){doSave(reader.result)};
       reader.readAsDataURL(file);
@@ -1741,7 +1742,8 @@ const CommunityPage={
       var isMe=m.senderId===App.user.id;var sender=DB.getUserById(m.senderId);
       var senderName=sender?(sender.role==='admin'?'👑 د. مؤمن يسري':sender.name):'غير معروف';
       var fileHtml=m.fileData?'<div class="message-file" onclick="window.open(\''+m.fileData+'\')">'+(m.fileType==='pdf'?'📄':'🖼️')+' '+Utils.escHtml(m.fileName||'ملف')+'</div>':'';
-      return '<div class="message '+(isMe?'sent':'received')+' fade-in"><div class="message-sender">'+senderName+'</div><div>'+Utils.escHtml(m.text||'')+'</div>'+fileHtml+'<div class="message-time">'+Utils.formatTime(m.date)+'</div></div>';
+      var deleteBtn=App.user&&App.user.role==='admin'?'<button onclick="CommunityPage.deleteMessage(\''+m.id+'\')" style="background:none;border:none;color:var(--danger);cursor:pointer;font-size:0.7rem;margin-top:4px">🗑️ حذف</button>':'';
+      return '<div class="message '+(isMe?'sent':'received')+' fade-in"><div class="message-sender">'+senderName+'</div><div>'+Utils.escHtml(m.text||'')+'</div>'+fileHtml+'<div class="message-time">'+Utils.formatTime(m.date)+'</div>'+deleteBtn+'</div>';
     }).join('');
     container.scrollTop=container.scrollHeight;
   },
@@ -1781,6 +1783,13 @@ const CommunityPage={
       DB.saveCommunity(msgs);CommunityPage._pendingFile=null;CommunityPage.loadMessages();
       showToast('تم مشاركة الملف بنجاح!');
     };reader.readAsDataURL(file);
+  },
+  deleteMessage:function(id){
+    if(!confirm('هل أنت متأكد من حذف هذه الرسالة؟'))return;
+    var msgs=DB.community().filter(function(m){return m.id!==id});
+    DB.saveCommunity(msgs);
+    this.loadMessages();
+    showToast('تم حذف الرسالة','error');
   }
 };
 const Tournament={
@@ -1920,6 +1929,13 @@ const AIBot={
     var btn=document.getElementById('aiSendBtn');
     if(btn)btn.disabled=true;
     var self=this;
+    var resetLoading=function(){
+      if(!self.loading)return;
+      self.loading=false;
+      if(btn)btn.disabled=false;
+      var el=document.getElementById(loadingId);if(el)el.remove();
+    };
+    var resetTimer=setTimeout(resetLoading,30000);
     this.messages.push({role:'user',text:text});
     this._save();
     var apiContents=[];
@@ -1939,6 +1955,7 @@ const AIBot={
         return JSON.parse(t);
       });
     }).then(function(data){
+      clearTimeout(resetTimer);
       if(data.error){self._showError(container,loadingId,data.msg);self.messages.pop();self._save();self.loading=false;if(btn)btn.disabled=false;return}
       var el=document.getElementById(loadingId);if(el)el.remove();
       var reply='عذراً، لم أتمكن من معالجة سؤالك.';
@@ -1950,6 +1967,7 @@ const AIBot={
       container.scrollTop=container.scrollHeight;
       self.loading=false;if(btn)btn.disabled=false;
     }).catch(function(e){
+      clearTimeout(resetTimer);
       self._showError(container,loadingId,'خطأ في الاتصال: '+e.message+'. تأكد من اتصالك بالإنترنت.');
       self.messages.pop();self._save();
       self.loading=false;if(btn)btn.disabled=false;
@@ -1957,6 +1975,13 @@ const AIBot={
   }
 };
 document.addEventListener('DOMContentLoaded',function(){App.init()});
+window.addEventListener('error',function(e){
+  console.error('Global error:',e);
+  setTimeout(function(){location.reload()},2000);
+});
+window.addEventListener('unhandledrejection',function(e){
+  console.error('Unhandled promise rejection:',e);
+});
 </script>
 </body>
 </html>
