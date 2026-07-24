@@ -1453,9 +1453,28 @@ const Student={
   },
   showLessonEmbed:function(lessonId){
     var l=DB.lessons().find(function(x){return x.id===lessonId});if(!l||!l.videoEmbed)return;
-    var embed=l.videoEmbed.replace(/<iframe/g,'<iframe style="width:100%;height:100%;border:none;border-radius:8px"');
-    var html='<div class="modal-overlay" id="embedModal" onclick="if(event.target===this)this.remove()" style="display:flex;align-items:center;justify-content:center;z-index:9999"><div style="width:90%;max-width:900px;position:relative"><button onclick="document.getElementById(\'embedModal\').remove()" style="position:absolute;top:-40px;left:0;background:none;border:none;color:#fff;font-size:1.5rem;cursor:pointer;z-index:10">✕</button><div style="padding-top:56.25%;position:relative">'+embed+'</div></div></div>';
-    document.body.insertAdjacentHTML('beforeend',html);
+    var div=document.createElement('div');
+    div.id='embedModal';
+    div.style.cssText='position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:9999;background:rgba(0,0,0,0.8)';
+    div.onclick=function(e){if(e.target===div)div.remove()};
+    var wrapper=document.createElement('div');
+    wrapper.style.cssText='width:90%;max-width:900px;position:relative';
+    var closeBtn=document.createElement('button');
+    closeBtn.textContent='✕';
+    closeBtn.style.cssText='position:absolute;top:-40px;left:0;background:none;border:none;color:#fff;font-size:1.5rem;cursor:pointer;z-index:10';
+    closeBtn.onclick=function(){div.remove()};
+    var container=document.createElement('div');
+    container.style.cssText='padding-top:56.25%;position:relative;background:#000;border-radius:8px;overflow:hidden';
+    var content=document.createElement('div');
+    content.style.cssText='position:absolute;inset:0';
+    content.innerHTML=l.videoEmbed;
+    var iframes=content.querySelectorAll('iframe');
+    iframes.forEach(function(f){f.style.cssText='width:100%;height:100%;border:none'});
+    container.appendChild(content);
+    wrapper.appendChild(closeBtn);
+    wrapper.appendChild(container);
+    div.appendChild(wrapper);
+    document.body.appendChild(div);
   },
   walletView:function(){
     var u=DB.getUserById(App.user.id);App.user=u;
