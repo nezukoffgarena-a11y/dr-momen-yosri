@@ -536,10 +536,22 @@ const App={
     var u=DB.getUserByEmail(email);
     if(u){
       if(u.password!==password){callback({error:'كلمة المرور غير صحيحة'});return}
-      if(u.status==='pending'){callback({pending:true});return}
-      DB.saveSession({userId:u.id,email:email});
-      this.user=u;
-      DB.syncFromServer(function(){var fresh=DB.getUserByEmail(email);if(fresh)self.user=fresh;callback({success:true,role:u.role})});
+      FB_DB.ref('all_users').orderByChild('email').equalTo(email).once('value').then(function(snap){
+        var latest=null;
+        snap.forEach(function(child){latest=child.val()});
+        if(latest){
+          DB.addUser(latest);u=latest;
+        }
+        if(u.status==='pending'){callback({pending:true});return}
+        DB.saveSession({userId:u.id,email:email});
+        self.user=u;
+        DB.syncFromServer(function(){var fresh=DB.getUserByEmail(email);if(fresh)self.user=fresh;callback({success:true,role:u.role})});
+      }).catch(function(){
+        if(u.status==='pending'){callback({pending:true});return}
+        DB.saveSession({userId:u.id,email:email});
+        self.user=u;
+        callback({success:true,role:u.role});
+      });
       return;
     }
     FB_DB.ref('all_users').orderByChild('email').equalTo(email).once('value').then(function(snap){
