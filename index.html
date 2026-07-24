@@ -7,6 +7,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
@@ -334,7 +336,9 @@ tr:hover td{background:rgba(0,245,212,0.03)}
 <div id="app"></div>
 <script>
 "use strict";
-const SERVER_URL=(window.location.protocol!=='file:'&&window.location.origin&&window.location.origin!=='null')?window.location.origin:'';
+const FIREBASE_CFG={apiKey:"AIzaSyCbKbi6mE_VS1BZVaCblNb-MntBQvkdy-4",authDomain:"dr-momen-yosri.firebaseapp.com",databaseURL:"https://dr-momen-yosri-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"dr-momen-yosri",storageBucket:"dr-momen-yosri.firebasestorage.app",messagingSenderId:"160270733322",appId:"1:160270733322:web:b75b432c1d5d4556b54ff3"};
+firebase.initializeApp(FIREBASE_CFG);
+var FB_DB=firebase.database();
 const ADMIN_EMAIL="DrMomenYosriTheTopADMINONLY19191#3@ADMIN.COM";
 const ADMIN_PASS="DrMomenYosriTheTopADMINONLY19191#32026/2027";
 const GRADES=["رابع ابتدائي","خامس ابتدائي","سادس ابتدائي","أول إعدادي","ثاني إعدادي","ثالث إعدادي","أول ثانوي","ثاني ثانوي","ثالث ثانوي"];
@@ -375,7 +379,10 @@ const DB={
   getUserById(id){return this.users().find(u=>u.id===id)},
   getUserByEmail(email){return this.users().find(u=>u.email===email)},
   addUser(user){const u=this.users();u.push(user);this.saveUsers(u)},
-  updateUser(id,updates){this.saveUsers(this.users().map(u=>u.id===id?{...u,...updates}:u))},
+  updateUser(id,updates){
+    this.saveUsers(this.users().map(function(u){return u.id===id?Object.assign({},u,updates):u}));
+    var u=this.getUserById(id);if(u)FB_DB.ref('all_users/'+id).set(u).catch(function(){});
+  },
   _syncTimer:null,
   _syncing:false,
   _push:function(){
@@ -384,10 +391,10 @@ const DB={
     DB._syncTimer=setTimeout(function(){DB._pushNow()},500);
   },
   _pushNow:function(){
-    if(!SERVER_URL)return;
     var session=DB.session();
     if(!session||!session.email)return;
-    var payload={
+    var emailKey=session.email.replace(/\./g,'_dot_');
+    var data={
       users:DB.users(),
       lessons:DB.lessons(),
       files:DB.files(),
@@ -396,41 +403,49 @@ const DB={
       examResults:DB.examResults(),
       reports:DB.reports(),
       notifications:DB.notifications(),
-      community:DB.community(),
-      unlocks:{},
-      aiChats:{}
+      community:DB.community()
     };
     var allKeys=Object.keys(localStorage);
+    var unlocks={};var aiChats={};
     allKeys.forEach(function(k){
-      if(k.startsWith('dm_unlocks_'))payload.unlocks[k.replace('dm_unlocks_','')]=DB._get(k.replace('dm_',''));
-      if(k.startsWith('dm_aiChat_'))payload.aiChats[k.replace('dm_aiChat_','')]=DB._get(k.replace('dm_',''));
+      if(k.startsWith('dm_unlocks_'))unlocks[k.replace('dm_unlocks_','')]=DB._get(k.replace('dm_',''));
+      if(k.startsWith('dm_aiChat_'))aiChats[k.replace('dm_aiChat_','')]=DB._get(k.replace('dm_',''));
     });
-    fetch(SERVER_URL+'/api/batch',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}).catch(function(e){console.log('Sync error:',e)});
+    data.unlocks=unlocks;data.aiChats=aiChats;
+    FB_DB.ref('users/'+emailKey).set(data).catch(function(e){console.log('Firebase push error:',e)});
   },
   syncFromServer:function(callback){
-    if(!SERVER_URL){if(callback)callback();return}
     var session=DB.session();
     if(!session||!session.email){if(callback)callback();return}
     DB._syncing=true;
-    fetch(SERVER_URL+'/api/sync/'+encodeURIComponent(session.email)).then(function(r){return r.json()}).then(function(res){
-      if(res.user){
-        DB._set('users',res.allUsers||DB.users());
-      }
-      if(res.data){
-        if(res.data.lessons)DB._set('lessons',res.data.lessons);
-        if(res.data.files)DB._set('files',res.data.files);
-        if(res.data.transactions)DB._set('transactions',res.data.transactions);
-        if(res.data.exams)DB._set('exams',res.data.exams);
-        if(res.data.examResults)DB._set('examResults',res.data.examResults);
-        if(res.data.reports)DB._set('reports',res.data.reports);
-        if(res.data.notifications)DB._set('notifications',res.data.notifications);
-        if(res.data.community)DB._set('community',res.data.community);
-        if(res.data.unlocks){Object.keys(res.data.unlocks).forEach(function(k){DB._set('unlocks_'+k,res.data.unlocks[k])})}
-        if(res.data.aiChats){Object.keys(res.data.aiChats).forEach(function(k){DB._set('aiChat_'+k,res.data.aiChats[k])})}
+    var emailKey=session.email.replace(/\./g,'_dot_');
+    FB_DB.ref('users/'+emailKey).once('value').then(function(snap){
+      var res=snap.val();
+      if(res){
+        if(res.users)DB._set('users',res.users);
+        if(res.lessons)DB._set('lessons',res.lessons);
+        if(res.files)DB._set('files',res.files);
+        if(res.transactions)DB._set('transactions',res.transactions);
+        if(res.exams)DB._set('exams',res.exams);
+        if(res.examResults)DB._set('examResults',res.examResults);
+        if(res.reports)DB._set('reports',res.reports);
+        if(res.notifications)DB._set('notifications',res.notifications);
+        if(res.community)DB._set('community',res.community);
+        if(res.unlocks){Object.keys(res.unlocks).forEach(function(k){DB._set('unlocks_'+k,res.unlocks[k])})}
+        if(res.aiChats){Object.keys(res.aiChats).forEach(function(k){DB._set('aiChat_'+k,res.aiChats[k])})}
       }
       DB._syncing=false;
       if(callback)callback();
-    }).catch(function(e){console.log('Sync from server failed:',e);DB._syncing=false;if(callback)callback()});
+    }).catch(function(e){console.log('Firebase sync error:',e);DB._syncing=false;if(callback)callback()});
+  },
+  getAllUsers:function(callback){
+    FB_DB.ref('all_users').once('value').then(function(snap){
+      var data=snap.val()||[];
+      if(callback)callback(data);
+    }).catch(function(){if(callback)callback([])});
+  },
+  pushAllUsers:function(users){
+    FB_DB.ref('all_users').set(users).catch(function(e){console.log(e)});
   }
 };
 (function seedAdmin(){
@@ -524,24 +539,20 @@ const App={
       if(u.status==='pending'){callback({pending:true});return}
       DB.saveSession({userId:u.id,email:email});
       this.user=u;
-      if(!SERVER_URL){callback({success:true,role:u.role});return}
-      fetch(SERVER_URL+'/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:email,password:password})})
-      .then(function(r){return r.json()}).then(function(res){
-        if(res.error){callback({error:res.error});return}
-        if(res.pending){callback({pending:true});return}
-        DB.addUser(res.user);DB.saveSession({userId:res.user.id,email:email});self.user=res.user;
-        DB.syncFromServer(function(){var fresh=DB.getUserByEmail(email);if(fresh)self.user=fresh;callback({success:true,role:res.user.role})});
-      }).catch(function(){callback({success:true,role:u.role})});
+      DB.syncFromServer(function(){var fresh=DB.getUserByEmail(email);if(fresh)self.user=fresh;callback({success:true,role:u.role})});
       return;
     }
-    if(!SERVER_URL){callback({error:'البريد الإلكتروني غير مسجل'});return}
-    fetch(SERVER_URL+'/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:email,password:password})})
-    .then(function(r){return r.json()}).then(function(res){
-      if(res.error){callback({error:res.error});return}
-      if(res.pending){callback({pending:true});return}
-      DB.addUser(res.user);DB.saveSession({userId:res.user.id,email:email});self.user=res.user;
-      DB.syncFromServer(function(){var fresh=DB.getUserByEmail(email);if(fresh)self.user=fresh;callback({success:true,role:res.user.role})});
-    }).catch(function(){callback({error:'البريد الإلكتروني غير مسجل'})});
+    FB_DB.ref('all_users').orderByChild('email').equalTo(email).once('value').then(function(snap){
+      var found=null;
+      snap.forEach(function(child){found=child.val()});
+      if(!found){callback({error:'البريد الإلكتروني غير مسجل'});return}
+      if(found.password!==password){callback({error:'كلمة المرور غير صحيحة'});return}
+      if(found.status==='pending'){callback({pending:true});return}
+      DB.addUser(found);
+      DB.saveSession({userId:found.id,email:email});
+      self.user=found;
+      DB.syncFromServer(function(){var fresh=DB.getUserByEmail(email);if(fresh)self.user=fresh;callback({success:true,role:found.role})});
+    }).catch(function(){callback({error:'خطأ في الاتصال'})});
   },
   logout(){DB.clearSession();this.user=null;this.navigate('landing')},
   toggleMobile(){document.getElementById('mobileMenu').classList.toggle('open')},
@@ -753,26 +764,19 @@ const Auth={
         avatar:avatarData
       };
       if(btn){btn.disabled=true;btn.textContent='⏳ جاري إنشاء الحساب...'}
-      var saveAndNavigate=function(savedUser){
-        DB.addUser(savedUser);
-        DB.saveSession({userId:savedUser.id,email:email});
-        App.user=savedUser;
-        App.navigate('pending');
+      user.role='student';user.status='pending';user.wallet=0;user.badges=[];user.joinedAt=Date.now();
+      FB_DB.ref('all_users').orderByChild('email').equalTo(email).once('value').then(function(snap){
+        if(snap.exists()){if(btn){btn.disabled=false;btn.textContent='إنشاء الحساب'};errEl.textContent='هذا البريد الإلكتروني مسجل بالفعل';errEl.style.display='block';return}
+        FB_DB.ref('all_users/'+user.id).set(user).then(function(){
+          DB.addUser(user);DB.saveSession({userId:user.id,email:email});App.user=user;
+          App.navigate('pending');
+          if(btn){btn.disabled=false;btn.textContent='إنشاء الحساب'}
+          showToast('تم إنشاء الحساب بنجاح! في انتظار المراجعة.','info');
+        });
+      }).catch(function(){
+        DB.addUser(user);DB.saveSession({userId:user.id,email:email});App.user=user;App.navigate('pending');
         if(btn){btn.disabled=false;btn.textContent='إنشاء الحساب'}
-        showToast('تم إنشاء الحساب بنجاح! في انتظار المراجعة.','info');
-      };
-      if(!SERVER_URL){
-        user.role='student';user.status='pending';user.wallet=0;user.badges=[];user.joinedAt=Date.now();
-        saveAndNavigate(user);return;
-      }
-      fetch(SERVER_URL+'/api/auth/signup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(user)})
-      .then(function(r){return r.json()})
-      .then(function(res){
-        if(res.error){if(btn){btn.disabled=false;btn.textContent='إنشاء الحساب'};errEl.textContent=res.error;errEl.style.display='block';return}
-        saveAndNavigate(res.user||user);
-      }).catch(function(e){
-        user.role='student';user.status='pending';user.wallet=0;user.badges=[];user.joinedAt=Date.now();
-        saveAndNavigate(user);
+        showToast('تم إنشاء الحساب (محلياً). في انتظار المراجعة.','info');
       });
     };
     if(avatarInput.files&&avatarInput.files[0]){
@@ -815,7 +819,29 @@ const Admin={
     links.map(function(l){return '<button class="sidebar-link '+(s===l.id||(!s&&l.id==='overview')?'active':'')+'" onclick="Admin.switchSection(\''+l.id+'\')"><span class="link-icon">'+l.icon+'</span><span>'+l.label+'</span></button>'}).join('')+
     '</div>';
   },
-  switchSection:function(sub){App.currentSubView=sub;App.navigate('admin',sub)},
+  switchSection:function(sub){
+    App.currentSubView=sub;
+    if(sub==='overview'||sub==='students'||sub==='pending'){
+      FB_DB.ref('all_users').once('value').then(function(snap){
+        var allData=snap.val()||{};
+        var allUsers=[];
+        Object.keys(allData).forEach(function(id){var u=allData[id];if(u&&u.id)allUsers.push(u)});
+        if(allUsers.length>0){
+          var existing=DB.users();
+          var merged=existing.slice();
+          allUsers.forEach(function(fu){
+            var idx=-1;
+            for(var i=0;i<existing.length;i++){if(existing[i].email===fu.email){idx=i;break}}
+            if(idx>=0){merged[idx]=fu}else{merged.push(fu)}
+          });
+          DB._set('users',merged);
+        }
+        App.navigate('admin',sub);
+      }).catch(function(){App.navigate('admin',sub)});
+    }else{
+      App.navigate('admin',sub);
+    }
+  },
   renderSection:function(){
     var s=App.currentSubView||'overview';
     var self=this;
@@ -875,8 +901,21 @@ const Admin={
       return '<tr><td><strong>'+Utils.escHtml(u.name)+'</strong></td><td style="font-family:var(--font-en);font-size:0.8rem" dir="ltr">'+Utils.escHtml(u.email)+'</td><td dir="ltr">'+Utils.escHtml(u.phone||'-')+'</td><td>'+Utils.escHtml(u.parentName||'-')+'</td><td dir="ltr"><a href="https://wa.me/'+(u.parentPhone||'').replace(/^0/,'20')+'" target="_blank">'+Utils.escHtml(u.parentPhone||'-')+' 📱</a></td><td>'+Utils.escHtml(u.grade)+'</td><td><span class="badge badge-info">'+Utils.escHtml(u.track)+'</span></td><td>'+Utils.escHtml(u.governorate||'-')+'</td><td><span class="badge '+(u.status==='approved'?'badge-accent':u.status==='rejected'?'badge-danger':'badge-warning')+'">'+(u.status==='approved'?'مقبول':u.status==='rejected'?'مرفوض':'قيد المراجعة')+'</span></td><td>'+(u.status!=='approved'?'<button class="btn btn-sm btn-primary" onclick="Admin.approveStudent(\''+u.id+'\')">قبول</button>':'')+(u.status!=='rejected'?'<button class="btn btn-sm btn-danger" onclick="Admin.rejectStudent(\''+u.id+'\')">رفض</button>':'')+'</td></tr>';
     }).join('');
   },
-  approveStudent:function(id){DB.updateUser(id,{status:'approved'});showToast('تم قبول الطالب بنجاح!');this.switchSection(App.currentSubView||'students')},
-  rejectStudent:function(id){if(!confirm('هل أنت متأكد من رفض هذا الطالب؟'))return;DB.updateUser(id,{status:'rejected'});showToast('تم رفض الطالب','error');this.switchSection(App.currentSubView||'students')},
+  approveStudent:function(id){
+    DB.updateUser(id,{status:'approved'});
+    var u=DB.getUserById(id);
+    if(u){FB_DB.ref('all_users/'+id).set(u).catch(function(){})}
+    showToast('تم قبول الطالب بنجاح!');
+    this.switchSection(App.currentSubView||'students');
+  },
+  rejectStudent:function(id){
+    if(!confirm('هل أنت متأكد من رفض هذا الطالب؟'))return;
+    DB.updateUser(id,{status:'rejected'});
+    var u=DB.getUserById(id);
+    if(u){FB_DB.ref('all_users/'+id).set(u).catch(function(){})}
+    showToast('تم رفض الطالب','error');
+    this.switchSection(App.currentSubView||'students');
+  },
   pendingRequests:function(){
     var users=DB.users().filter(function(u){return u.role==='student'&&u.status==='pending'});
     return '<div class="fade-in"><div class="page-header"><h1 class="page-title">طلبات التسجيل المعلقة</h1><p class="page-subtitle">'+users.length+' طلب(طلبات) في انتظار المراجعة</p></div>'+
@@ -1597,12 +1636,7 @@ const AIBot={
       apiContents.push({role:m.role==='user'?'user':'model',parts:[{text:m.text}]});
     });
     var fetchPromise;
-    if(!SERVER_URL){
-      self._showError(container,loadingId,'المساعد الذكي يتطلب تشغيل السيرفر. شغّل السيرفر أولاً.');
-      self.loading=false;if(btn)btn.disabled=false;return;
-    }else{
-      fetchPromise=fetch(SERVER_URL+'/api/ai',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:apiContents,generationConfig:{temperature:0.7,maxOutputTokens:2048}})});
-    }
+    fetchPromise=fetch('/api/ai',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:apiContents,generationConfig:{temperature:0.7,maxOutputTokens:2048}})});
     fetchPromise.then(function(r){
       return r.text().then(function(t){
         if(!r.ok){console.error('AI Bot HTTP Error:',r.status,t);var errMsg='خطأ في الخادم ('+r.status+')';try{var d=JSON.parse(t);if(d.error&&d.error.message)errMsg=d.error.message;if(d.error&&d.error.code)errMsg+=' (Code: '+d.error.code+')';}catch(x){errMsg+=' '+t.substring(0,200)}return {error:true,msg:errMsg}}
