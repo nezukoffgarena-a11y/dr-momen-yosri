@@ -384,26 +384,30 @@ const DB={
     var u=this.getUserById(id);if(u)FB_DB.ref('all_users/'+id).set(u).catch(function(){});
   },
   _syncTimer:null,
-  _syncing:false,
+  _pushing:false,
   _push:function(){
-    if(DB._syncing)return;
     clearTimeout(DB._syncTimer);
     DB._syncTimer=setTimeout(function(){DB._pushNow()},500);
   },
   _pushNow:function(){
+    if(DB._pushing)return;
+    DB._pushing=true;
     var session=DB.session();
-    if(!session||!session.email)return;
+    if(!session||!session.email){DB._pushing=false;return}
     var emailKey=session.email.replace(/\./g,'_dot_');
-    var data={
-      users:DB.users(),
+    var shared={
       lessons:DB.lessons(),
       files:DB.files(),
-      transactions:DB.transactions(),
       exams:DB.exams(),
-      examResults:DB.examResults(),
-      reports:DB.reports(),
       notifications:DB.notifications(),
-      community:DB.community()
+      community:DB.community(),
+      users:DB.users()
+    };
+    FB_DB.ref('shared/data').set(shared).catch(function(e){console.log('Firebase shared push error:',e)});
+    var personal={
+      transactions:DB.transactions(),
+      examResults:DB.examResults(),
+      reports:DB.reports()
     };
     var allKeys=Object.keys(localStorage);
     var unlocks={};var aiChats={};
@@ -411,32 +415,39 @@ const DB={
       if(k.startsWith('dm_unlocks_'))unlocks[k.replace('dm_unlocks_','')]=DB._get(k.replace('dm_',''));
       if(k.startsWith('dm_aiChat_'))aiChats[k.replace('dm_aiChat_','')]=DB._get(k.replace('dm_',''));
     });
-    data.unlocks=unlocks;data.aiChats=aiChats;
-    FB_DB.ref('users/'+emailKey).set(data).catch(function(e){console.log('Firebase push error:',e)});
+    personal.unlocks=unlocks;personal.aiChats=aiChats;
+    Promise.all([
+      FB_DB.ref('shared/data').set(shared),
+      FB_DB.ref('users/'+emailKey).set(personal)
+    ]).then(function(){DB._pushing=false}).catch(function(e){console.log('Firebase push error:',e);DB._pushing=false});
+    setTimeout(function(){DB._pushing=false},5000);
   },
   syncFromServer:function(callback){
     var session=DB.session();
     if(!session||!session.email){if(callback)callback();return}
-    DB._syncing=true;
-    var emailKey=session.email.replace(/\./g,'_dot_');
-    FB_DB.ref('users/'+emailKey).once('value').then(function(snap){
+    FB_DB.ref('shared/data').once('value').then(function(snap){
       var res=snap.val();
       if(res){
-        if(res.users)DB._set('users',res.users);
         if(res.lessons)DB._set('lessons',res.lessons);
         if(res.files)DB._set('files',res.files);
-        if(res.transactions)DB._set('transactions',res.transactions);
         if(res.exams)DB._set('exams',res.exams);
-        if(res.examResults)DB._set('examResults',res.examResults);
-        if(res.reports)DB._set('reports',res.reports);
         if(res.notifications)DB._set('notifications',res.notifications);
         if(res.community)DB._set('community',res.community);
+        if(res.users)DB._set('users',res.users);
+      }
+      var emailKey=session.email.replace(/\./g,'_dot_');
+      return FB_DB.ref('users/'+emailKey).once('value');
+    }).then(function(snap){
+      var res=snap?snap.val():null;
+      if(res){
+        if(res.transactions)DB._set('transactions',res.transactions);
+        if(res.examResults)DB._set('examResults',res.examResults);
+        if(res.reports)DB._set('reports',res.reports);
         if(res.unlocks){Object.keys(res.unlocks).forEach(function(k){DB._set('unlocks_'+k,res.unlocks[k])})}
         if(res.aiChats){Object.keys(res.aiChats).forEach(function(k){DB._set('aiChat_'+k,res.aiChats[k])})}
       }
-      DB._syncing=false;
       if(callback)callback();
-    }).catch(function(e){console.log('Firebase sync error:',e);DB._syncing=false;if(callback)callback()});
+    }).catch(function(e){console.log('Firebase sync error:',e);if(callback)callback()});
   },
   getAllUsers:function(callback){
     FB_DB.ref('all_users').once('value').then(function(snap){
