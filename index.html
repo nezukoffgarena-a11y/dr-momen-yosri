@@ -25,6 +25,22 @@
 --transition:0.35s cubic-bezier(0.25,0.46,0.45,0.94);--transition-fast:0.2s ease;--transition-bounce:0.5s cubic-bezier(0.34,1.56,0.64,1);
 --font-ar:'Cairo',sans-serif;--font-en:'Inter',sans-serif;--font-mono:'JetBrains Mono',monospace;
 }
+html[data-theme="light"]{
+--bg-primary:#f0f2f5;--bg-secondary:#ffffff;--bg-tertiary:#e8ecf1;
+--text-primary:#1a1a2e;--text-secondary:#4a4a6a;--text-muted:#8888aa;
+--glass:rgba(255,255,255,0.7);--glass-border:rgba(0,0,0,0.08);--glass-strong:rgba(255,255,255,0.9);
+--shadow:0 8px 32px rgba(0,0,0,0.08);--shadow-lg:0 20px 60px rgba(0,0,0,0.1);
+--accent-dim:rgba(0,200,170,0.1);--accent-glow:rgba(0,200,170,0.3);
+--accent2-dim:rgba(91,141,239,0.1);
+}
+html[data-theme="light"] body{background:radial-gradient(ellipse at 20% 50%,rgba(220,230,245,0.5) 0%,transparent 50%),radial-gradient(ellipse at 80% 20%,rgba(0,200,170,0.05) 0%,transparent 40%),#f0f2f5}
+html[data-theme="light"] ::-webkit-scrollbar-track{background:#f0f2f5}
+html[data-theme="light"] ::selection{background:var(--accent);color:#1a1a2e}
+html[data-theme="light"] .sidebar{background:linear-gradient(180deg,rgba(255,255,255,0.98),rgba(240,242,245,0.95))}
+html[data-theme="light"] .community-sidebar{background:linear-gradient(180deg,rgba(255,255,255,0.98),rgba(240,242,245,0.95))}
+html[data-theme="light"] .community-header{background:rgba(255,255,255,0.6)}
+html[data-theme="light"] .community-input{background:rgba(255,255,255,0.6)}
+html[data-theme="light"] .community-input input{background:rgba(0,0,0,0.04);border-color:rgba(0,0,0,0.1);color:#1a1a2e}
 html{scroll-behavior:smooth}
 body{font-family:var(--font-ar);background:var(--bg-primary);color:var(--text-primary);line-height:1.7;overflow-x:hidden;min-height:100vh;background:radial-gradient(ellipse at 20% 50%,rgba(28,37,65,0.5) 0%,transparent 50%),radial-gradient(ellipse at 80% 20%,rgba(0,245,212,0.03) 0%,transparent 40%),radial-gradient(ellipse at 50% 80%,rgba(91,141,239,0.03) 0%,transparent 40%),var(--bg-primary)}
 ::selection{background:var(--accent);color:var(--bg-primary)}
@@ -343,6 +359,63 @@ const ADMIN_EMAIL="DrMomenYosriTheTopADMINONLY19191#3@ADMIN.COM";
 const ADMIN_PASS="DrMomenYosriTheTopADMINONLY19191#32026/2027";
 const GRADES=["رابع ابتدائي","خامس ابتدائي","سادس ابتدائي","أول إعدادي","ثاني إعدادي","ثالث إعدادي","أول ثانوي","ثاني ثانوي","ثالث ثانوي"];
 const TRACKS=["عربي حكومي","لغات"];
+const GRADES_EN=["4th Primary","5th Primary","6th Primary","1st Prep","2nd Prep","3rd Prep","1st Secondary","2nd Secondary","3rd Secondary"];
+const TRACKS_EN=["Arabic Government","Languages"];
+const I18N={
+  ar:{
+    appTitle:"د. مؤمن يسري - منصة التعليم",navHome:"الرئيسية",navLogin:"دخول",navSignup:"تسجيل",navDashboard:"لوحتي",navAdmin:"لوحة التحكم",navCommunity:"المجتمع",navTournament:"البطولة",
+    landingTitle:"د. مؤمن يسري",landingSub:"منصة التعليم الذكية للعلوم",landingCTA:"ابدأ الآن",landingFeatures:"المميزات",landingAbout:"حول المنصة",
+    loginTitle:"تسجيل الدخول",loginEmail:"البريد الإلكتروني",loginPass:"كلمة المرور",loginBtn:"دخول",loginCaptcha:"أثبت أنك لست روبوت",loginNoAcc:"ليس لديك حساب؟",loginSignUp:"سجل الآن",
+    signupTitle:"إنشاء حساب جديد",signupName:"الاسم الكامل",signupEmail:"البريد الإلكتروني",signupPass:"كلمة المرور",signupPhone:"هاتف الطالب",signupParent:"ولي الأمر",signupParentPhone:"هاتف ولي الأمر",signupTrack:"المسار",signupGrade:"الصف الدراسي",signupSchool:"المدرسة",signupAdmin:"الإدارة التعليمية",signupGov:"المحافظة",signupBtn:"إنشاء الحساب",signupHaveAcc:"لديك حساب بالفعل؟",signupLogin:"سجل دخول",
+    pendingTitle:"حسابك قيد المراجعة",pendingMsg:"سيتم مراجعة حسابك من الإدارة والموافقة عليه قريباً",
+    profileTitle:"الملف الشخصي",profileEdit:"تعديل البيانات",profileName:"الاسم",profilePhone:"الهاتف",profileTrack:"المسار",profileGrade:"الصف",profileSchool:"المدرسة",profileAdmin:"الإدارة",profileGov:"المحافظة",profileSave:"حفظ التعديلات",profileExport:"تصدير البيانات",profileImport:"استيراد البيانات",
+    examTitle:"الامتحانات",examStart:"ابدأ الامتحان",examSubmit:"تسليم",examNext:"التالي",examPrev:"السابق",examResult:"نتيجة الامتحان",examScore:"الدرجة",examPass:"نجحت",examFail:"لم تنجح",
+    lessonTitle:"الدروس",lessonPrice:"السعر",lessonBuy:"شراء",lessonWatch:"مشاهدة",lessonUnlock:"فتح الدرس",
+    walletTitle:"المحفظة",walletBalance:"الرصيد",walletAdd:"إضافة رصيد",
+    communityTitle:"المجتمع",communitySend:"إرسال",communityChannels:"القنوات",communityGeneral:"عام",communityScience:"علوم",
+    aiTitle:"المساعد الذكي",aiPlaceholder:"اسأل أي سؤال في العلوم...",aiSend:"إرسال",aiThinking:"جاري التفكير...",
+    hwTitle:"الواجبات",hwCreate:"إنشاء واجب",hwSubmit:"تسليم الواجب",hwScore:"الدرجة",hwDueDate:"موعد التسليم",hwStatus:"الحالة",hwPending:"قيد المراجعة",hwGraded:"تم التقييم",
+    tournamentTitle:"بطولة المتفوقين",tournamentRank:"الترتيب",tournamentPoints:"النقاط",tournamentStudent:"الطالب",tournamentMedal:"ميدالية",
+    adminStudents:"الطلاب",adminPending:"طلبات التسجيل",adminLessons:"الدروس",adminFiles:"الملفات",adminExams:"الامتحانات",adminHomework:"الواجبات",adminWallet:"المحفظة",adminReports:"التقارير",adminBroadcast:"الإشعارات",adminAI:"المساعد الذكي",
+    settingsTitle:"إعدادات الحساب",settingsChangePass:"تغيير كلمة المرور",settingsNewPass:"كلمة المرور الجديدة",settingsConfirmPass:"تأكيد كلمة المرور",settingsSave:"حفظ",
+    general:"عام",loading:"جاري التحميل...",save:"حفظ",cancel:"إلغاء",delete:"حذف",edit:"تعديل",add:"إضافة",confirm:"تأكيد",back:"رجوع",search:"بحث...",noResults:"لا توجد نتائج",
+    captchaQ:"ما ناتج",captchaPlus:"+",captchaMinus:"-",captchaMul:"×",captchaEq:"="
+  },
+  en:{
+    appTitle:"Dr. Momen Yosri - Education Platform",navHome:"Home",navLogin:"Login",navSignup:"Sign Up",navDashboard:"My Dashboard",navAdmin:"Admin Panel",navCommunity:"Community",navTournament:"Tournament",
+    landingTitle:"Dr. Momen Yosri",landingSub:"Smart Science Education Platform",landingCTA:"Start Now",landingFeatures:"Features",landingAbout:"About",
+    loginTitle:"Login",loginEmail:"Email",loginPass:"Password",loginBtn:"Login",loginCaptcha:"Prove you're not a robot",loginNoAcc:"Don't have an account?",loginSignUp:"Sign up now",
+    signupTitle:"Create Account",signupName:"Full Name",signupEmail:"Email",signupPass:"Password",signupPhone:"Student Phone",signupParent:"Parent",signupParentPhone:"Parent Phone",signupTrack:"Track",signupGrade:"Grade",signupSchool:"School",signupAdmin:"Administration",signupGov:"Governorate",signupBtn:"Create Account",signupHaveAcc:"Already have an account?",signupLogin:"Login",
+    pendingTitle:"Account Under Review",pendingMsg:"Your account is being reviewed and will be approved soon",
+    profileTitle:"Profile",profileEdit:"Edit Profile",profileName:"Name",profilePhone:"Phone",profileTrack:"Track",profileGrade:"Grade",profileSchool:"School",profileAdmin:"Administration",profileGov:"Governorate",profileSave:"Save Changes",profileExport:"Export Data",profileImport:"Import Data",
+    examTitle:"Exams",examStart:"Start Exam",examSubmit:"Submit",examNext:"Next",examPrev:"Previous",examResult:"Exam Result",examScore:"Score",examPass:"Passed",examFail:"Failed",
+    lessonTitle:"Lessons",lessonPrice:"Price",lessonBuy:"Buy",lessonWatch:"Watch",lessonUnlock:"Unlock",
+    walletTitle:"Wallet",walletBalance:"Balance",walletAdd:"Add Balance",
+    communityTitle:"Community",communitySend:"Send",communityChannels:"Channels",communityGeneral:"General",communityScience:"Science",
+    aiTitle:"AI Assistant",aiPlaceholder:"Ask any science question...",aiSend:"Send",aiThinking:"Thinking...",
+    hwTitle:"Homework",hwCreate:"Create Homework",hwSubmit:"Submit Homework",hwScore:"Score",hwDueDate:"Due Date",hwStatus:"Status",hwPending:"Pending",hwGraded:"Graded",
+    tournamentTitle:"Top Students Tournament",tournamentRank:"Rank",tournamentPoints:"Points",tournamentStudent:"Student",tournamentMedal:"Medal",
+    adminStudents:"Students",adminPending:"Pending Requests",adminLessons:"Lessons",adminFiles:"Files",adminExams:"Exams",adminHomework:"Homework",adminWallet:"Wallet",adminReports:"Reports",adminBroadcast:"Notifications",adminAI:"AI Assistant",
+    settingsTitle:"Account Settings",settingsChangePass:"Change Password",settingsNewPass:"New Password",settingsConfirmPass:"Confirm Password",settingsSave:"Save",
+    general:"General",loading:"Loading...",save:"Save",cancel:"Cancel",delete:"Delete",edit:"Edit",add:"Add",confirm:"Confirm",back:"Back",search:"Search...",noResults:"No results",
+    captchaQ:"What is",captchaPlus:"+",captchaMinus:"-",captchaMul:"×",captchaEq:"="
+  }
+};
+var Lang={
+  get(){return DB._get('lang')||'ar'},
+  set(l){DB._set('lang',l);document.documentElement.lang=l;document.documentElement.dir=l==='ar'?'rtl':'ltr';document.body.style.fontFamily=l==='ar'?'var(--font-ar)':'var(--font-en)'},
+  t(key){var l=this.get();return(I18N[l]&&I18N[l][key])||I18N.ar[key]||key}
+};
+var Theme={
+  get(){return DB._get('theme')||'dark'},
+  set(t){DB._set('theme',t);document.documentElement.setAttribute('data-theme',t==='light'?'light':'')},
+  toggle(){this.set(this.get()==='dark'?'light':'dark')}
+};
+var Captcha={
+  a:0,b:0,op:'+',
+  generate(){this.a=Math.floor(Math.random()*15)+1;this.b=Math.floor(Math.random()*15)+1;this.op=['+','-','×'][Math.floor(Math.random()*3)];var el=document.getElementById('captchaQ');if(el)el.textContent=Lang.t('captchaQ')+' '+this.a+' '+this.op+' '+this.b+' '+Lang.t('captchaEq')+' ?'},
+  check(ans){var expected;switch(this.op){case'+':expected=this.a+this.b;break;case'-':expected=this.a-this.b;break;case'×':expected=this.a*this.b;break;default:expected=this.a+this.b}return parseInt(ans)===expected}
+};
 const SUBJECTS=["فيزياء","علوم","رياضيات","لغة عربية","لغة إنجليزية","تاريخ","جغرافيا","تربية وطنية","معلوماتية"];
 const BADGES_LIST=[
   {id:"physicist",name:"عالم الفيزياء",icon:"⚛️",desc:"إجابة ممتازة في الفيزياء"},
@@ -373,6 +446,10 @@ const DB={
   saveNotifications(n){this._set('notifications',n);this._push()},
   community(){return this._get('community')||[]},
   saveCommunity(c){this._set('community',c);this._push()},
+  homeworks(){return this._get('homeworks')||[]},
+  saveHomeworks(h){this._set('homeworks',h);this._push()},
+  hwSubmissions(){return this._get('hwSubmissions')||[]},
+  saveHwSubmissions(s){this._set('hwSubmissions',s);this._push()},
   session(){return this._get('session')},
   saveSession(s){this._set('session',s)},
   clearSession(){localStorage.removeItem('dm_session')},
@@ -401,7 +478,9 @@ const DB={
       exams:DB.exams(),
       notifications:DB.notifications(),
       community:DB.community(),
-      users:DB.users()
+      users:DB.users(),
+      homeworks:DB.homeworks(),
+      hwSubmissions:DB.hwSubmissions()
     };
     FB_DB.ref('shared/data').set(shared).catch(function(e){console.log('Firebase shared push error:',e)});
     var personal={
@@ -434,6 +513,8 @@ const DB={
         if(res.notifications)DB._set('notifications',res.notifications);
         if(res.community)DB._set('community',res.community);
         if(res.users)DB._set('users',res.users);
+        if(res.homeworks)DB._set('homeworks',res.homeworks);
+        if(res.hwSubmissions)DB._set('hwSubmissions',res.hwSubmissions);
       }
       var emailKey=session.email.replace(/\./g,'_dot_');
       return FB_DB.ref('users/'+emailKey).once('value');
@@ -464,6 +545,7 @@ const DB={
     DB.addUser({id:'admin_001',name:'د. مؤمن يسري',email:ADMIN_EMAIL,password:ADMIN_PASS,role:'admin',status:'approved',phone:'',parentName:'',parentPhone:'',track:'',grade:'',school:'',administration:'',governorate:'',avatar:'',wallet:0,badges:[],joinedAt:Date.now()});
   }
 })();
+Theme.set(Theme.get());Lang.set(Lang.get());
 const Utils={
   uid(){return '_'+Date.now()+'_'+Math.random().toString(36).substr(2,9)},
   formatDate(d){return new Date(d).toLocaleDateString('ar-EG',{year:'numeric',month:'short',day:'numeric'})},
@@ -521,6 +603,7 @@ const App={
       }
     },30000);
   },
+  renderApp(){if(this.currentView)this.navigate(this.currentView,this.currentSubView)},
   navigate(view,sub){
     this.currentView=view;
     this.currentSubView=sub||'';
@@ -528,12 +611,13 @@ const App={
     const app=document.getElementById('app');
     switch(view){
       case'landing':app.innerHTML=Landing.render();Landing.init();break;
-      case'login':app.innerHTML=Auth.renderLogin();break;
+      case'login':app.innerHTML=Auth.renderLogin();Captcha.generate();break;
       case'signup':app.innerHTML=Auth.renderSignup();break;
       case'pending':app.innerHTML=PendingPage.render();break;
       case'admin':if(!this.requireAuth('admin'))return;app.innerHTML=Admin.render();Admin.init();break;
       case'student':if(!this.requireAuth('student'))return;app.innerHTML=Student.render();Student.init();break;
       case'community':if(!this.requireAuth())return;app.innerHTML=CommunityPage.render();CommunityPage.init();break;
+      case'tournament':if(!this.requireAuth())return;app.innerHTML=Tournament.render();break;
     }
     window.scrollTo(0,0);
   },
@@ -580,20 +664,24 @@ const App={
   logout(){DB.clearSession();this.user=null;this.navigate('landing')},
   toggleMobile(){document.getElementById('mobileMenu').classList.toggle('open')},
   renderNavbar(){
+    var T=Lang.t.bind(Lang);
+    var langBtn='<button class="btn btn-sm btn-secondary" onclick="Lang.set(Lang.get()===\'ar\'?\'en\':\'ar\');App.renderApp()" style="font-size:0.75rem;padding:6px 12px">'+(Lang.get()==='ar'?'EN':'عربي')+'</button>';
+    var themeBtn='<button class="btn btn-sm btn-secondary" onclick="Theme.toggle();App.renderApp()" style="font-size:0.75rem;padding:6px 12px">'+(Theme.get()==='dark'?'☀️':'🌙')+'</button>';
+    var toggles=langBtn+themeBtn;
     const nav=document.getElementById('navLinks');
     const usr=document.getElementById('navUser');
     const mob=document.getElementById('mobileMenu');
     if(!this.user){
-      nav.innerHTML='<button class="nav-link active" onclick="App.navigate(\'landing\')">الرئيسية</button><button class="nav-link" onclick="App.navigate(\'login\')">تسجيل الدخول</button><button class="nav-link" onclick="App.navigate(\'signup\')">إنشاء حساب</button>';
-      usr.innerHTML='';
+      nav.innerHTML='<button class="nav-link active" onclick="App.navigate(\'landing\')">'+T('navHome')+'</button><button class="nav-link" onclick="App.navigate(\'login\')">'+T('navLogin')+'</button><button class="nav-link" onclick="App.navigate(\'signup\')">'+T('navSignup')+'</button>';
+      usr.innerHTML=toggles;
     }else if(this.user.role==='admin'){
-      nav.innerHTML='<button class="nav-link '+(this.currentView==='admin'?'active':'')+'" onclick="App.navigate(\'admin\')">لوحة التحكم</button><button class="nav-link '+(this.currentView==='community'?'active':'')+'" onclick="App.navigate(\'community\')">المجتمع</button>';
-      usr.innerHTML='<div class="nav-avatar">👑</div><button class="btn btn-sm btn-secondary" onclick="App.logout()">خروج</button>';
+      nav.innerHTML='<button class="nav-link '+(this.currentView==='admin'?'active':'')+'" onclick="App.navigate(\'admin\')">'+T('navAdmin')+'</button><button class="nav-link '+(this.currentView==='community'?'active':'')+'" onclick="App.navigate(\'community\')">'+T('navCommunity')+'</button><button class="nav-link '+(this.currentView==='tournament'?'active':'')+'" onclick="App.navigate(\'tournament\')">'+T('navTournament')+'</button>';
+      usr.innerHTML=toggles+'<div class="nav-avatar">👑</div><button class="btn btn-sm btn-secondary" onclick="App.logout()">'+T('general')==='general'?'خروج':Lang.get()==='ar'?'خروج':'Logout'+'</button>';
     }else{
-      nav.innerHTML='<button class="nav-link '+(this.currentView==='student'?'active':'')+'" onclick="App.navigate(\'student\')">لوحتي</button><button class="nav-link '+(this.currentView==='community'?'active':'')+'" onclick="App.navigate(\'community\')">المجتمع</button>';
-      usr.innerHTML='<div class="nav-avatar">'+Utils.escHtml(this.user.name.charAt(0))+'</div><button class="btn btn-sm btn-secondary" onclick="App.logout()">خروج</button>';
+      nav.innerHTML='<button class="nav-link '+(this.currentView==='student'?'active':'')+'" onclick="App.navigate(\'student\')">'+T('navDashboard')+'</button><button class="nav-link '+(this.currentView==='community'?'active':'')+'" onclick="App.navigate(\'community\')">'+T('navCommunity')+'</button><button class="nav-link '+(this.currentView==='tournament'?'active':'')+'" onclick="App.navigate(\'tournament\')">'+T('navTournament')+'</button>';
+      usr.innerHTML=toggles+'<div class="nav-avatar">'+Utils.escHtml(this.user.name.charAt(0))+'</div><button class="btn btn-sm btn-secondary" onclick="App.logout()">'+(Lang.get()==='ar'?'خروج':'Logout')+'</button>';
     }
-    mob.innerHTML=nav.innerHTML+(this.user?'<button class="nav-link" onclick="App.logout()">خروج</button>':'');
+    mob.innerHTML=nav.innerHTML+(this.user?'<button class="nav-link" onclick="App.logout()">'+(Lang.get()==='ar'?'خروج':'Logout')+'</button>':'');
   },
   initParticles(){
     const canvas=document.getElementById('particles-canvas');
@@ -699,6 +787,7 @@ const Auth={
     '<form onsubmit="Auth.handleLogin(event)">'+
     '<div class="form-group"><label class="form-label">البريد الإلكتروني</label><input class="form-input" type="email" id="loginEmail" required placeholder="example@email.com" dir="ltr" value="'+Utils.escHtml(last.email)+'"></div>'+
     '<div class="form-group"><label class="form-label">كلمة المرور</label><input class="form-input" type="password" id="loginPass" required placeholder="••••••••" dir="ltr" value="'+Utils.escHtml(last.password)+'"></div>'+
+    '<div class="form-group"><label class="form-label">'+Lang.t('loginCaptcha')+'</label><div style="display:flex;gap:10px;align-items:center"><span id="captchaQ" style="font-size:1.1rem;font-weight:700;color:var(--accent);min-width:120px"></span><input class="form-input" type="number" id="captchaAnswer" required placeholder="?" style="width:80px;text-align:center"></div></div>'+
     '<div id="loginError" class="form-error" style="display:none;margin-bottom:14px"></div>'+
     '<label style="display:flex;align-items:center;gap:8px;font-size:0.85rem;color:var(--text-secondary);cursor:pointer;margin-bottom:14px"><input type="checkbox" id="rememberMe" checked> تذكر بيانات الدخول</label>'+
     '<button type="submit" class="btn btn-primary btn-block">دخول</button>'+
@@ -745,10 +834,12 @@ const Auth={
     e.preventDefault();
     var email=document.getElementById('loginEmail').value.trim();
     var pass=document.getElementById('loginPass').value;
+    var captchaAns=document.getElementById('captchaAnswer');
     var errEl=document.getElementById('loginError');
     errEl.style.display='none';
+    if(captchaAns&&!Captcha.check(captchaAns.value)){errEl.textContent=Lang.get()==='ar'?'إجابة التحقق غير صحيحة':'Invalid captcha answer';errEl.style.display='block';Captcha.generate();return}
     var btn=document.querySelector('button[type="submit"]');
-    if(btn){btn.disabled=true;btn.textContent='⏳ جاري الدخول...'}
+    if(btn){btn.disabled=true;btn.textContent=Lang.get()==='ar'?'⏳ جاري الدخول...':'Logging in...'}
     App.login(email,pass,function(result){
       if(btn){btn.disabled=false;btn.textContent='دخول'}
       if(result.error){errEl.textContent=result.error;errEl.style.display='block';return}
@@ -827,16 +918,18 @@ const Admin={
   renderSidebar:function(){
     var s=App.currentSubView;
     var links=[
-      {id:'overview',icon:'📊',label:'نظرة عامة'},
-      {id:'students',icon:'👥',label:'الطلاب'},
-      {id:'pending',icon:'⏳',label:'طلبات التسجيل'},
-      {id:'lessons',icon:'🎬',label:'الدروس والفيديوهات'},
-      {id:'files',icon:'📁',label:'الملفات والمواد'},
-      {id:'wallet',icon:'💰',label:'محفظة الطلاب'},
-      {id:'exams',icon:'📝',label:'الامتحانات'},
-      {id:'reports',icon:'📋',label:'التقييمات والتقارير'},
-      {id:'broadcast',icon:'📢',label:'الإشعارات العامة'},
-      {id:'aibot',icon:'🤖',label:'المساعد الذكي'}
+      {id:'overview',icon:'📊',label:Lang.t('general')==='general'?'نظرة عامة':Lang.get()==='ar'?'نظرة عامة':'Overview'},
+      {id:'students',icon:'👥',label:Lang.t('adminStudents')},
+      {id:'pending',icon:'⏳',label:Lang.t('adminPending')},
+      {id:'lessons',icon:'🎬',label:Lang.t('adminLessons')},
+      {id:'files',icon:'📁',label:Lang.t('adminFiles')},
+      {id:'wallet',icon:'💰',label:Lang.t('adminWallet')},
+      {id:'exams',icon:'📝',label:Lang.t('adminExams')},
+      {id:'homework',icon:'📚',label:Lang.t('adminHomework')},
+      {id:'reports',icon:'📋',label:Lang.t('adminReports')},
+      {id:'broadcast',icon:'📢',label:Lang.t('adminBroadcast')},
+      {id:'aibot',icon:'🤖',label:Lang.t('adminAI')},
+      {id:'settings',icon:'⚙️',label:Lang.t('settingsTitle')}
     ];
     return '<div class="sidebar" id="adminSidebar"><div class="sidebar-section">التحكم</div>'+
     links.map(function(l){return '<button class="sidebar-link '+(s===l.id||(!s&&l.id==='overview')?'active':'')+'" onclick="Admin.switchSection(\''+l.id+'\')"><span class="link-icon">'+l.icon+'</span><span>'+l.label+'</span></button>'}).join('')+
@@ -868,7 +961,7 @@ const Admin={
   renderSection:function(){
     var s=App.currentSubView||'overview';
     var self=this;
-    var map={overview:function(){return self.overview()},students:function(){return self.students()},pending:function(){return self.pendingRequests()},lessons:function(){return self.lessonsMgmt()},files:function(){return self.filesMgmt()},wallet:function(){return self.walletMgmt()},exams:function(){return self.examsMgmt()},reports:function(){return self.reportsMgmt()},broadcast:function(){return self.broadcastMgmt()},aibot:function(){return AIBot.render()}};
+    var map={overview:function(){return self.overview()},students:function(){return self.students()},pending:function(){return self.pendingRequests()},lessons:function(){return self.lessonsMgmt()},files:function(){return self.filesMgmt()},wallet:function(){return self.walletMgmt()},exams:function(){return self.examsMgmt()},homework:function(){return self.homeworkMgmt()},reports:function(){return self.reportsMgmt()},broadcast:function(){return self.broadcastMgmt()},aibot:function(){return AIBot.render()},settings:function(){return self.settingsMgmt()}};
     return (map[s]||map.overview)();
   },
   init:function(){
@@ -990,6 +1083,7 @@ const Admin={
     '<div class="form-group"><label class="form-label">رابط الفيديو (YouTube / Vimeo / رابط مباشر)</label><input class="form-input" id="lVideo" dir="ltr" placeholder="https://..." value="'+(isEdit?Utils.escHtml(lesson.videoUrl||''):'')+'"></div>'+
     '<div class="form-group"><label class="form-label">رفع فيديو MP4 مباشر</label><input class="form-input" type="file" id="lVideoFile" accept="video/mp4,video/*"></div>'+
     '<div class="form-group"><label class="form-label">رابط الفيديو البديل (اختياري)</label><input class="form-input" id="lVideoAlt" dir="ltr" placeholder="https://..." value="'+(isEdit?Utils.escHtml(lesson.videoUrlAlt||''):'')+'"></div>'+
+    '<div class="form-group"><label class="form-label">Embed Code (اختياري - للصق كود embed من YouTube أو أي مصدر)</label><textarea class="form-textarea" id="lVideoEmbed" dir="ltr" placeholder="<iframe src=...></iframe>" rows="3">'+(isEdit?Utils.escHtml(lesson.videoEmbed||''):'')+'</textarea></div>'+
     '<button type="submit" class="btn btn-primary btn-block">'+(isEdit?'حفظ التعديلات':'إضافة الدرس')+'</button></form></div></div>';
     document.body.insertAdjacentHTML('beforeend',html);
   },
@@ -998,7 +1092,7 @@ const Admin={
     var fileInput=document.getElementById('lVideoFile');
     var file=fileInput&&fileInput.files[0];
     var doSave=function(videoData){
-      var data={title:document.getElementById('lTitle').value.trim(),description:document.getElementById('lDesc').value.trim(),subject:document.getElementById('lSubject').value,price:parseInt(document.getElementById('lPrice').value)||0,grade:document.getElementById('lGrade').value,track:document.getElementById('lTrack').value,videoUrl:document.getElementById('lVideo').value.trim(),videoUrlAlt:document.getElementById('lVideoAlt').value.trim()};
+      var data={title:document.getElementById('lTitle').value.trim(),description:document.getElementById('lDesc').value.trim(),subject:document.getElementById('lSubject').value,price:parseInt(document.getElementById('lPrice').value)||0,grade:document.getElementById('lGrade').value,track:document.getElementById('lTrack').value,videoUrl:document.getElementById('lVideo').value.trim(),videoUrlAlt:document.getElementById('lVideoAlt').value.trim(),videoEmbed:document.getElementById('lVideoEmbed').value.trim()};
       if(videoData)data.videoData=videoData;
       var lessons=DB.lessons();
       if(editId){var idx=lessons.findIndex(function(l){return l.id===editId});if(idx>=0)lessons[idx]=Object.assign({},lessons[idx],data)}
@@ -1212,18 +1306,105 @@ const Admin={
     showToast('تم إرسال الإشعار لجميع الطلاب!');
     this.switchSection('broadcast');
   },
-  deleteNotification:function(id){DB.saveNotifications(DB.notifications().filter(function(n){return n.id!==id}));showToast('تم حذف الإشعار','error');this.switchSection('broadcast')}
+  deleteNotification:function(id){DB.saveNotifications(DB.notifications().filter(function(n){return n.id!==id}));showToast('تم حذف الإشعار','error');this.switchSection('broadcast')},
+  homeworkMgmt:function(){
+    var hw=DB.homeworks();
+    var subs=DB.hwSubmissions();
+    return '<div class="fade-in"><div class="page-header"><h1 class="page-title">'+Lang.t('hwTitle')+'</h1><p class="page-subtitle">'+hw.length+' '+(Lang.get()==='ar'?'واجب':'homeworks')+'</p></div>'+
+    '<button class="btn btn-primary" onclick="Admin.showHomeworkModal()" style="margin-bottom:20px">+ '+Lang.t('hwCreate')+'</button>'+
+    '<div class="card" style="margin-bottom:20px"><div class="card-header"><h3 class="card-title">'+(Lang.get()==='ar'?'الواجبات':'Homeworks')+'</h3></div>'+
+    '<div class="table-container"><table><thead><tr><th>'+Lang.t('hwTitle')+'</th><th>'+Lang.t('hwDueDate')+'</th><th>'+Lang.t('hwScore')+'</th><th>'+(Lang.get()==='ar'?'الصف':'Grade')+'</th><th>'+(Lang.get()==='ar'?'إجراءات':'Actions')+'</th></tr></thead><tbody>'+
+    hw.map(function(h){return '<tr><td><strong>'+Utils.escHtml(h.title)+'</strong></td><td>'+Utils.formatDate(h.dueDate)+'</td><td>'+h.maxScore+'</td><td>'+Utils.escHtml(h.grade)+'</td><td><button class="btn btn-sm btn-primary" onclick="Admin.showHomeworkModal(\''+h.id+'\')">'+Lang.t('edit')+'</button> <button class="btn btn-sm btn-danger" onclick="Admin.deleteHomework(\''+h.id+'\')">'+Lang.t('delete')+'</button></td></tr>'}).join('')+
+    '</tbody></table></div>'+(hw.length===0?'<div class="empty-state"><div class="empty-icon">📚</div><p>'+Lang.t('noResults')+'</p></div>':'')+'</div>'+
+    '<div class="card"><div class="card-header"><h3 class="card-title">'+(Lang.get()==='ar'?'تسليمات الطلاب':'Student Submissions')+'</h3></div>'+
+    (subs.length===0?'<div class="empty-state"><p>'+(Lang.get()==='ar'?'لا توجد تسليمات بعد':'No submissions yet')+'</p></div>':'')+
+    subs.slice().reverse().map(function(s){var h=hw.find(function(x){return x.id===s.hwId});return '<div class="transaction-item" style="align-items:flex-start"><div class="transaction-icon" style="background:'+(s.status==='graded'?'rgba(0,245,212,0.15)':'rgba(255,165,2,0.15)')+'">'+(s.status==='graded'?'✅':'⏳')+'</div><div class="transaction-info" style="flex:1"><div class="transaction-title">'+Utils.escHtml(s.studentName||'طالب')+' - '+(h?Utils.escHtml(h.title):'')+'</div><div style="font-size:0.82rem;color:var(--text-secondary);margin-top:4px;white-space:pre-wrap">'+Utils.escHtml(s.answer)+'</div><div class="transaction-date">'+Utils.formatDate(s.date)+'</div></div>'+
+    (s.status!=='graded'?'<div style="display:flex;gap:6px;flex-direction:column;align-items:center"><input class="form-input" type="number" id="grade_'+s.id+'" min="0" max="'+(s.maxScore||100)+'" placeholder="0" style="width:70px"><button class="btn btn-sm btn-primary" onclick="Admin.gradeSubmission(\''+s.id+'\')">'+(Lang.get()==='ar'?'تقييم':'Grade')+'</button></div>':'<div style="font-weight:700;color:var(--accent)">'+s.score+'/'+s.maxScore+'</div>')+
+    '</div>'}).join('')+'</div></div>';
+  },
+  gradeSubmission:function(id){
+    var input=document.getElementById('grade_'+id);if(!input)return;
+    var score=parseInt(input.value)||0;
+    var subs=DB.hwSubmissions();
+    var sub=subs.find(function(s){return s.id===id});if(!sub)return;
+    sub.score=score;sub.status='graded';sub.gradedAt=Date.now();
+    DB.saveHwSubmissions(subs);
+    var u=DB.getUserById(sub.studentId);
+    if(u){
+      var bonusPoints=Math.round(score*0.1);
+      DB.updateUser(u.id,{wallet:(u.wallet||0)+bonusPoints});
+      showToast((Lang.get()==='ar'?'تم التقييم! +':'Graded! +')+bonusPoints+(Lang.get()==='ar'?' ج.م':' EGP'));
+    }
+    this.switchSection('homework');
+  },
+  showHomeworkModal:function(editId){
+    var hw=editId?DB.homeworks().find(function(h){return h.id===editId}):null;
+    var gOpts=GRADES.map(function(g){return '<option value="'+g+'" '+(hw&&hw.grade===g?'selected':'')+'>'+g+'</option>'}).join('');
+    var tOpts=TRACKS.map(function(t){return '<option value="'+t+'" '+(hw&&hw.track===t?'selected':'')+'>'+t+'</option>'}).join('');
+    var html='<div class="modal-overlay" id="hwModal" onclick="if(event.target===this)this.remove()"><div class="modal"><button class="modal-close" onclick="document.getElementById(\'hwModal\').remove()">✕</button>'+
+    '<h3 class="modal-title">'+(editId?Lang.t('edit'):Lang.t('hwCreate'))+'</h3>'+
+    '<form onsubmit="Admin.saveHomework(event,\''+(editId||'')+'\')">'+
+    '<div class="form-group"><label class="form-label">'+Lang.t('hwTitle')+'</label><input class="form-input" id="hwTitle" required value="'+(hw?Utils.escHtml(hw.title):'')+'"></div>'+
+    '<div class="form-group"><label class="form-label">'+Lang.get()==='ar'?'التعليمات':'Instructions'+'</label><textarea class="form-textarea" id="hwInstr">'+(hw?Utils.escHtml(hw.instructions):'')+'</textarea></div>'+
+    '<div class="form-row"><div class="form-group"><label class="form-label">'+Lang.t('hwDueDate')+'</label><input class="form-input" type="date" id="hwDue" required value="'+(hw?new Date(hw.dueDate).toISOString().split('T')[0]:'')+'"></div>'+
+    '<div class="form-group"><label class="form-label">'+Lang.t('hwScore')+'</label><input class="form-input" type="number" id="hwMaxScore" required min="1" value="'+(hw?hw.maxScore:100)+'"></div></div>'+
+    '<div class="form-row"><div class="form-group"><label class="form-label">'+Lang.t('signupGrade')+'</label><select class="form-select" id="hwGrade" required><option value="">--</option>'+gOpts+'</select></div>'+
+    '<div class="form-group"><label class="form-label">'+Lang.t('signupTrack')+'</label><select class="form-select" id="hwTrack" required><option value="">--</option>'+tOpts+'</select></div></div>'+
+    '<div class="form-group"><label class="form-label">'+Lang.get()==='ar'?'السؤال / المحتوى':'Question / Content'+'</label><textarea class="form-textarea" id="hwQuestion" rows="5" required>'+(hw?Utils.escHtml(hw.question):'')+'</textarea></div>'+
+    '<button type="submit" class="btn btn-primary btn-block">'+Lang.t('save')+'</button></form></div></div>';
+    document.body.insertAdjacentHTML('beforeend',html);
+  },
+  saveHomework:function(e,editId){
+    e.preventDefault();
+    var data={title:document.getElementById('hwTitle').value.trim(),instructions:document.getElementById('hwInstr').value.trim(),dueDate:new Date(document.getElementById('hwDue').value).getTime(),maxScore:parseInt(document.getElementById('hwMaxScore').value)||100,grade:document.getElementById('hwGrade').value,track:document.getElementById('hwTrack').value,question:document.getElementById('hwQuestion').value.trim()};
+    var hws=DB.homeworks();
+    if(editId){var idx=hws.findIndex(function(h){return h.id===editId});if(idx>=0)hws[idx]=Object.assign({},hws[idx],data)}
+    else{data.id=Utils.uid();data.createdAt=Date.now();hws.push(data)}
+    DB.saveHomeworks(hws);
+    document.getElementById('hwModal').remove();
+    showToast(editId?Lang.t('save')+' ✓':Lang.t('hwCreate')+' ✓');
+    this.switchSection('homework');
+  },
+  deleteHomework:function(id){if(!confirm(Lang.t('confirm')+'?'))return;DB.saveHomeworks(DB.homeworks().filter(function(h){return h.id!==id}));showToast(Lang.t('delete')+' ✓','error');this.switchSection('homework')},
+  settingsMgmt:function(){
+    return '<div class="fade-in"><div class="page-header"><h1 class="page-title">'+Lang.t('settingsTitle')+'</h1></div>'+
+    '<div class="card" style="max-width:500px"><div class="card-header"><h3 class="card-title">'+Lang.t('settingsChangePass')+'</h3></div>'+
+    '<form onsubmit="Admin.changeAdminPass(event)">'+
+    '<div class="form-group"><label class="form-label">'+Lang.t('loginEmail')+'</label><input class="form-input" type="email" id="adminNewEmail" value="'+Utils.escHtml(App.user.email)+'" dir="ltr"></div>'+
+    '<div class="form-group"><label class="form-label">'+Lang.t('settingsNewPass')+'</label><input class="form-input" type="password" id="adminNewPass" dir="ltr" minlength="6"></div>'+
+    '<div class="form-group"><label class="form-label">'+Lang.t('settingsConfirmPass')+'</label><input class="form-input" type="password" id="adminConfPass" dir="ltr"></div>'+
+    '<div class="form-group"><label class="form-label">'+Lang.get()==='ar'?'كلمة المرور الحالية':'Current Password'+'</label><input class="form-input" type="password" id="adminCurPass" required dir="ltr"></div>'+
+    '<button type="submit" class="btn btn-primary btn-block">'+Lang.t('settingsSave')+'</button></form></div></div>';
+  },
+  changeAdminPass:function(e){
+    e.preventDefault();
+    var curPass=document.getElementById('adminCurPass').value;
+    var newEmail=document.getElementById('adminNewEmail').value.trim();
+    var newPass=document.getElementById('adminNewPass').value;
+    var confPass=document.getElementById('adminConfPass').value;
+    if(App.user.password!==curPass){showToast(Lang.get()==='ar'?'كلمة المرور الحالية خاطئة':'Wrong current password','error');return}
+    if(newPass&&newPass!==confPass){showToast(Lang.get()==='ar'?'كلمتا المرور غير متطابقتين':'Passwords do not match','error');return}
+    var updates={};
+    if(newPass&&newPass.length>=6)updates.password=newPass;
+    if(newEmail&&newEmail!==App.user.email)updates.email=newEmail;
+    if(Object.keys(updates).length===0){showToast(Lang.get()==='ar'?'لا توجد تغييرات':'No changes','error');return}
+    DB.updateUser(App.user.id,updates);
+    if(updates.email)DB.saveSession({userId:App.user.id,email:updates.email});
+    App.user=DB.getUserById(App.user.id);
+    showToast(Lang.get()==='ar'?'تم تحديث الحساب بنجاح!':'Account updated!');
+    this.switchSection('settings');
+  }
 };
 const Student={
   render:function(){return '<div class="dashboard">'+this.renderSidebar()+'<div class="main-content" id="studentContent">'+this.renderSection()+'</div></div>'},
   renderSidebar:function(){
     var s=App.currentSubView;
-    var links=[{id:'overview',icon:'🏠',label:'الرئيسية'},{id:'lessons',icon:'🎬',label:'الدروس'},{id:'wallet',icon:'💰',label:'محفظتي'},{id:'exams',icon:'📝',label:'الامتحانات'},{id:'files',icon:'📁',label:'الملفات والمراجعات'},{id:'reports',icon:'📊',label:'تقاريري'},{id:'badges',icon:'🏆',label:'الإنجازات'},{id:'profile',icon:'👤',label:'معلوماتي الشخصية'},{id:'parent',icon:'👨‍👩‍👦',label:'بيانات ولي الأمر'},{id:'aibot',icon:'🤖',label:'المساعد الذكي'}];
+    var links=[{id:'overview',icon:'🏠',label:'الرئيسية'},{id:'lessons',icon:'🎬',label:'الدروس'},{id:'wallet',icon:'💰',label:'محفظتي'},{id:'exams',icon:'📝',label:'الامتحانات'},{id:'homework',icon:'📚',label:Lang.t('hwTitle')},{id:'files',icon:'📁',label:'الملفات والمراجعات'},{id:'reports',icon:'📊',label:'تقاريري'},{id:'badges',icon:'🏆',label:'الإنجازات'},{id:'profile',icon:'👤',label:'معلوماتي الشخصية'},{id:'parent',icon:'👨‍👩‍👦',label:'بيانات ولي الأمر'},{id:'aibot',icon:'🤖',label:'المساعد الذكي'}];
     return '<div class="sidebar" id="studentSidebar"><div class="sidebar-section">لوحتي</div>'+
     links.map(function(l){return '<button class="sidebar-link '+(s===l.id||(!s&&l.id==='overview')?'active':'')+'" onclick="Student.switchSection(\''+l.id+'\')"><span class="link-icon">'+l.icon+'</span><span>'+l.label+'</span></button>'}).join('')+'</div>';
   },
   switchSection:function(sub){App.currentSubView=sub;App.navigate('student',sub)},
-  renderSection:function(){var s=App.currentSubView||'overview';App.user=DB.getUserById(App.user.id);var self=this;var map={overview:function(){return self.overview()},lessons:function(){return self.lessonsView()},wallet:function(){return self.walletView()},exams:function(){return self.examsView()},files:function(){return self.filesView()},reports:function(){return self.reportsView()},badges:function(){return self.badgesView()},profile:function(){return self.profileView()},parent:function(){return self.parentView()},aibot:function(){return AIBot.render()}};return (map[s]||map.overview)()},
+  renderSection:function(){var s=App.currentSubView||'overview';App.user=DB.getUserById(App.user.id);var self=this;var map={overview:function(){return self.overview()},lessons:function(){return self.lessonsView()},wallet:function(){return self.walletView()},exams:function(){return self.examsView()},homework:function(){return self.homeworkView()},files:function(){return self.filesView()},reports:function(){return self.reportsView()},badges:function(){return self.badgesView()},profile:function(){return self.profileView()},parent:function(){return self.parentView()},aibot:function(){return AIBot.render()}};return (map[s]||map.overview)()},
   init:function(){
     if(App.currentSubView==='aibot')setTimeout(function(){AIBot.init()},50);
   },
@@ -1481,6 +1662,31 @@ const Student={
     return '<div class="fade-in"><div class="page-header"><h1 class="page-title">بيانات ولي الأمر</h1><p class="page-subtitle">المعلومات المسجلة لولي الأمر (للقراءة فقط)</p></div>'+
     '<div class="card" style="max-width:500px;padding:32px"><div style="text-align:center;margin-bottom:24px"><div style="width:64px;height:64px;border-radius:50%;background:var(--cobalt);border:2px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:1.5rem;margin:0 auto 12px">👨‍👩‍👦</div><h3 style="font-weight:800">ولي الأمر</h3></div>'+
     '<div style="font-size:0.92rem;line-height:2.2;color:var(--text-secondary)"><div><strong style="color:var(--text-primary)">الاسم:</strong> '+Utils.escHtml(u.parentName||'غير مسجل')+'</div><div><strong style="color:var(--text-primary)">رقم الهاتف:</strong> <span dir="ltr" style="font-family:var(--font-en)">'+Utils.escHtml(u.parentPhone||'غير مسجل')+'</span></div></div></div></div>';
+  },
+  homeworkView:function(){
+    var u=App.user;
+    var hws=DB.homeworks().filter(function(h){return h.grade===u.grade&&(h.track===u.track||!h.track)});
+    var subs=DB.hwSubmissions().filter(function(s){return s.studentId===u.id});
+    return '<div class="fade-in"><div class="page-header"><h1 class="page-title">'+Lang.t('hwTitle')+'</h1></div>'+
+    (hws.length===0?'<div class="card empty-state"><div class="empty-icon">📚</div><p>'+(Lang.get()==='ar'?'لا توجد واجبات متاحة':'No homework available')+'</p></div>':'')+
+    '<div class="content-grid">'+
+    hws.map(function(hw){var mySub=subs.find(function(s){return s.hwId===hw.id});
+      var isOverdue=Date.now()>hw.dueDate&&!mySub;
+      return '<div class="card fade-in"><div class="card-header"><h3 class="card-title">'+Utils.escHtml(hw.title)+'</h3>'+
+      (mySub?'<span class="badge badge-accent">'+Lang.t('hwScore')+': '+mySub.score+'/'+hw.maxScore+'</span>':isOverdue?'<span class="badge badge-danger">'+(Lang.get()==='ar'?'منتهي':'Overdue')+'</span>':'<span class="badge badge-warning">'+Lang.t('hwPending')+'</span>')+'</div>'+
+      '<div style="font-size:0.88rem;color:var(--text-secondary);line-height:2"><div>📅 '+Lang.t('hwDueDate')+': '+Utils.formatDate(hw.dueDate)+'</div>'+
+      (hw.instructions?'<div style="margin-top:8px">'+Utils.escHtml(hw.instructions)+'</div>':'')+
+      '<div style="margin-top:12px;padding:12px;border-radius:var(--radius-sm);background:var(--glass);border:1px solid var(--glass-border)"><strong>'+Lang.get()==='ar'?'السؤال':'Question'+':</strong><br>'+Utils.escHtml(hw.question)+'</div></div>'+
+      (!mySub&&!isOverdue?'<div style="margin-top:14px"><div class="form-group"><label class="form-label">'+Lang.get()==='ar'?'إجابتك':'Your Answer'+':</label><textarea class="form-textarea" id="hwAns_'+hw.id+'" rows="3" placeholder="'+Lang.get()==='ar'?'اكتب إجابتك هنا...':'Write your answer here...'+'"></textarea></div>'+
+      '<button class="btn btn-primary btn-block" onclick="Student.submitHomework(\''+hw.id+'\')">'+Lang.t('hwSubmit')+'</button></div>':'')+'</div>'}).join('')+'</div></div>';
+  },
+  submitHomework:function(hwId){
+    var hw=DB.homeworks().find(function(h){return h.id===hwId});if(!hw)return;
+    var ans=document.getElementById('hwAns_'+hwId);if(!ans||!ans.value.trim())return;
+    var sub={id:Utils.uid(),hwId:hwId,studentId:App.user.id,studentName:App.user.name,answer:ans.value.trim(),score:0,maxScore:hw.maxScore,date:Date.now(),status:'pending'};
+    var subs=DB.hwSubmissions();subs.push(sub);DB.saveHwSubmissions(subs);
+    showToast(Lang.get()==='ar'?'تم تسليم الواجب بنجاح!':'Homework submitted!');
+    this.switchSection('homework');
   }
 };
 const CommunityPage={
@@ -1550,6 +1756,48 @@ const CommunityPage={
       DB.saveCommunity(msgs);CommunityPage._pendingFile=null;CommunityPage.loadMessages();
       showToast('تم مشاركة الملف بنجاح!');
     };reader.readAsDataURL(file);
+  }
+};
+const Tournament={
+  render:function(){
+    var students=DB.users().filter(function(u){return u.role==='student'&&u.status==='approved'});
+    var hwResults={};
+    DB.hwSubmissions().forEach(function(s){
+      if(!hwResults[s.studentId])hwResults[s.studentId]={totalScore:0,totalMax:0,completed:0};
+      hwResults[s.studentId].totalScore+=s.score||0;
+      hwResults[s.studentId].totalMax+=s.maxScore||100;
+      hwResults[s.studentId].completed++;
+    });
+    var examResults={};
+    DB.examResults().forEach(function(r){
+      if(!examResults[r.studentId])examResults[r.studentId]={passed:0,total:0};
+      examResults[r.studentId].total++;
+      if(r.score>=60)examResults[r.studentId].passed++;
+    });
+    var ranked=students.map(function(u){
+      var hw=hwResults[u.id]||{totalScore:0,totalMax:0,completed:0};
+      var ex=examResults[u.id]||{passed:0,total:0};
+      var hwPercent=hw.totalMax>0?Math.round(hw.totalScore/hw.totalMax*100):0;
+      var points=(hwPercent*2)+(ex.passed*50)+(hw.completed*10);
+      return {user:u,hw:hw,ex:ex,hwPercent:hwPercent,points:points};
+    }).sort(function(a,b){return b.points-a.points});
+    var medals=['🥇','🥈','🥉'];
+    return '<div style="max-width:900px;margin:0 auto;padding:88px 20px 40px" class="fade-in">'+
+    '<div class="page-header"><h1 class="page-title">🏆 '+Lang.t('tournamentTitle')+'</h1><p class="page-subtitle">'+Lang.get()==='ar'?'أفضل الطلاب أداءً هذا الفصل':'Top performing students this semester'+'</p></div>'+
+    (ranked.length===0?'<div class="card empty-state"><div class="empty-icon">🏆</div><p>'+(Lang.get()==='ar'?'لا يوجد طلاب مسجلين':'No students registered')+'</p></div>':'')+
+    ranked.map(function(r,i){
+      var medal=i<3?medals[i]:'';
+      var progressWidth=r.hw.totalMax>0?Math.round(r.hw.totalScore/r.hw.totalMax*100):0;
+      return '<div class="card fade-in" style="margin-bottom:12px;'+(i<3?'border:1px solid var(--accent);box-shadow:0 0 20px rgba(0,245,212,0.1)':'')+'">'+
+      '<div style="display:flex;align-items:center;gap:16px;padding:16px 20px">'+
+      '<div style="min-width:50px;text-align:center;font-size:1.5rem;font-weight:900;color:'+(i===0?'#FFD700':i===1?'#C0C0C0':i===2?'#CD7F32':'var(--text-muted)')+'">'+(i<3?medal:(i+1))+'</div>'+
+      '<div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:1rem;font-weight:800;color:var(--bg-primary);flex-shrink:0">'+Utils.escHtml(r.user.name.charAt(0))+'</div>'+
+      '<div style="flex:1"><div style="font-weight:700">'+Utils.escHtml(r.user.name)+'</div><div style="font-size:0.78rem;color:var(--text-muted)">'+Utils.escHtml(r.user.grade)+' - '+Utils.escHtml(r.user.track)+'</div></div>'+
+      '<div style="text-align:center;min-width:80px"><div style="font-size:1.3rem;font-weight:900;color:var(--accent)">'+r.points+'</div><div style="font-size:0.7rem;color:var(--text-muted)">'+Lang.t('tournamentPoints')+'</div></div>'+
+      '<div style="text-align:center;min-width:70px"><div style="font-weight:700">'+r.hw.completed+'</div><div style="font-size:0.7rem;color:var(--text-muted)">'+Lang.t('hwTitle')+'</div></div>'+
+      '<div style="text-align:center;min-width:70px"><div style="font-weight:700">'+r.ex.passed+'/'+r.ex.total+'</div><div style="font-size:0.7rem;color:var(--text-muted)">'+Lang.t('examTitle')+'</div></div>'+
+      '</div></div>';
+    }).join('')+'</div>';
   }
 };
 const AIBot={
