@@ -628,6 +628,7 @@ const App={
           }
         });
         if(this.user.status==='pending'){this.navigate('pending');return}
+        if(this.user.status==='banned'){DB.clearSession();this.user=null;this.navigate('banned');return}
         if(this.user.role==='admin'){this.navigate('admin');return}
         this.navigate('student');return;
       }
@@ -659,6 +660,7 @@ const App={
       case'login':app.innerHTML=Auth.renderLogin();Captcha.generate();break;
       case'signup':app.innerHTML=Auth.renderSignup();break;
       case'pending':app.innerHTML=PendingPage.render();break;
+      case'banned':app.innerHTML='<div style="display:flex;align-items:center;justify-content:center;min-height:80vh;padding:40px"><div class="card" style="max-width:500px;text-align:center"><div style="font-size:4rem;margin-bottom:16px">🚫</div><h1 style="font-size:1.5rem;font-weight:900;margin-bottom:12px;color:var(--danger)">تم حظرك</h1><p style="color:var(--text-secondary);line-height:1.8;margin-bottom:24px">تم حظر حسابك من قبل الإدارة. لا يمكنك الوصول للمنصة في الوقت الحالي.<br><br>للإستفسار تواصل مع الإدارة.</p><button class="btn btn-primary" onclick="App.navigate(\'login\')">العودة لصفحة الدخول</button></div></div>';break;
       case'admin':if(!this.requireAuth('admin'))return;app.innerHTML=Admin.render();Admin.init();break;
       case'student':if(!this.requireAuth('student'))return;app.innerHTML=Student.render();Student.init();break;
       case'community':if(!this.requireAuth())return;app.innerHTML=CommunityPage.render();CommunityPage.init();break;
@@ -683,11 +685,13 @@ const App={
           DB.addUser(latest);u=latest;
         }
         if(u.status==='pending'){callback({pending:true});return}
+        if(u.status==='banned'){callback({banned:true});return}
         DB.saveSession({userId:u.id,email:email});
         self.user=u;
         DB.syncFromServer(function(){var fresh=DB.getUserByEmail(email);if(fresh)self.user=fresh;callback({success:true,role:u.role})});
       }).catch(function(){
         if(u.status==='pending'){callback({pending:true});return}
+        if(u.status==='banned'){callback({banned:true});return}
         DB.saveSession({userId:u.id,email:email});
         self.user=u;
         callback({success:true,role:u.role});
@@ -700,6 +704,7 @@ const App={
       if(!found){callback({error:'البريد الإلكتروني غير مسجل'});return}
       if(found.password!==password){callback({error:'كلمة المرور غير صحيحة'});return}
       if(found.status==='pending'){callback({pending:true});return}
+      if(found.status==='banned'){callback({banned:true});return}
       DB.addUser(found);
       DB.saveSession({userId:found.id,email:email});
       self.user=found;
@@ -890,6 +895,7 @@ const Auth={
       if(btn){btn.disabled=false;btn.textContent='دخول'}
       if(result.error){errEl.textContent=result.error;errEl.style.display='block';return}
       if(result.pending){App.navigate('pending');return}
+      if(result.banned){App.navigate('banned');return}
       var remember=document.getElementById('rememberMe');
       if(remember&&remember.checked){
         var savedArr=JSON.parse(localStorage.getItem('savedLogins')||'[]');
@@ -1060,7 +1066,7 @@ const Admin={
     if(users.length===0){tbody.innerHTML='';empty.style.display='block';return}
     empty.style.display='none';
     tbody.innerHTML=users.map(function(u){
-      return '<tr><td><strong>'+Utils.escHtml(u.name)+'</strong></td><td style="font-family:var(--font-en);font-size:0.8rem" dir="ltr">'+Utils.escHtml(u.email)+'</td><td dir="ltr">'+Utils.escHtml(u.phone||'-')+'</td><td>'+Utils.escHtml(u.parentName||'-')+'</td><td dir="ltr"><a href="https://wa.me/'+(u.parentPhone||'').replace(/^0/,'20')+'" target="_blank">'+Utils.escHtml(u.parentPhone||'-')+' 📱</a></td><td>'+Utils.escHtml(u.grade)+'</td><td><span class="badge badge-info">'+Utils.escHtml(u.track)+'</span></td><td>'+Utils.escHtml(u.governorate||'-')+'</td><td><span class="badge '+(u.status==='approved'?'badge-accent':u.status==='rejected'?'badge-danger':'badge-warning')+'">'+(u.status==='approved'?'مقبول':u.status==='rejected'?'مرفوض':'قيد المراجعة')+'</span></td><td>'+(u.status!=='approved'?'<button class="btn btn-sm btn-primary" onclick="Admin.approveStudent(\''+u.id+'\')">قبول</button>':'')+(u.status!=='rejected'?'<button class="btn btn-sm btn-danger" onclick="Admin.rejectStudent(\''+u.id+'\')">رفض</button>':'')+'</td></tr>';
+      return '<tr><td><strong>'+Utils.escHtml(u.name)+'</strong></td><td style="font-family:var(--font-en);font-size:0.8rem" dir="ltr">'+Utils.escHtml(u.email)+'</td><td dir="ltr">'+Utils.escHtml(u.phone||'-')+'</td><td>'+Utils.escHtml(u.parentName||'-')+'</td><td dir="ltr"><a href="https://wa.me/'+(u.parentPhone||'').replace(/^0/,'20')+'" target="_blank">'+Utils.escHtml(u.parentPhone||'-')+' 📱</a></td><td>'+Utils.escHtml(u.grade)+'</td><td><span class="badge badge-info">'+Utils.escHtml(u.track)+'</span></td><td>'+Utils.escHtml(u.governorate||'-')+'</td><td><span class="badge '+(u.status==='approved'?'badge-accent':u.status==='rejected'?'badge-danger':u.status==='banned'?'badge-danger':'badge-warning')+'">'+(u.status==='approved'?'مقبول':u.status==='rejected'?'مرفوض':u.status==='banned'?'محظور':'قيد المراجعة')+'</span></td><td style="display:flex;gap:4px;flex-wrap:wrap">'+(u.status!=='approved'?'<button class="btn btn-sm btn-primary" onclick="Admin.approveStudent(\''+u.id+'\')">قبول</button>':'')+(u.status!=='rejected'&&u.status!=='banned'?'<button class="btn btn-sm btn-danger" onclick="Admin.rejectStudent(\''+u.id+'\')">رفض</button>':'')+(u.status!=='banned'?'<button class="btn btn-sm btn-danger" onclick="Admin.banStudent(\''+u.id+'\')">🚫 حظر</button>':'<button class="btn btn-sm btn-primary" onclick="Admin.unbanStudent(\''+u.id+'\')">✅ إلغاء الحظر</button>')+'</td></tr>';
     }).join('');
   },
   approveStudent:function(id){
@@ -1076,6 +1082,22 @@ const Admin={
     var u=DB.getUserById(id);
     if(u){FB_DB.ref('all_users/'+id).set(u).catch(function(){})}
     showToast('تم رفض الطالب','error');
+    this.switchSection(App.currentSubView||'students');
+  },
+  banStudent:function(id){
+    if(!confirm('هل أنت متأكد من حظر هذا الطالب؟ لن يتمكن من الدخول مجدداً.'))return;
+    DB.updateUser(id,{status:'banned'});
+    var u=DB.getUserById(id);
+    if(u){FB_DB.ref('all_users/'+id).set(u).catch(function(){})}
+    showToast('تم حظر الطالب 🚫','error');
+    this.switchSection(App.currentSubView||'students');
+  },
+  unbanStudent:function(id){
+    if(!confirm('هل أنت متأكد من إلغاء حظر هذا الطالب؟'))return;
+    DB.updateUser(id,{status:'approved'});
+    var u=DB.getUserById(id);
+    if(u){FB_DB.ref('all_users/'+id).set(u).catch(function(){})}
+    showToast('تم إلغاء الحظر ✅');
     this.switchSection(App.currentSubView||'students');
   },
   pendingRequests:function(){
