@@ -606,8 +606,12 @@ const Notify={
     var p=document.getElementById('notifPanel');if(!p)return;
     var notifs=DB.notifications().slice().reverse();
     var ids=this.getReadIds();
-    var lang=Lang.get();
-    p.innerHTML='<div class="notif-dropdown-header"><h4>🔔 '+('الإشعارات')+'</h4><button onclick="Notify.markAllRead();Notify.renderBell();Notify.renderPanel()" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:0.75rem">'+('تحديد الكل كمقروء')+'</button></div><div class="notif-dropdown-body">'+(notifs.length===0?'<div class="notif-empty">لا توجد إشعارات بعد</div>':notifs.map(function(n){var isUnread=ids.indexOf(n.id)===-1;var icon=n.type==='lesson'?'📚':n.type==='exam'?'📝':n.type==='homework'?'📋':n.type==='file'?'📁':'📢';return '<div class="notif-item'+(isUnread?' unread':'')+'" onclick="Notify.markRead(\''+n.id+'\');Notify.renderBell();Notify.renderPanel()"><div class="notif-item-icon">'+icon+'</div><div class="notif-item-body"><div class="notif-item-title">'+Utils.escHtml(n.title)+'</div><div class="notif-item-msg">'+Utils.escHtml(n.message)+'</div><div class="notif-item-time">'+Utils.timeAgo(n.date)+'</div></div></div>'}).join('')+'</div>';
+    var html='<div class="notif-dropdown-header"><h4>🔔 '+('الإشعارات')+'</h4>';
+    html+='<button onclick="Notify.markAllRead();Notify.renderBell();Notify.renderPanel()" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:0.75rem">'+('تحديد الكل كمقروء')+'</button></div>';
+    html+='<div class="notif-dropdown-body">';
+    if(notifs.length===0){html+='<div class="notif-empty">لا توجد إشعارات بعد</div>'}
+    else{for(var i=0;i<notifs.length;i++){var n=notifs[i];var isUnread=ids.indexOf(n.id)===-1;var icon=n.type==='lesson'?'📚':n.type==='exam'?'📝':n.type==='homework'?'📋':n.type==='file'?'📁':'📢';var q="'";html+='<div class="notif-item'+(isUnread?' unread':'')+'" onclick="Notify.markRead('+q+n.id+q+');Notify.renderBell();Notify.renderPanel()"><div class="notif-item-icon">'+icon+'</div><div class="notif-item-body"><div class="notif-item-title">'+Utils.escHtml(n.title)+'</div><div class="notif-item-msg">'+Utils.escHtml(n.message)+'</div><div class="notif-item-time">'+Utils.timeAgo(n.date)+'</div></div></div>'}}
+    html+='</div>';p.innerHTML=html;
   }
 };
 document.addEventListener('click',function(){document.querySelectorAll('.notif-dropdown.show').forEach(function(el){el.classList.remove('show')})});
