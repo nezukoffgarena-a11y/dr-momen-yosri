@@ -1532,10 +1532,9 @@ const Admin={
     var hw=DB.homeworks();
     var subs=DB.hwSubmissions();
     return '<div class="fade-in"><div class="page-header"><h1 class="page-title">'+Lang.t('hwTitle')+'</h1><p class="page-subtitle">'+hw.length+' '+(Lang.get()==='ar'?'واجب':'homeworks')+'</p></div>'+
-    '<button class="btn btn-primary" onclick="Admin.showHomeworkModal()" style="margin-bottom:20px">+ '+Lang.t('hwCreate')+'</button>'+
     '<div class="card" style="margin-bottom:20px"><div class="card-header"><h3 class="card-title">'+(Lang.get()==='ar'?'الواجبات':'Homeworks')+'</h3></div>'+
-    '<div class="table-container"><table><thead><tr><th>'+Lang.t('hwTitle')+'</th><th>'+Lang.t('hwDueDate')+'</th><th>'+Lang.t('hwScore')+'</th><th>'+(Lang.get()==='ar'?'الصف':'Grade')+'</th><th>'+(Lang.get()==='ar'?'إجراءات':'Actions')+'</th></tr></thead><tbody>'+
-    hw.map(function(h){return '<tr><td><strong>'+Utils.escHtml(h.title)+'</strong></td><td>'+Utils.formatDate(h.dueDate)+'</td><td>'+h.maxScore+'</td><td>'+Utils.escHtml(h.grade)+'</td><td><button class="btn btn-sm btn-primary" onclick="Admin.showHomeworkModal(\''+h.id+'\')">'+Lang.t('edit')+'</button> <button class="btn btn-sm btn-danger" onclick="Admin.deleteHomework(\''+h.id+'\')">'+Lang.t('delete')+'</button></td></tr>'}).join('')+
+    '<div class="table-container"><table><thead><tr><th>'+Lang.t('hwTitle')+'</th><th>'+Lang.t('hwDueDate')+'</th><th>'+Lang.t('hwScore')+'</th><th>'+(Lang.get()==='ar'?'الصف':'Grade')+'</th></tr></thead><tbody>'+
+    hw.map(function(h){return '<tr><td><strong>'+Utils.escHtml(h.title)+'</strong></td><td>'+Utils.formatDate(h.dueDate)+'</td><td>'+h.maxScore+'</td><td>'+Utils.escHtml(h.grade)+'</td></tr>'}).join('')+
     '</tbody></table></div>'+(hw.length===0?'<div class="empty-state"><div class="empty-icon">📚</div><p>'+Lang.t('noResults')+'</p></div>':'')+'</div>'+
     '<div class="card"><div class="card-header"><h3 class="card-title">'+(Lang.get()==='ar'?'تسليمات الطلاب':'Student Submissions')+'</h3></div>'+
     (subs.length===0?'<div class="empty-state"><p>'+(Lang.get()==='ar'?'لا توجد تسليمات بعد':'No submissions yet')+'</p></div>':'')+
@@ -1651,36 +1650,6 @@ const Admin={
     }
     this.switchSection('homework');
   },
-  showHomeworkModal:function(editId){
-    var hw=editId?DB.homeworks().find(function(h){return h.id===editId}):null;
-    var gOpts=GRADES.map(function(g){return '<option value="'+g+'" '+(hw&&hw.grade===g?'selected':'')+'>'+g+'</option>'}).join('');
-    var tOpts=TRACKS.map(function(t){return '<option value="'+t+'" '+(hw&&hw.track===t?'selected':'')+'>'+t+'</option>'}).join('');
-    var html='<div class="modal-overlay" id="hwModal" onclick="if(event.target===this)this.remove()"><div class="modal"><button class="modal-close" onclick="document.getElementById(\'hwModal\').remove()">✕</button>'+
-    '<h3 class="modal-title">'+(editId?Lang.t('edit'):Lang.t('hwCreate'))+'</h3>'+
-    '<form onsubmit="Admin.saveHomework(event,\''+(editId||'')+'\')">'+
-    '<div class="form-group"><label class="form-label">'+Lang.t('hwTitle')+'</label><input class="form-input" id="hwTitle" required value="'+(hw?Utils.escHtml(hw.title):'')+'"></div>'+
-    '<div class="form-group"><label class="form-label">'+Lang.get()==='ar'?'التعليمات':'Instructions'+'</label><textarea class="form-textarea" id="hwInstr">'+(hw?Utils.escHtml(hw.instructions):'')+'</textarea></div>'+
-    '<div class="form-row"><div class="form-group"><label class="form-label">'+Lang.t('hwDueDate')+'</label><input class="form-input" type="date" id="hwDue" required value="'+(hw?new Date(hw.dueDate).toISOString().split('T')[0]:'')+'"></div>'+
-    '<div class="form-group"><label class="form-label">'+Lang.t('hwScore')+'</label><input class="form-input" type="number" id="hwMaxScore" required min="1" value="'+(hw?hw.maxScore:100)+'"></div></div>'+
-    '<div class="form-row"><div class="form-group"><label class="form-label">'+Lang.t('signupGrade')+'</label><select class="form-select" id="hwGrade" required><option value="">--</option>'+gOpts+'</select></div>'+
-    '<div class="form-group"><label class="form-label">'+Lang.t('signupTrack')+'</label><select class="form-select" id="hwTrack" required><option value="">--</option>'+tOpts+'</select></div></div>'+
-    '<div class="form-group"><label class="form-label">'+Lang.get()==='ar'?'السؤال / المحتوى':'Question / Content'+'</label><textarea class="form-textarea" id="hwQuestion" rows="5" required>'+(hw?Utils.escHtml(hw.question):'')+'</textarea></div>'+
-    '<button type="submit" class="btn btn-primary btn-block">'+Lang.t('save')+'</button></form></div></div>';
-    document.body.insertAdjacentHTML('beforeend',html);
-  },
-  saveHomework:function(e,editId){
-    e.preventDefault();
-    var data={title:document.getElementById('hwTitle').value.trim(),instructions:document.getElementById('hwInstr').value.trim(),dueDate:new Date(document.getElementById('hwDue').value).getTime(),maxScore:parseInt(document.getElementById('hwMaxScore').value)||100,grade:document.getElementById('hwGrade').value,track:document.getElementById('hwTrack').value,question:document.getElementById('hwQuestion').value.trim()};
-    var hws=DB.homeworks();
-    if(editId){var idx=hws.findIndex(function(h){return h.id===editId});if(idx>=0)hws[idx]=Object.assign({},hws[idx],data)}
-    else{data.id=Utils.uid();data.createdAt=Date.now();hws.push(data)}
-    DB.saveHomeworks(hws);
-    document.getElementById('hwModal').remove();
-    showToast(editId?Lang.t('save')+' ✓':Lang.t('hwCreate')+' ✓');
-    if(!editId)Notify.add('homework','واجب جديد: '+data.title,'واجب جديد في '+data.grade+' - موعد التسليم: '+Utils.formatDate(data.dueDate));
-    this.switchSection('homework');
-  },
-  deleteHomework:function(id){if(!confirm(Lang.t('confirm')+'?'))return;DB.saveHomeworks(DB.homeworks().filter(function(h){return h.id!==id}));showToast(Lang.t('delete')+' ✓','error');this.switchSection('homework')},
   settingsMgmt:function(){
     return '<div class="fade-in"><div class="page-header"><h1 class="page-title">'+Lang.t('settingsTitle')+'</h1></div>'+
     '<div class="card" style="max-width:500px"><div class="card-header"><h3 class="card-title">'+Lang.t('settingsChangePass')+'</h3></div>'+
