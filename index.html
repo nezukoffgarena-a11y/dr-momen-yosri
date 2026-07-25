@@ -45,6 +45,9 @@ html[data-theme="light"] .community-input input{background:rgba(0,0,0,0.04);bord
 html[data-theme="light"] .mobile-bottom-nav{background:rgba(255,255,255,0.97);border-top-color:rgba(0,0,0,0.08)}
 html[data-theme="light"] .mobile-sidebar-header{border-bottom-color:rgba(0,0,0,0.08)}
 html[data-theme="light"] .mobile-sidebar-close{background:rgba(0,0,0,0.04);border-color:rgba(0,0,0,0.1)}
+html[data-theme="light"] .hw-upload-area{border-color:rgba(0,0,0,0.15)}
+html[data-theme="light"] .hw-pdf-viewer{background:#f5f5f5}
+html[data-theme="light"] .hw-pdf-toolbar{background:rgba(0,0,0,0.04)}
 html{scroll-behavior:smooth}
 body{font-family:var(--font-ar);background:var(--bg-primary);color:var(--text-primary);line-height:1.7;overflow-x:hidden;min-height:100vh;background:radial-gradient(ellipse at 20% 50%,rgba(28,37,65,0.5) 0%,transparent 50%),radial-gradient(ellipse at 80% 20%,rgba(0,245,212,0.03) 0%,transparent 40%),radial-gradient(ellipse at 50% 80%,rgba(91,141,239,0.03) 0%,transparent 40%),var(--bg-primary)}
 ::selection{background:var(--accent);color:var(--bg-primary)}
@@ -328,6 +331,19 @@ tr:hover td{background:rgba(0,245,212,0.03)}
 .notif-item-msg{font-size:0.75rem;color:var(--text-secondary);line-height:1.6}
 .notif-item-time{font-size:0.68rem;color:var(--text-muted);margin-top:3px}
 .notif-empty{padding:40px 16px;text-align:center;color:var(--text-muted);font-size:0.85rem}
+.hw-upload-area{border:2px dashed var(--glass-border);border-radius:var(--radius-sm);padding:28px 20px;cursor:pointer;transition:var(--transition);text-align:center}
+.hw-upload-area:hover,.hw-upload-area.dragover{border-color:var(--accent);background:rgba(0,245,212,0.04)}
+.hw-pdf-preview{border-radius:var(--radius-sm);overflow:hidden;border:1px solid var(--glass-border)}
+.hw-pdf-viewer{border-radius:var(--radius-sm);border:1px solid var(--glass-border);overflow:hidden;background:rgba(0,0,0,0.2)}
+.hw-pdf-toolbar{display:flex;justify-content:space-between;align-items:center;padding:8px 14px;background:rgba(0,0,0,0.3);border-bottom:1px solid var(--glass-border);font-size:0.82rem;font-weight:700}
+.hw-pdf-container{position:relative;width:100%;height:600px;background:#1a1a2e}
+.hw-pdf-container object{width:100%;height:100%;border:none}
+.hw-annotation-canvas{position:absolute;top:0;left:0;width:100%;height:100%;cursor:crosshair;z-index:2;touch-action:none}
+.hw-pdf-pen-tools{display:flex;gap:6px;padding:8px 14px;border-top:1px solid var(--glass-border);flex-wrap:wrap;align-items:center}
+@media(max-width:768px){
+.hw-pdf-container{height:400px}
+.hw-pdf-pen-tools{justify-content:center}
+}
 .sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9991;transition:opacity .3s}
 .sidebar-overlay.show{display:block;animation:fadeIn .2s ease}
 .mobile-sidebar-close{display:none;position:absolute;top:16px;left:16px;width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.06);border:1px solid var(--glass-border);color:var(--text-primary);font-size:1.2rem;cursor:pointer;align-items:center;justify-content:center;transition:var(--transition);z-index:10}
@@ -1116,6 +1132,16 @@ const Admin={
   },
   init:function(){
     if(App.currentSubView==='aibot')setTimeout(function(){AIBot.init()},50);
+    if(App.currentSubView==='homework')setTimeout(function(){Admin.initCanvases()},100);
+  },
+  initCanvases:function(){
+    document.querySelectorAll('.hw-annotation-canvas').forEach(function(canvas){
+      var container=canvas.parentElement;
+      if(container){
+        canvas.width=container.offsetWidth;
+        canvas.height=container.offsetHeight;
+      }
+    });
   },
   overview:function(){
     var users=DB.users().filter(function(u){return u.role==='student'});
@@ -1513,16 +1539,109 @@ const Admin={
     '</tbody></table></div>'+(hw.length===0?'<div class="empty-state"><div class="empty-icon">📚</div><p>'+Lang.t('noResults')+'</p></div>':'')+'</div>'+
     '<div class="card"><div class="card-header"><h3 class="card-title">'+(Lang.get()==='ar'?'تسليمات الطلاب':'Student Submissions')+'</h3></div>'+
     (subs.length===0?'<div class="empty-state"><p>'+(Lang.get()==='ar'?'لا توجد تسليمات بعد':'No submissions yet')+'</p></div>':'')+
-    subs.slice().reverse().map(function(s){var h=hw.find(function(x){return x.id===s.hwId});return '<div class="transaction-item" style="align-items:flex-start"><div class="transaction-icon" style="background:'+(s.status==='graded'?'rgba(0,245,212,0.15)':'rgba(255,165,2,0.15)')+'">'+(s.status==='graded'?'✅':'⏳')+'</div><div class="transaction-info" style="flex:1"><div class="transaction-title">'+Utils.escHtml(s.studentName||'طالب')+' - '+(h?Utils.escHtml(h.title):'')+'</div><div style="font-size:0.82rem;color:var(--text-secondary);margin-top:4px;white-space:pre-wrap">'+Utils.escHtml(s.answer)+'</div><div class="transaction-date">'+Utils.formatDate(s.date)+'</div></div>'+
-    (s.status!=='graded'?'<div style="display:flex;gap:6px;flex-direction:column;align-items:center"><input class="form-input" type="number" id="grade_'+s.id+'" min="0" max="'+(s.maxScore||100)+'" placeholder="0" style="width:70px"><button class="btn btn-sm btn-primary" onclick="Admin.gradeSubmission(\''+s.id+'\')">'+(Lang.get()==='ar'?'تقييم':'Grade')+'</button></div>':'<div style="font-weight:700;color:var(--accent)">'+s.score+'/'+s.maxScore+'</div>')+
-    '</div>'}).join('')+'</div></div>';
+    subs.slice().reverse().map(function(s){
+      var h=hw.find(function(x){return x.id===s.hwId});
+      var isGraded=s.status==='graded';
+      var pdfViewer='';
+      if(s.pdfData){
+        pdfViewer='<div style="margin-top:12px"><div class="hw-pdf-viewer" id="hwViewer_'+s.id+'">'+
+        '<div class="hw-pdf-toolbar"><span>📄 '+Utils.escHtml(s.studentName||'طالب')+'</span>'+
+        '<a href="'+s.pdfData+'" download="'+Utils.escHtml(s.studentName||'hw')+'.pdf" class="btn btn-sm btn-secondary" style="font-size:0.75rem;padding:4px 10px">⬇️ تحميل</a></div>'+
+        '<div class="hw-pdf-container"><object data="'+s.pdfData+'" type="application/pdf" width="100%" height="100%" id="hwPdfObj_'+s.id+'">PDF</object>'+
+        '<canvas class="hw-annotation-canvas" id="hwCanvas_'+s.id+'" onmousedown="Admin.penStart(event,\''+s.id+'\')" onmousemove="Admin.penMove(event,\''+s.id+'\')" onmouseup="Admin.penEnd(\''+s.id+'\')" ontouchstart="Admin.penTouchStart(event,\''+s.id+'\')" ontouchmove="Admin.penTouchMove(event,\''+s.id+'\')" ontouchend="Admin.penEnd(\''+s.id+'\')"></canvas></div>'+
+        '<div class="hw-pdf-pen-tools">'+
+        '<button class="btn btn-sm '+(Admin._penColor==='red'?'btn-danger':'btn-secondary')+'" onclick="Admin.setPenColor(\'red\',\''+s.id+'\')" style="font-size:0.75rem">🔴 أحمر</button>'+
+        '<button class="btn btn-sm '+(Admin._penColor==='green'?'btn-primary':'btn-secondary')+'" onclick="Admin.setPenColor(\'green\',\''+s.id+'\')" style="font-size:0.75rem">🟢 أخضر</button>'+
+        '<button class="btn btn-sm btn-secondary" onclick="Admin.clearPen(\''+s.id+'\')" style="font-size:0.75rem">🗑️ مسح التأشيرات</button>'+
+        '</div></div></div>';
+      }else if(!isGraded){
+        pdfViewer='<div style="margin-top:12px;padding:16px;background:rgba(255,165,2,0.06);border:1px solid rgba(255,165,2,0.15);border-radius:var(--radius-sm);text-align:center;color:var(--warning);font-size:0.88rem">⏳ '+Lang.get()==='ar'?'لم يرفع الطالب ملف PDF بعد':'No PDF uploaded yet'+'</div>';
+      }
+      var gradePanel='';
+      if(!isGraded){
+        gradePanel='<div style="margin-top:16px;padding:16px;border-top:1px solid var(--glass-border);display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap">'+
+        '<div style="flex:1;min-width:120px"><label class="form-label">'+Lang.get()==='ar'?'الدرجة':'Grade'+'</label><input class="form-input" type="number" id="grade_'+s.id+'" min="0" max="'+(s.maxScore||100)+'" placeholder="0 / '+(s.maxScore||100)+'"></div>'+
+        '<div style="flex:2;min-width:200px"><label class="form-label">'+Lang.get()==='ar'?'ملاحظات':'Feedback'+'</label><input class="form-input" id="fb_'+s.id+'" placeholder="'+Lang.get()==='ar'?'ملاحظات على التصحيح...':'Correction notes...'+'"></div>'+
+        '<button class="btn btn-primary" onclick="Admin.gradeSubmission(\''+s.id+'\')">'+Lang.get()==='ar'?'تقييم وحفظ':'Grade & Save'+'</button></div>';
+      }else{
+        gradePanel='<div style="margin-top:16px;padding:14px;border-radius:var(--radius-sm);background:rgba(0,245,212,0.06);border:1px solid rgba(0,245,212,0.15);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px"><div><strong style="color:var(--accent);font-size:1.1rem">'+s.score+' / '+s.maxScore+'</strong>'+
+        (s.feedback?'<div style="font-size:0.82rem;color:var(--text-secondary);margin-top:4px">💬 '+Utils.escHtml(s.feedback)+'</div>':'')+'</div>'+
+        (s.annotation?'<div style="font-size:0.75rem;color:var(--text-muted)">📝 '+Lang.get()==='ar'?'يوجد تأشيرات':'Has annotations'+'</div>':'')+'</div>';
+      }
+      return '<div class="card" style="margin-bottom:16px;overflow:visible"><div class="card-header"><h3 class="card-title">'+Utils.escHtml(s.studentName||'طالب')+' - '+(h?Utils.escHtml(h.title):'')+'</h3>'+
+      '<span class="badge '+(isGraded?'badge-accent':'badge-warning')+'">'+(isGraded?'✅ '+s.score+'/'+s.maxScore:'⏳ '+Lang.t('hwPending'))+'</span></div>'+
+      '<div style="font-size:0.82rem;color:var(--text-muted);margin-bottom:8px">📅 '+Utils.formatDate(s.date)+'</div>'+
+      pdfViewer+gradePanel+'</div>'
+    }).join('')+'</div></div>';
+  },
+  _penColor:'red',
+  _penDrawing:false,
+  _penLastX:0,
+  _penLastY:0,
+  setPenColor:function(color,id){
+    Admin._penColor=color;
+    var canvas=document.getElementById('hwCanvas_'+id);
+    if(canvas)canvas.style.cursor='crosshair';
+  },
+  _getCanvasPos:function(e,canvas){
+    var r=canvas.getBoundingClientRect();
+    var x=(e.clientX||e.pageX)-r.left;
+    var y=(e.clientY||e.pageY)-r.top;
+    return {x:x*(canvas.width/r.width),y:y*(canvas.height/r.height)};
+  },
+  penStart:function(e,id){
+    var canvas=document.getElementById('hwCanvas_'+id);if(!canvas)return;
+    Admin._penDrawing=true;
+    var pos=Admin._getCanvasPos(e,canvas);
+    Admin._penLastX=pos.x;Admin._penLastY=pos.y;
+    var ctx=canvas.getContext('2d');ctx.beginPath();ctx.moveTo(pos.x,pos.y);
+  },
+  penMove:function(e,id){
+    if(!Admin._penDrawing)return;
+    var canvas=document.getElementById('hwCanvas_'+id);if(!canvas)return;
+    var ctx=canvas.getContext('2d');
+    var pos=Admin._getCanvasPos(e,canvas);
+    ctx.strokeStyle=Admin._penColor==='green'?'#00c4aa':'#ff4757';
+    ctx.lineWidth=3;ctx.lineCap='round';ctx.lineJoin='round';
+    ctx.beginPath();ctx.moveTo(Admin._penLastX,Admin._penLastY);ctx.lineTo(pos.x,pos.y);ctx.stroke();
+    Admin._penLastX=pos.x;Admin._penLastY=pos.y;
+  },
+  penEnd:function(id){
+    Admin._penDrawing=false;
+    var canvas=document.getElementById('hwCanvas_'+id);
+    if(canvas){
+      var dataUrl=canvas.toDataURL();
+      var subs=DB.hwSubmissions();var sub=subs.find(function(s){return s.id===id});
+      if(sub){sub.annotation=dataUrl;DB.saveHwSubmissions(subs)}
+    }
+  },
+  penTouchStart:function(e,id){
+    e.preventDefault();
+    var touch=e.touches[0];
+    Admin.penStart({clientX:touch.clientX,clientY:touch.clientY},id);
+  },
+  penTouchMove:function(e,id){
+    e.preventDefault();
+    var touch=e.touches[0];
+    Admin.penMove({clientX:touch.clientX,clientY:touch.clientY},id);
+  },
+  clearPen:function(id){
+    var canvas=document.getElementById('hwCanvas_'+id);if(!canvas)return;
+    var ctx=canvas.getContext('2d');ctx.clearRect(0,0,canvas.width,canvas.height);
+    var subs=DB.hwSubmissions();var sub=subs.find(function(s){return s.id===id});
+    if(sub){delete sub.annotation;DB.saveHwSubmissions(subs)}
+    showToast(Lang.get()==='ar'?'تم مسح التأشيرات':'Annotations cleared');
   },
   gradeSubmission:function(id){
-    var input=document.getElementById('grade_'+id);if(!input)return;
+    var input=document.getElementById('grade_'+id);var fb=document.getElementById('fb_'+id);
+    if(!input)return;
     var score=parseInt(input.value)||0;
+    var feedback=fb?fb.value.trim():'';
     var subs=DB.hwSubmissions();
     var sub=subs.find(function(s){return s.id===id});if(!sub)return;
-    sub.score=score;sub.status='graded';sub.gradedAt=Date.now();
+    sub.score=score;sub.feedback=feedback;sub.status='graded';sub.gradedAt=Date.now();
+    var canvas=document.getElementById('hwCanvas_'+id);
+    if(canvas&&canvas.width>0){sub.annotation=canvas.toDataURL()}
     DB.saveHwSubmissions(subs);
     var u=DB.getUserById(sub.studentId);
     if(u){
@@ -1893,19 +2012,63 @@ const Student={
     '<div class="content-grid">'+
     hws.map(function(hw){var mySub=subs.find(function(s){return s.hwId===hw.id});
       var isOverdue=Date.now()>hw.dueDate&&!mySub;
+      var gradedHtml='';
+      if(mySub&&mySub.status==='graded'){
+        gradedHtml='<div style="margin-top:14px;padding:14px;border-radius:var(--radius-sm);background:rgba(0,245,212,0.06);border:1px solid rgba(0,245,212,0.15)"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><strong style="color:var(--accent)">'+Lang.t('hwScore')+': '+mySub.score+' / '+hw.maxScore+'</strong><span class="badge badge-accent">✅ '+Lang.t('hwGraded')+'</span></div>'+
+        (mySub.feedback?'<div style="font-size:0.85rem;color:var(--text-secondary);line-height:1.8;margin-top:6px"><strong>'+Lang.get()==='ar'?'ملاحظات المعلم':'Teacher Notes'+':</strong> '+Utils.escHtml(mySub.feedback)+'</div>':'')+'</div>';
+      }
+      var subPdfHtml='';
+      if(mySub&&mySub.pdfData){
+        subPdfHtml='<div style="margin-top:14px"><div style="font-size:0.82rem;font-weight:700;color:var(--accent);margin-bottom:8px">'+Lang.get()==='ar'?'واجبك المُسلّم':'Submitted Homework'+':</div><div class="hw-pdf-preview"><object data="'+mySub.pdfData+'" type="application/pdf" width="100%" height="500"><p>'+Lang.get()==='ar'?'المتصفح لا يدعم عرض PDF':'Browser does not support PDF'+'</p></object></div></div>';
+      }
       return '<div class="card fade-in"><div class="card-header"><h3 class="card-title">'+Utils.escHtml(hw.title)+'</h3>'+
-      (mySub?'<span class="badge badge-accent">'+Lang.t('hwScore')+': '+mySub.score+'/'+hw.maxScore+'</span>':isOverdue?'<span class="badge badge-danger">'+(Lang.get()==='ar'?'منتهي':'Overdue')+'</span>':'<span class="badge badge-warning">'+Lang.t('hwPending')+'</span>')+'</div>'+
+      (mySub?'<span class="badge '+(mySub.status==='graded'?'badge-accent':'badge-warning')+'">'+(mySub.status==='graded'?Lang.t('hwGraded')+': '+mySub.score+'/'+hw.maxScore:Lang.t('hwPending'))+'</span>':isOverdue?'<span class="badge badge-danger">'+(Lang.get()==='ar'?'منتهي':'Overdue')+'</span>':'<span class="badge badge-warning">'+Lang.t('hwPending')+'</span>')+'</div>'+
       '<div style="font-size:0.88rem;color:var(--text-secondary);line-height:2"><div>📅 '+Lang.t('hwDueDate')+': '+Utils.formatDate(hw.dueDate)+'</div>'+
       (hw.instructions?'<div style="margin-top:8px">'+Utils.escHtml(hw.instructions)+'</div>':'')+
       '<div style="margin-top:12px;padding:12px;border-radius:var(--radius-sm);background:var(--glass);border:1px solid var(--glass-border)"><strong>'+Lang.get()==='ar'?'السؤال':'Question'+':</strong><br>'+Utils.escHtml(hw.question)+'</div></div>'+
-      (!mySub&&!isOverdue?'<div style="margin-top:14px"><div class="form-group"><label class="form-label">'+Lang.get()==='ar'?'إجابتك':'Your Answer'+':</label><textarea class="form-textarea" id="hwAns_'+hw.id+'" rows="3" placeholder="'+Lang.get()==='ar'?'اكتب إجابتك هنا...':'Write your answer here...'+'"></textarea></div>'+
-      '<button class="btn btn-primary btn-block" onclick="Student.submitHomework(\''+hw.id+'\')">'+Lang.t('hwSubmit')+'</button></div>':'')+'</div>'}).join('')+'</div></div>';
+      subPdfHtml+gradedHtml+
+      (!mySub&&!isOverdue?'<div style="margin-top:14px">'+
+      '<div class="form-group"><label class="form-label">'+(Lang.get()==='ar'?'ارفع واجبك كـ PDF':'Upload homework as PDF')+':</label>'+
+      '<div class="hw-upload-area" id="hwUpload_'+hw.id+'" ondragover="event.preventDefault();this.classList.add(\'dragover\')" ondragleave="this.classList.remove(\'dragover\')" ondrop="event.preventDefault();this.classList.remove(\'dragover\');Student.handleHwDrop(event,\''+hw.id+'\')">'+
+      '<input type="file" id="hwFile_'+hw.id+'" accept=".pdf" onchange="Student.handleHwFileSelect(\''+hw.id+'\')" style="display:none">'+
+      '<div style="text-align:center;cursor:pointer" onclick="document.getElementById(\'hwFile_'+hw.id+'\').click()">'+
+      '<div style="font-size:2rem;margin-bottom:8px">📄</div>'+
+      '<div style="font-weight:700;font-size:0.9rem">'+(Lang.get()==='ar'?'اضغط هنا أو اسحب ملف PDF':'Click here or drag PDF file')+'</div>'+
+      '<div style="font-size:0.75rem;color:var(--text-muted);margin-top:4px" id="hwFileName_'+hw.id+'"></div>'+
+      '</div></div></div>'+
+      '<div id="hwPdfPreview_'+hw.id+'" style="margin-top:12px"></div>'+
+      '<button class="btn btn-primary btn-block" id="hwSubmitBtn_'+hw.id+'" onclick="Student.submitHomework(\''+hw.id+'\')" disabled>'+Lang.t('hwSubmit')+'</button></div>':'')+'</div>'}).join('')+'</div></div>';
+  },
+  _hwPdfs:{},
+  handleHwFileSelect:function(hwId){
+    var input=document.getElementById('hwFile_'+hwId);if(!input||!input.files[0])return;
+    var file=input.files[0];
+    if(file.type!=='application/pdf'){showToast((Lang.get()==='ar'?'يجب رفع ملف PDF فقط':'PDF files only'),'error');return}
+    var self=this;
+    var reader=new FileReader();
+    reader.onload=function(e){
+      self._hwPdfs[hwId]=e.target.result;
+      var nameEl=document.getElementById('hwFileName_'+hwId);
+      if(nameEl)nameEl.textContent='✅ '+file.name+' ('+Math.round(file.size/1024)+' KB)';
+      var previewEl=document.getElementById('hwPdfPreview_'+hwId);
+      if(previewEl)previewEl.innerHTML='<object data="'+e.target.result+'" type="application/pdf" width="100%" height="400" style="border-radius:var(--radius-sm);border:1px solid var(--glass-border)"><p>PDF Preview</p></object>';
+      var btn=document.getElementById('hwSubmitBtn_'+hwId);if(btn)btn.disabled=false;
+    };
+    reader.readAsDataURL(file);
+  },
+  handleHwDrop:function(hwId,e){
+    var file=e.dataTransfer.files[0];
+    if(!file||file.type!=='application/pdf')return;
+    var input=document.getElementById('hwFile_'+hwId);
+    if(input){var dt=new DataTransfer();dt.items.add(file);input.files=dt.files;this.handleHwFileSelect(hwId)}
   },
   submitHomework:function(hwId){
     var hw=DB.homeworks().find(function(h){return h.id===hwId});if(!hw)return;
-    var ans=document.getElementById('hwAns_'+hwId);if(!ans||!ans.value.trim())return;
-    var sub={id:Utils.uid(),hwId:hwId,studentId:App.user.id,studentName:App.user.name,answer:ans.value.trim(),score:0,maxScore:hw.maxScore,date:Date.now(),status:'pending'};
+    var pdfData=this._hwPdfs[hwId];
+    if(!pdfData){showToast((Lang.get()==='ar'?'ارفع ملف PDF أولاً':'Upload PDF first'),'error');return}
+    var sub={id:Utils.uid(),hwId:hwId,studentId:App.user.id,studentName:App.user.name,pdfData:pdfData,score:0,maxScore:hw.maxScore,date:Date.now(),status:'pending'};
     var subs=DB.hwSubmissions();subs.push(sub);DB.saveHwSubmissions(subs);
+    delete this._hwPdfs[hwId];
     showToast(Lang.get()==='ar'?'تم تسليم الواجب بنجاح!':'Homework submitted!');
     this.switchSection('homework');
   }
