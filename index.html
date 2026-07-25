@@ -43,7 +43,8 @@ html[data-theme="light"] .community-header{background:rgba(255,255,255,0.6)}
 html[data-theme="light"] .community-input{background:rgba(255,255,255,0.6)}
 html[data-theme="light"] .community-input input{background:rgba(0,0,0,0.04);border-color:rgba(0,0,0,0.1);color:#1a1a2e}
 html[data-theme="light"] .mobile-bottom-nav{background:rgba(255,255,255,0.97);border-top-color:rgba(0,0,0,0.08)}
-html[data-theme="light"] .mobile-more-panel{background:rgba(255,255,255,0.97);border-color:rgba(0,0,0,0.08)}
+html[data-theme="light"] .mobile-sidebar-header{border-bottom-color:rgba(0,0,0,0.08)}
+html[data-theme="light"] .mobile-sidebar-close{background:rgba(0,0,0,0.04);border-color:rgba(0,0,0,0.1)}
 html{scroll-behavior:smooth}
 body{font-family:var(--font-ar);background:var(--bg-primary);color:var(--text-primary);line-height:1.7;overflow-x:hidden;min-height:100vh;background:radial-gradient(ellipse at 20% 50%,rgba(28,37,65,0.5) 0%,transparent 50%),radial-gradient(ellipse at 80% 20%,rgba(0,245,212,0.03) 0%,transparent 40%),radial-gradient(ellipse at 50% 80%,rgba(91,141,239,0.03) 0%,transparent 40%),var(--bg-primary)}
 ::selection{background:var(--accent);color:var(--bg-primary)}
@@ -327,18 +328,14 @@ tr:hover td{background:rgba(0,245,212,0.03)}
 .notif-item-msg{font-size:0.75rem;color:var(--text-secondary);line-height:1.6}
 .notif-item-time{font-size:0.68rem;color:var(--text-muted);margin-top:3px}
 .notif-empty{padding:40px 16px;text-align:center;color:var(--text-muted);font-size:0.85rem}
-.mobile-bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:10000;background:rgba(11,19,43,0.97);backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px);border-top:1px solid var(--glass-border);padding:6px 0 env(safe-area-inset-bottom,6px)}
-.mobile-bottom-nav-inner{display:flex;justify-content:space-around;align-items:center}
-.mobile-bottom-item{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 4px;border:none;background:none;cursor:pointer;transition:var(--transition);color:var(--text-muted);min-width:0;flex:1;border-radius:var(--radius-xs)}
-.mobile-bottom-item.active{color:var(--accent)}
-.mobile-bottom-item:active{transform:scale(0.9)}
-.mobile-bottom-icon{font-size:1.3rem;line-height:1}
-.mobile-bottom-label{font-size:0.6rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:60px;text-align:center}
-.mobile-bottom-more{position:relative}
-.mobile-bottom-more .mobile-more-panel{display:none;position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:rgba(11,19,43,0.97);backdrop-filter:blur(30px);border:1px solid var(--glass-border);border-radius:var(--radius);padding:8px;min-width:200px;max-height:60vh;overflow-y:auto;box-shadow:0 -10px 40px rgba(0,0,0,0.5);z-index:10001}
-.mobile-bottom-more .mobile-more-panel.show{display:block}
-.mobile-more-btn{display:flex;align-items:center;gap:10px;padding:10px 14px;border:none;background:none;color:var(--text-secondary);font-size:0.85rem;font-family:var(--font-ar);cursor:pointer;width:100%;border-radius:var(--radius-xs);transition:var(--transition)}
-.mobile-more-btn:hover,.mobile-more-btn:active{background:rgba(0,245,212,0.06);color:var(--accent)}
+.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9991;transition:opacity .3s}
+.sidebar-overlay.show{display:block;animation:fadeIn .2s ease}
+.mobile-sidebar-close{display:none;position:absolute;top:16px;left:16px;width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.06);border:1px solid var(--glass-border);color:var(--text-primary);font-size:1.2rem;cursor:pointer;align-items:center;justify-content:center;transition:var(--transition);z-index:10}
+.mobile-sidebar-close:hover{background:rgba(255,71,87,0.15);color:var(--danger);border-color:rgba(255,71,87,0.3)}
+.mobile-sidebar-header{display:none;padding:20px 24px;padding-top:24px;border-bottom:1px solid var(--glass-border);margin-bottom:8px}
+.mobile-sidebar-header .sidebar-avatar{width:52px;height:52px;border-radius:50%;border:2px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:1.3rem;background:linear-gradient(135deg,var(--cobalt),var(--bg-primary));box-shadow:0 0 20px rgba(0,245,212,0.2);margin-bottom:12px}
+.mobile-sidebar-header .sidebar-name{font-size:1rem;font-weight:800}
+.mobile-sidebar-header .sidebar-role{font-size:0.78rem;color:var(--text-muted);margin-top:2px}
 @media(max-width:1024px){
 .hero-visual{display:none}
 .sidebar{width:70px;overflow:visible}
@@ -349,24 +346,25 @@ tr:hover td{background:rgba(0,245,212,0.03)}
 }
 @media(max-width:768px){
 html{overflow-x:hidden}
-body{padding-bottom:72px}
+body.sidebar-open{overflow:hidden}
 .nav-links{display:none}
 .nav-hamburger{display:flex}
-.mobile-bottom-nav{display:block}
 .navbar{padding:0 12px;height:56px}
 .mobile-menu{top:56px}
 .mobile-menu .nav-link{font-size:1.1rem;padding:14px 32px}
-.sidebar{display:block!important;width:280px!important;position:fixed!important;top:0;bottom:0;right:0;z-index:9993;background:rgba(11,19,43,0.98)!important;border-left:1px solid var(--glass-border)!important;padding:76px 0 20px!important;overflow-y:auto;transition:transform .3s ease;transform:translateX(100%)}
-.sidebar.open{transform:translateX(0)}
+.sidebar{display:block!important;width:280px!important;position:fixed!important;top:0;bottom:0;right:0!important;left:auto!important;z-index:9993;background:var(--bg-primary)!important;border-left:1px solid var(--glass-border)!important;border-right:none!important;padding:0!important;overflow-y:auto;transform:translateX(101%);transition:transform .3s cubic-bezier(0.25,0.46,0.45,0.94);box-shadow:none}
+.sidebar.open{transform:translateX(0);box-shadow:-20px 0 60px rgba(0,0,0,0.5)}
 .sidebar-link span:not(.link-icon){display:inline!important}
 .sidebar-link{justify-content:flex-start!important;padding:12px 24px!important}
 .sidebar-section{display:block!important;padding:8px 24px!important}
-.main-content{margin-right:0;padding:16px;padding-top:68px;padding-bottom:80px}
+.mobile-sidebar-close{display:flex}
+.mobile-sidebar-header{display:block}
+.main-content{margin-right:0!important;padding:16px;padding-top:72px}
 .dashboard{padding-top:0}
 .form-row{grid-template-columns:1fr}
 .community-sidebar{display:none}
 .community-sidebar.open{display:block;width:100%;position:absolute;z-index:10;height:100%}
-.community-layout{position:relative;height:calc(100vh - 56px - 72px)}
+.community-layout{position:relative;height:calc(100vh - 56px)}
 .hero{padding:100px 16px 40px}
 .hero::before,.hero::after{display:none}
 .hero-title{font-size:clamp(1.8rem,6vw,2.8rem)}
@@ -403,7 +401,7 @@ body{padding-bottom:72px}
 .badge-card{padding:16px 12px}
 .badge-icon{font-size:2.2rem}
 .community-header{padding:12px 16px}
-.community-messages{padding:14px 16px;padding-bottom:70px}
+.community-messages{padding:14px 16px}
 .community-input{padding:12px 16px}
 .community-input input{padding:12px 16px;font-size:0.85rem}
 .message{max-width:88%;padding:12px 16px;font-size:0.85rem}
@@ -452,7 +450,6 @@ body{padding-bottom:72px}
 </nav>
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="App.toggleSidebar()"></div>
 <div class="mobile-menu" id="mobileMenu"></div>
-<div id="mobileBottomNav"></div>
 <div id="app"></div>
 <script>
 "use strict";
@@ -752,69 +749,8 @@ const App={
       case'community':if(!this.requireAuth())return;app.innerHTML=CommunityPage.render();CommunityPage.init();break;
       case'tournament':if(!this.requireAuth())return;app.innerHTML=Tournament.render();break;
     }
-    this.renderMobileBottomNav();
+    if(window.innerWidth<=768)this._initSwipeClose();
     window.scrollTo(0,0);
-  },
-  renderMobileBottomNav(){
-    var c=document.getElementById('mobileBottomNav');if(!c)return;
-    if(!this.user||this.currentView==='landing'||this.currentView==='login'||this.currentView==='signup'||this.currentView==='pending'||this.currentView==='banned'){c.innerHTML='';return}
-    var isStudent=this.user.role==='student';
-    var isAdmin=this.user.role==='admin';
-    var v=this.currentView;var s=this.currentSubView||'overview';
-    if(isStudent){
-      var mainItems=[
-        {icon:'🏠',label:'الرئيسية',view:'student',sub:'overview'},
-        {icon:'🎬',label:'الدروس',view:'student',sub:'lessons'},
-        {icon:'📝',label:'الامتحانات',view:'student',sub:'exams'},
-        {icon:'🤖',label:'المساعد',view:'student',sub:'aibot'},
-        {icon:'💬',label:'المجتمع',view:'community'}
-      ];
-      var moreItems=[
-        {icon:'💰',label:'محفظتي',view:'student',sub:'wallet'},
-        {icon:'📚',label:'الواجبات',view:'student',sub:'homework'},
-        {icon:'📁',label:'الملفات',view:'student',sub:'files'},
-        {icon:'📊',label:'تقاريري',view:'student',sub:'reports'},
-        {icon:'🏆',label:'الإنجازات',view:'student',sub:'badges'},
-        {icon:'👤',label:'معلوماتي',view:'student',sub:'profile'},
-        {icon:'👨‍👩‍👦',label:'ولي الأمر',view:'student',sub:'parent'},
-        {icon:'🏆',label:'البطولة',view:'tournament'}
-      ];
-    }else{
-      var mainItems=[
-        {icon:'📊',label:'نظرة عامة',view:'admin',sub:'overview'},
-        {icon:'👥',label:'الطلاب',view:'admin',sub:'students'},
-        {icon:'🎬',label:'الدروس',view:'admin',sub:'lessons'},
-        {icon:'📝',label:'الامتحانات',view:'admin',sub:'exams'},
-        {icon:'💬',label:'المجتمع',view:'community'}
-      ];
-      var moreItems=[
-        {icon:'⏳',label:'قيد المراجعة',view:'admin',sub:'pending'},
-        {icon:'📁',label:'الملفات',view:'admin',sub:'files'},
-        {icon:'💰',label:'المحفظة',view:'admin',sub:'wallet'},
-        {icon:'📚',label:'الواجبات',view:'admin',sub:'homework'},
-        {icon:'📋',label:'التقارير',view:'admin',sub:'reports'},
-        {icon:'📢',label:'البث',view:'admin',sub:'broadcast'},
-        {icon:'🤖',label:'الذكاء الاصطناعي',view:'admin',sub:'aibot'},
-        {icon:'⚙️',label:'الإعدادات',view:'admin',sub:'settings'},
-        {icon:'🏆',label:'البطولة',view:'tournament'}
-      ];
-    }
-    var isActive=function(item){
-      if(item.view!==v)return'';
-      if(item.view==='community'||item.view==='tournament')return item.view===v?'active':'';
-      return item.sub===s?'active':'';
-    };
-    var html='<div class="mobile-bottom-nav"><div class="mobile-bottom-nav-inner">';
-    mainItems.forEach(function(item){
-      html+='<button class="mobile-bottom-item '+isActive(item)+'" onclick="App.navigate(\''+item.view+'\''+(item.sub?+',\''+item.sub+'\'':'')+')"><span class="mobile-bottom-icon">'+item.icon+'</span><span class="mobile-bottom-label">'+item.label+'</span></button>';
-    });
-    html+='<div class="mobile-bottom-more"><button class="mobile-bottom-item" onclick="var p=this.querySelector(\'.mobile-more-panel\');p.classList.toggle(\'show\')"><span class="mobile-bottom-icon">☰</span><span class="mobile-bottom-label">المزيد</span><div class="mobile-more-panel">';
-    moreItems.forEach(function(item){
-      html+='<button class="mobile-more-btn" onclick="App.navigate(\''+item.view+'\''+(item.sub?+',\''+item.sub+'\'':'')+')">'+item.icon+' '+item.label+'</button>';
-    });
-    html+='</div></button></div></div></div>';
-    c.innerHTML=html;
-    document.addEventListener('click',function(e){var mp=document.querySelector('.mobile-more-panel.show');if(mp&&!e.target.closest('.mobile-bottom-more'))mp.classList.remove('show')},true);
   },
   requireAuth(role){
     if(!this.user){this.navigate('login');return false}
@@ -866,8 +802,15 @@ const App={
     var ov=document.getElementById('sidebarOverlay');
     if(!sb)return;
     var isOpen=sb.classList.contains('open');
-    if(isOpen){sb.classList.remove('open');ov.classList.remove('show');document.body.style.overflow=''}
-    else{sb.classList.add('open');ov.classList.add('show');document.body.style.overflow='hidden'}
+    if(isOpen){sb.classList.remove('open');ov.classList.remove('show');document.body.classList.remove('sidebar-open')}
+    else{sb.classList.add('open');ov.classList.add('show');document.body.classList.add('sidebar-open')}
+  },
+  _initSwipeClose(){
+    var sb=document.querySelector('.sidebar');if(!sb)return;
+    var startX=0,dx=0;
+    sb.addEventListener('touchstart',function(e){startX=e.touches[0].clientX;dx=0},{passive:true});
+    sb.addEventListener('touchmove',function(e){dx=e.touches[0].clientX-startX;if(dx>0)sb.style.transform='translateX('+(100-Math.min(dx/2.8,100))+'%)'},{passive:true});
+    sb.addEventListener('touchend',function(){if(dx>80)App.toggleSidebar();sb.style.transform='';},{passive:true});
   },
   renderNavbar(){
     var T=Lang.t.bind(Lang);
@@ -1138,7 +1081,7 @@ const Admin={
       {id:'aibot',icon:'🤖',label:Lang.t('adminAI')},
       {id:'settings',icon:'⚙️',label:Lang.t('settingsTitle')}
     ];
-    return '<div class="sidebar" id="adminSidebar"><div class="sidebar-section">التحكم</div>'+
+    return '<div class="sidebar" id="adminSidebar"><button class="mobile-sidebar-close" onclick="App.toggleSidebar()">✕</button><div class="mobile-sidebar-header"><div class="sidebar-avatar">👑</div><div class="sidebar-name">'+Utils.escHtml(App.user?App.user.name:'Admin')+'</div><div class="sidebar-role">مدير المنصة</div></div><div class="sidebar-section">التحكم</div>'+
     links.map(function(l){return '<button class="sidebar-link '+(s===l.id||(!s&&l.id==='overview')?'active':'')+'" onclick="Admin.switchSection(\''+l.id+'\');if(window.innerWidth<=768)App.toggleSidebar()"><span class="link-icon">'+l.icon+'</span><span>'+l.label+'</span></button>'}).join('')+
     '</div>';
   },
@@ -1653,7 +1596,7 @@ const Student={
   renderSidebar:function(){
     var s=App.currentSubView;
     var links=[{id:'overview',icon:'🏠',label:'الرئيسية'},{id:'lessons',icon:'🎬',label:'الدروس'},{id:'wallet',icon:'💰',label:'محفظتي'},{id:'exams',icon:'📝',label:'الامتحانات'},{id:'homework',icon:'📚',label:Lang.t('hwTitle')},{id:'files',icon:'📁',label:'الملفات والمراجعات'},{id:'reports',icon:'📊',label:'تقاريري'},{id:'badges',icon:'🏆',label:'الإنجازات'},{id:'profile',icon:'👤',label:'معلوماتي الشخصية'},{id:'parent',icon:'👨‍👩‍👦',label:'بيانات ولي الأمر'},{id:'aibot',icon:'🤖',label:'المساعد الذكي'}];
-    return '<div class="sidebar" id="studentSidebar"><div class="sidebar-section">لوحتي</div>'+
+    return '<div class="sidebar" id="studentSidebar"><button class="mobile-sidebar-close" onclick="App.toggleSidebar()">✕</button><div class="mobile-sidebar-header"><div class="sidebar-avatar">'+Utils.escHtml(App.user?App.user.name.charAt(0):'🎓')+'</div><div class="sidebar-name">'+Utils.escHtml(App.user?App.user.name:'Student')+'</div><div class="sidebar-role">'+Utils.escHtml((App.user?App.user.grade:'')+' — '+(App.user?App.user.track:''))+'</div></div><div class="sidebar-section">لوحتي</div>'+
     links.map(function(l){return '<button class="sidebar-link '+(s===l.id||(!s&&l.id==='overview')?'active':'')+'" onclick="Student.switchSection(\''+l.id+'\');if(window.innerWidth<=768)App.toggleSidebar()"><span class="link-icon">'+l.icon+'</span><span>'+l.label+'</span></button>'}).join('')+'</div>';
   },
   switchSection:function(sub){App.currentSubView=sub;App.navigate('student',sub)},
