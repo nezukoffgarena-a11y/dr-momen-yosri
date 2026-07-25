@@ -1225,7 +1225,8 @@ const Admin={
     '<div class="content-grid">'+
     users.map(function(u){return '<div class="card fade-in"><div class="card-header"><h3 class="card-title">'+Utils.escHtml(u.name)+'</h3><span class="badge badge-accent">'+Utils.escHtml(u.grade)+'</span></div>'+
     '<div style="text-align:center;margin:16px 0"><div style="font-size:2rem;font-weight:900;color:var(--accent)">'+Utils.formatMoney(u.wallet||0)+'</div><div style="font-size:0.78rem;color:var(--text-muted)">الرصيد الحالي</div></div>'+
-    '<form onsubmit="Admin.addBalance(event,\''+u.id+'\')" style="display:flex;gap:8px"><input class="form-input" type="number" id="bal_'+u.id+'" placeholder="المبلغ" min="1" required style="flex:1"><button type="submit" class="btn btn-sm btn-primary">+ إضافة</button></form>'+
+    '<form onsubmit="Admin.addBalance(event,\''+u.id+'\')" style="display:flex;gap:8px;margin-bottom:8px"><input class="form-input" type="number" id="bal_'+u.id+'" placeholder="المبلغ" min="1" required style="flex:1"><button type="submit" class="btn btn-sm btn-primary">+ إضافة</button></form>'+
+    '<form onsubmit="Admin.deductBalance(event,\''+u.id+'\')" style="display:flex;gap:8px"><input class="form-input" type="number" id="dbal_'+u.id+'" placeholder="المبلغ" min="1" required style="flex:1"><button type="submit" class="btn btn-sm btn-danger">- خصم</button></form>'+
     '<div style="margin-top:12px"><button class="btn btn-sm btn-secondary btn-block" onclick="Admin.viewTransactions(\''+u.id+'\')">📋 سجل المعاملات</button></div></div>'}).join('')+
     (users.length===0?'<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">💰</div><p>لا يوجد طلاب مقبولين بعد</p></div>':'')+'</div></div>';
   },
@@ -1237,6 +1238,17 @@ const Admin={
     DB.updateUser(userId,{wallet:(user.wallet||0)+amount});
     var txns=DB.transactions();txns.push({id:Utils.uid(),userId:userId,amount:amount,type:'credit',note:'إيداع من الإدارة',date:Date.now()});DB.saveTransactions(txns);
     showToast('تم إضافة '+Utils.formatMoney(amount)+' لمحفظة '+user.name);
+    this.switchSection('wallet');
+  },
+  deductBalance:function(e,userId){
+    e.preventDefault();
+    var input=document.getElementById('dbal_'+userId);
+    var amount=parseInt(input.value)||0;if(amount<=0)return;
+    var user=DB.getUserById(userId);
+    if((user.wallet||0)<amount){showToast('الرصيد غير كافي! الرصيد الحالي: '+Utils.formatMoney(user.wallet||0),'error');return}
+    DB.updateUser(userId,{wallet:(user.wallet||0)-amount});
+    var txns=DB.transactions();txns.push({id:Utils.uid(),userId:userId,amount:amount,type:'debit',note:'خصم من الإدارة',date:Date.now()});DB.saveTransactions(txns);
+    showToast('تم خصم '+Utils.formatMoney(amount)+' من محفظة '+user.name,'error');
     this.switchSection('wallet');
   },
   viewTransactions:function(userId){
