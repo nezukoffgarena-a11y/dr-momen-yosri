@@ -1461,7 +1461,7 @@ const Student={
     if(App.currentSubView==='aibot')setTimeout(function(){AIBot.init()},50);
   },
   overview:function(){
-    var u=App.user;var lessons=DB.lessons().filter(function(l){return l.grade===u.grade&&l.track===u.track});
+    var u=App.user;var lessons=DB.lessons();
     var notifs=DB.notifications().slice(-5).reverse();var results=DB.examResults().filter(function(r){return r.studentId===u.id});
     var userUnlocks=(DB._get('unlocks_'+u.id))||[];
     return '<div class="fade-in"><div class="page-header"><h1 class="page-title">مرحباً، '+Utils.escHtml(u.name)+' 👋</h1><p class="page-subtitle">'+Utils.escHtml(u.grade)+' — '+Utils.escHtml(u.track)+'</p></div>'+
@@ -1479,7 +1479,7 @@ const Student={
       '<div class="lesson-footer"><span class="lesson-price">'+Utils.formatMoney(l.price)+'</span>'+(unlocked?'<span class="badge badge-accent">✅ مفتوح</span>':'<button class="btn btn-sm btn-primary" onclick="Student.unlockLesson(\''+l.id+'\')">🔓 فتح الدرس</button>')+'</div></div></div>'}).join('')+'</div>':'')+'</div>';
   },
   lessonsView:function(){
-    var u=App.user;var lessons=DB.lessons().filter(function(l){return l.grade===u.grade&&l.track===u.track});
+    var u=App.user;var lessons=DB.lessons();
     var userUnlocks=(DB._get('unlocks_'+u.id))||[];
     return '<div class="fade-in"><div class="page-header"><h1 class="page-title">الدروس المتاحة</h1><p class="page-subtitle">'+lessons.length+' درس لمادتك ومسارك</p></div>'+
     '<div class="content-grid">'+
@@ -1742,7 +1742,7 @@ const Student={
   },
   homeworkView:function(){
     var u=App.user;
-    var hws=DB.homeworks().filter(function(h){return h.grade===u.grade&&(h.track===u.track||!h.track)});
+    var hws=DB.homeworks();
     var subs=DB.hwSubmissions().filter(function(s){return s.studentId===u.id});
     return '<div class="fade-in"><div class="page-header"><h1 class="page-title">'+Lang.t('hwTitle')+'</h1></div>'+
     (hws.length===0?'<div class="card empty-state"><div class="empty-icon">📚</div><p>'+(Lang.get()==='ar'?'لا توجد واجبات متاحة':'No homework available')+'</p></div>':'')+
