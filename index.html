@@ -657,7 +657,7 @@ const App={
     const app=document.getElementById('app');
     switch(view){
       case'landing':app.innerHTML=Landing.render();Landing.init();break;
-      case'login':app.innerHTML=Auth.renderLogin();Captcha.generate();break;
+      case'login':app.innerHTML=Auth.renderLogin();break;
       case'signup':app.innerHTML=Auth.renderSignup();break;
       case'pending':app.innerHTML=PendingPage.render();break;
       case'banned':app.innerHTML='<div style="display:flex;align-items:center;justify-content:center;min-height:80vh;padding:40px"><div class="card" style="max-width:500px;text-align:center"><div style="font-size:4rem;margin-bottom:16px">🚫</div><h1 style="font-size:1.5rem;font-weight:900;margin-bottom:12px;color:var(--danger)">تم حظرك</h1><p style="color:var(--text-secondary);line-height:1.8;margin-bottom:24px">تم حظر حسابك من قبل الإدارة. لا يمكنك الوصول للمنصة في الوقت الحالي.<br><br>للإستفسار تواصل مع الإدارة.</p><button class="btn btn-primary" onclick="App.navigate(\'login\')">العودة لصفحة الدخول</button></div></div>';break;
@@ -839,7 +839,6 @@ const Auth={
     '<form onsubmit="Auth.handleLogin(event)">'+
     '<div class="form-group"><label class="form-label">البريد الإلكتروني</label><input class="form-input" type="email" id="loginEmail" required placeholder="example@email.com" dir="ltr" value="'+Utils.escHtml(last.email)+'"></div>'+
     '<div class="form-group"><label class="form-label">كلمة المرور</label><input class="form-input" type="password" id="loginPass" required placeholder="••••••••" dir="ltr" value="'+Utils.escHtml(last.password)+'"></div>'+
-    '<div class="form-group"><label class="form-label">'+Lang.t('loginCaptcha')+'</label><div style="display:flex;gap:10px;align-items:center"><span id="captchaQ" style="font-size:1.1rem;font-weight:700;color:var(--accent);min-width:120px"></span><input class="form-input" type="number" id="captchaAnswer" required placeholder="?" style="width:80px;text-align:center"></div></div>'+
     '<div id="loginError" class="form-error" style="display:none;margin-bottom:14px"></div>'+
     '<label style="display:flex;align-items:center;gap:8px;font-size:0.85rem;color:var(--text-secondary);cursor:pointer;margin-bottom:14px"><input type="checkbox" id="rememberMe" checked> تذكر بيانات الدخول</label>'+
     '<button type="submit" class="btn btn-primary btn-block">دخول</button>'+
@@ -886,10 +885,8 @@ const Auth={
     e.preventDefault();
     var email=document.getElementById('loginEmail').value.trim();
     var pass=document.getElementById('loginPass').value;
-    var captchaAns=document.getElementById('captchaAnswer');
     var errEl=document.getElementById('loginError');
     errEl.style.display='none';
-    if(captchaAns&&!Captcha.check(captchaAns.value)){errEl.textContent=Lang.get()==='ar'?'إجابة التحقق غير صحيحة':'Invalid captcha answer';errEl.style.display='block';Captcha.generate();return}
     var btn=document.querySelector('button[type="submit"]');
     if(btn){btn.disabled=true;btn.textContent=Lang.get()==='ar'?'⏳ جاري الدخول...':'Logging in...'}
     App.login(email,pass,function(result){
