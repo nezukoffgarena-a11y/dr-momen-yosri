@@ -304,6 +304,24 @@ tr:hover td{background:rgba(0,245,212,0.03)}
 @keyframes fadeIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
 .slide-in{animation:slideIn 0.4s ease}
 @keyframes slideIn{from{opacity:0;transform:translateX(30px)}to{opacity:1;transform:translateX(0)}}
+.notif-bell{position:relative;cursor:pointer;font-size:1.2rem;padding:8px;border-radius:50%;transition:var(--transition);background:rgba(255,255,255,0.05)}
+.notif-bell:hover{background:rgba(0,245,212,0.1)}
+.notif-badge{position:absolute;top:2px;right:2px;background:var(--danger);color:#fff;font-size:0.6rem;font-weight:900;min-width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid var(--bg-primary);animation:badgePulse 2s infinite}
+@keyframes badgePulse{0%,100%{transform:scale(1)}50%{transform:scale(1.15)}}
+.notif-dropdown{position:absolute;top:calc(100% + 8px);left:0;width:340px;max-height:400px;overflow-y:auto;background:rgba(11,19,43,0.97);backdrop-filter:blur(30px);border:1px solid var(--glass-border);border-radius:var(--radius);box-shadow:0 20px 60px rgba(0,0,0,0.5);z-index:10000;display:none;animation:fadeIn 0.2s ease}
+.notif-dropdown.show{display:block}
+.notif-dropdown-header{padding:14px 16px;border-bottom:1px solid var(--glass-border);display:flex;align-items:center;justify-content:space-between}
+.notif-dropdown-header h4{font-size:0.9rem;font-weight:800;margin:0}
+.notif-dropdown-body{max-height:340px;overflow-y:auto}
+.notif-item{padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.04);cursor:pointer;transition:var(--transition-fast);display:flex;gap:10px;align-items:flex-start}
+.notif-item:hover{background:rgba(0,245,212,0.04)}
+.notif-item.unread{background:rgba(0,245,212,0.06);border-right:3px solid var(--accent)}
+.notif-item-icon{font-size:1.1rem;flex-shrink:0;margin-top:2px}
+.notif-item-body{flex:1;min-width:0}
+.notif-item-title{font-size:0.82rem;font-weight:700;margin-bottom:2px}
+.notif-item-msg{font-size:0.75rem;color:var(--text-secondary);line-height:1.6}
+.notif-item-time{font-size:0.68rem;color:var(--text-muted);margin-top:3px}
+.notif-empty{padding:40px 16px;text-align:center;color:var(--text-muted);font-size:0.85rem}
 @media(max-width:1024px){
 .hero-visual{display:none}
 .sidebar{width:70px;overflow:visible}
@@ -529,6 +547,7 @@ const DB={
       }
       if(callback)callback();
     }).catch(function(e){console.log('Firebase sync error:',e);if(callback)callback()});
+    if(App.user)setTimeout(function(){Notify.renderBell()},500);
   },
   getAllUsers:function(callback){
     FB_DB.ref('all_users').once('value').then(function(snap){
@@ -564,6 +583,34 @@ function showToast(msg,type){
   c.appendChild(t);
   setTimeout(function(){t.style.opacity='0';t.style.transform='translateX(-30px)';setTimeout(function(){t.remove()},300)},3000);
 }
+const Notify={
+  _storageKey:function(){return 'dm_read_notifs'},
+  getReadIds:function(){try{return JSON.parse(localStorage.getItem(this._storageKey()))||[]}catch(e){return[]}},
+  markRead:function(id){var ids=this.getReadIds();if(ids.indexOf(id)===-1){ids.push(id);localStorage.setItem(this._storageKey(),JSON.stringify(ids))}},
+  markAllRead:function(){var notifs=DB.notifications();var ids=notifs.map(function(n){return n.id});localStorage.setItem(this._storageKey(),JSON.stringify(ids))},
+  unreadCount:function(){var ids=this.getReadIds();return DB.notifications().filter(function(n){return ids.indexOf(n.id)===-1}).length},
+  add:function(type,title,msg){var notifs=DB.notifications();var n={id:Utils.uid(),type:type,title:title,message:msg,date:Date.now()};notifs.push(n);DB.saveNotifications(notifs);if(navigator.vibrate)navigator.vibrate(200);this.renderBell()},
+  renderBell:function(){
+    var c=document.getElementById('notifBellContainer');if(!c)return;
+    var count=this.unreadCount();
+    c.innerHTML='<div class="notif-bell" onclick="Notify.togglePanel(event)">🔔'+(count>0?'<span class="notif-badge">'+count+'</span>':'')+'</div><div class="notif-dropdown" id="notifPanel"></div>';
+  },
+  togglePanel:function(e){
+    e&&e.stopPropagation();
+    var p=document.getElementById('notifPanel');if(!p)return;
+    var isOpen=p.classList.contains('show');
+    document.querySelectorAll('.notif-dropdown.show').forEach(function(el){el.classList.remove('show')});
+    if(!isOpen){this.renderPanel();p.classList.add('show')}
+  },
+  renderPanel:function(){
+    var p=document.getElementById('notifPanel');if(!p)return;
+    var notifs=DB.notifications().slice().reverse();
+    var ids=this.getReadIds();
+    var lang=Lang.get();
+    p.innerHTML='<div class="notif-dropdown-header"><h4>🔔 '+('الإشعارات')+'</h4><button onclick="Notify.markAllRead();Notify.renderBell();Notify.renderPanel()" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:0.75rem">'+('تحديد الكل كمقروء')+'</button></div><div class="notif-dropdown-body">'+(notifs.length===0?'<div class="notif-empty">لا توجد إشعارات بعد</div>':notifs.map(function(n){var isUnread=ids.indexOf(n.id)===-1;var icon=n.type==='lesson'?'📚':n.type==='exam'?'📝':n.type==='homework'?'📋':n.type==='file'?'📁':'📢';return '<div class="notif-item'+(isUnread?' unread':'')+'" onclick="Notify.markRead(\''+n.id+'\');Notify.renderBell();Notify.renderPanel()"><div class="notif-item-icon">'+icon+'</div><div class="notif-item-body"><div class="notif-item-title">'+Utils.escHtml(n.title)+'</div><div class="notif-item-msg">'+Utils.escHtml(n.message)+'</div><div class="notif-item-time">'+Utils.timeAgo(n.date)+'</div></div></div>'}).join('')+'</div>';
+  }
+};
+document.addEventListener('click',function(){document.querySelectorAll('.notif-dropdown.show').forEach(function(el){el.classList.remove('show')})});
 const App={
   currentView:'landing',
   currentSubView:'',
@@ -676,12 +723,13 @@ const App={
       usr.innerHTML=toggles;
     }else if(this.user.role==='admin'){
       nav.innerHTML='<button class="nav-link '+(this.currentView==='admin'?'active':'')+'" onclick="App.navigate(\'admin\')">'+T('navAdmin')+'</button><button class="nav-link '+(this.currentView==='community'?'active':'')+'" onclick="App.navigate(\'community\')">'+T('navCommunity')+'</button><button class="nav-link '+(this.currentView==='tournament'?'active':'')+'" onclick="App.navigate(\'tournament\')">'+T('navTournament')+'</button>';
-      usr.innerHTML=toggles+'<div class="nav-avatar">👑</div><button class="btn btn-sm btn-secondary" onclick="App.logout()">'+T('general')==='general'?'خروج':Lang.get()==='ar'?'خروج':'Logout'+'</button>';
+      usr.innerHTML=toggles+'<div id="notifBellContainer" style="position:relative"></div><div class="nav-avatar">👑</div><button class="btn btn-sm btn-secondary" onclick="App.logout()">'+T('general')==='general'?'خروج':Lang.get()==='ar'?'خروج':'Logout'+'</button>';
     }else{
       nav.innerHTML='<button class="nav-link '+(this.currentView==='student'?'active':'')+'" onclick="App.navigate(\'student\')">'+T('navDashboard')+'</button><button class="nav-link '+(this.currentView==='community'?'active':'')+'" onclick="App.navigate(\'community\')">'+T('navCommunity')+'</button><button class="nav-link '+(this.currentView==='tournament'?'active':'')+'" onclick="App.navigate(\'tournament\')">'+T('navTournament')+'</button>';
-      usr.innerHTML=toggles+'<div class="nav-avatar">'+Utils.escHtml(this.user.name.charAt(0))+'</div><button class="btn btn-sm btn-secondary" onclick="App.logout()">'+(Lang.get()==='ar'?'خروج':'Logout')+'</button>';
+      usr.innerHTML=toggles+'<div id="notifBellContainer" style="position:relative"></div><div class="nav-avatar">'+Utils.escHtml(this.user.name.charAt(0))+'</div><button class="btn btn-sm btn-secondary" onclick="App.logout()">'+(Lang.get()==='ar'?'خروج':'Logout')+'</button>';
     }
     mob.innerHTML=nav.innerHTML+(this.user?'<button class="nav-link" onclick="App.logout()">'+(Lang.get()==='ar'?'خروج':'Logout')+'</button>':'');
+    if(this.user&&this.user.role!=='landing')setTimeout(function(){Notify.renderBell()},100);
   },
   initParticles(){
     const canvas=document.getElementById('particles-canvas');
@@ -1100,6 +1148,7 @@ const Admin={
       DB.saveLessons(lessons);
       document.getElementById('lessonModal').remove();
       showToast(editId?'تم تعديل الدرس بنجاح!':'تم إضافة الدرس بنجاح!');
+      if(!editId)Notify.add('lesson','درس جديد: '+data.title,'تم إضافة درس جديد في '+data.grade+' - '+data.track);
       Admin.switchSection('lessons');
     };
     if(file){
@@ -1144,6 +1193,7 @@ const Admin={
       var files=DB.files();files.push(fileObj);DB.saveFiles(files);
       document.getElementById('fileModal').remove();
       showToast('تم رفع الملف بنجاح!');
+      Notify.add('file','ملف جديد: '+fileObj.name,'ملف جديد '+fileObj.type.toUpperCase()+' متاح للطلاب');
       Admin.switchSection('files');
     };
     reader.readAsDataURL(file);
@@ -1240,7 +1290,9 @@ const Admin={
     var exam={id:Utils.uid(),title:document.getElementById('exTitle').value.trim(),subject:document.getElementById('exSubject').value,grade:document.getElementById('exGrade').value,timeLimit:parseInt(document.getElementById('exTime').value)||30,passPercent:parseInt(document.getElementById('exPass').value)||50,questions:questions,createdAt:Date.now()};
     var exams=DB.exams();exams.push(exam);DB.saveExams(exams);
     this._qCount=0;document.getElementById('examModal').remove();
-    showToast('تم إنشاء الامتحان بنجاح!');this.switchSection('exams');
+    showToast('تم إنشاء الامتحان بنجاح!');
+    Notify.add('exam','امتحان جديد: '+exam.title,'امتحان في '+exam.grade+' - '+exam.questions.length+' سؤال - مدة '+exam.timeLimit+' دقيقة');
+    this.switchSection('exams');
   },
   deleteExam:function(id){if(!confirm('هل أنت متأكد من حذف هذا الامتحان؟'))return;DB.saveExams(DB.exams().filter(function(e){return e.id!==id}));showToast('تم حذف الامتحان','error');this.switchSection('exams')},
   viewExamResults:function(examId){
@@ -1364,6 +1416,7 @@ const Admin={
     DB.saveHomeworks(hws);
     document.getElementById('hwModal').remove();
     showToast(editId?Lang.t('save')+' ✓':Lang.t('hwCreate')+' ✓');
+    if(!editId)Notify.add('homework','واجب جديد: '+data.title,'واجب جديد في '+data.grade+' - موعد التسليم: '+Utils.formatDate(data.dueDate));
     this.switchSection('homework');
   },
   deleteHomework:function(id){if(!confirm(Lang.t('confirm')+'?'))return;DB.saveHomeworks(DB.homeworks().filter(function(h){return h.id!==id}));showToast(Lang.t('delete')+' ✓','error');this.switchSection('homework')},
