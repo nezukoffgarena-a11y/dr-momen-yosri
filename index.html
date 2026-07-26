@@ -1630,26 +1630,55 @@ const Admin={
   },
   openHwFile:function(fid,type,imgEl){
     var data=imgEl?imgEl.src:'';
-    if(!data){
-      var subs=DB.hwSubmissions();
-      for(var i=0;i<subs.length;i++){
-        var files=subs[i].files||[];
-        var idx=parseInt(fid.split('_')[1]);
-        var baseId=fid.split('_')[0];
-        if(subs[i].id===baseId&&files[idx]){data=files[idx].data;break}
-      }
+    var subId=fid.split('_')[0];
+    var fileIdx=parseInt(fid.split('_')[1]);
+    var sub=DB.hwSubmissions().find(function(s){return s.id===subId});
+    if(!data&&sub){
+      var files=sub.files||[];
+      if(files[fileIdx])data=files[fileIdx].data;
     }
     if(!data)return;
+    var isAr=Lang.get()==='ar';
+    var cid='modalCanvas_'+subId+'_'+fileIdx;
+    var content='';
+    if(type==='image'){
+      content='<div style="position:relative;width:100%"><img src="'+data+'" id="modalImg_'+cid+'" style="width:100%;max-height:70vh;object-fit:contain;border-radius:var(--radius-sm)"><canvas class="hw-annotation-canvas" id="'+cid+'" onmousedown="Admin.penStart(event,\''+subId+'\')" onmousemove="Admin.penMove(event,\''+subId+'\')" onmouseup="Admin.penEnd(\''+subId+'\')" ontouchstart="Admin.penTouchStart(event,\''+subId+'\')" ontouchmove="Admin.penTouchMove(event,\''+subId+'\')" ontouchend="Admin.penEnd(\''+subId+'\')" style="position:absolute;top:0;left:0;width:100%;height:100%"></canvas></div>';
+    }else{
+      content='<div style="position:relative;width:100%;height:70vh;background:#1a1a2e;border-radius:var(--radius-sm);overflow:hidden"><object data="'+data+'" type="application/pdf" width="100%" height="100%" style="border:none"></object><canvas class="hw-annotation-canvas" id="'+cid+'" onmousedown="Admin.penStart(event,\''+subId+'\')" onmousemove="Admin.penMove(event,\''+subId+'\')" onmouseup="Admin.penEnd(\''+subId+'\')" ontouchstart="Admin.penTouchStart(event,\''+subId+'\')" ontouchmove="Admin.penTouchMove(event,\''+subId+'\')" ontouchend="Admin.penEnd(\''+subId+'\')" style="position:absolute;top:0;left:0;width:100%;height:100%"></canvas></div>';
+    }
     var overlay=document.createElement('div');overlay.className='modal-overlay';overlay.id='hwFileOverlay';
     overlay.style.zIndex='10001';
-    if(type==='image'){
-      overlay.innerHTML='<div class="modal" style="max-width:90vw;max-height:90vh;padding:8px"><button class="modal-close" onclick="document.getElementById(\'hwFileOverlay\').remove()">✕</button>'+
-      '<img src="'+data+'" style="width:100%;height:100%;object-fit:contain;border-radius:var(--radius-sm)"></div>';
-    }else{
-      overlay.innerHTML='<div class="modal" style="max-width:90vw;max-height:90vh;padding:0"><button class="modal-close" onclick="document.getElementById(\'hwFileOverlay\').remove()" style="z-index:10">✕</button>'+
-      '<object data="'+data+'" type="application/pdf" width="100%" height="80vh" style="border-radius:var(--radius-sm)"></object></div>';
-    }
+    overlay.innerHTML='<div class="modal" style="max-width:90vw;max-height:95vh;padding:16px;overflow-y:auto"><button class="modal-close" onclick="document.getElementById(\'hwFileOverlay\').remove()">✕</button>'+
+    '<div class="modal-title" style="margin-bottom:12px">'+(isAr?'تصحيح واجب الطالب':'Grade Student Homework')+' — '+Utils.escHtml(sub?sub.studentName||'طالب':'')+'</div>'+
+    content+
+    '<div class="hw-pdf-pen-tools" style="margin-top:10px;border-radius:var(--radius-sm);background:var(--glass);border:1px solid var(--glass-border)">'+
+    '<button class="btn btn-sm '+(Admin._penColor==='red'?'btn-danger':'btn-secondary')+'" onclick="Admin.setPenColor(\'red\',\''+subId+'\')">'+(isAr?'🔴 أحمر':'Red')+'</button>'+
+    '<button class="btn btn-sm '+(Admin._penColor==='green'?'btn-primary':'btn-secondary')+'" onclick="Admin.setPenColor(\'green\',\''+subId+'\')">'+(isAr?'🟢 أخضر':'Green')+'</button>'+
+    '<button class="btn btn-sm btn-secondary" onclick="Admin.clearPen(\''+subId+'\')">'+(isAr?'🗑️ مسح التأشيرات':'Clear')+'</button>'+
+    '<a href="'+data+'" download="'+Utils.escHtml(sub?sub.studentName:'hw')+'" class="btn btn-sm btn-secondary" style="margin-right:auto">⬇️ '+(isAr?'تحميل':'Download')+'</a></div>'+
+    '<div style="margin-top:16px;padding:16px;background:var(--glass);border:1px solid var(--glass-border);border-radius:var(--radius-sm);display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap">'+
+    '<div style="flex:1;min-width:120px"><label class="form-label">'+(isAr?'الدرجة':'Grade')+'</label><input class="form-input" type="number" id="modalGrade_'+subId+'" min="0" max="'+(sub?sub.maxScore:100)+'" value="'+(sub&&sub.score?sub.score:'')+'" placeholder="0 / '+(sub?sub.maxScore:100)+'"></div>'+
+    '<div style="flex:2;min-width:200px"><label class="form-label">'+(isAr?'ملاحظات':'Feedback')+'</label><input class="form-input" id="modalFb_'+subId+'" value="'+Utils.escHtml(sub&&sub.feedback?sub.feedback:'')+'" placeholder="'+(isAr?'ملاحظات على التصحيح...':'Correction notes...')+'"></div>'+
+    '<button class="btn btn-primary" onclick="Admin.modalGradeSave(\''+subId+'\')">'+(isAr?'💾 تقييم وحفظ':'💾 Save Grade')+'</button></div>'+
+    '</div>';
     document.body.appendChild(overlay);
+    setTimeout(function(){
+      var c=document.getElementById(cid);if(c){
+        var parent=c.parentElement;
+        c.width=parent.offsetWidth;c.height=parent.offsetHeight;
+      }
+    },100);
+  },
+  modalGradeSave:function(subId){
+    var grade=document.getElementById('modalGrade_'+subId);
+    var fb=document.getElementById('modalFb_'+subId);
+    var score=parseInt(grade?grade.value:0)||0;
+    var feedback=fb?fb.value.trim():'';
+    var subs=DB.hwSubmissions();var sub=subs.find(function(s){return s.id===subId});
+    if(sub){sub.score=score;sub.feedback=feedback;sub.status='graded';DB.saveHwSubmissions(subs)}
+    document.getElementById('hwFileOverlay').remove();
+    showToast(Lang.get()==='ar'?'تم التقييم بنجاح!':'Graded successfully!','success');
+    Admin.switchSection('homework');
   },
   _getCanvasPos:function(e,canvas){
     var r=canvas.getBoundingClientRect();
