@@ -742,9 +742,15 @@ const App={
         DB.syncFromServer(function(){
           var fresh=DB.getUserByEmail(App.user.email);
           if(fresh){App.user=fresh}
+          Notify.renderBell();
           if(App.currentView==='student'&&typeof Student!=='undefined'){
             var el=document.getElementById('studentContent');
             if(el)Student.switchSection(App.currentSubView||'overview');
+            var unread=Notify.unreadCount();
+            if(unread>0&&!Notify._lastShownToast){
+              var latestNotifs=DB.notifications().filter(function(n){return n.studentId===App.user.id}).slice().reverse();
+              if(latestNotifs.length>0){var ln=latestNotifs[0];showToast(ln.title+': '+ln.message,'info');Notify._lastShownToast=ln.id}
+            }
           }
         });
       }
