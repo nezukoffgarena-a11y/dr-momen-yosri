@@ -1528,13 +1528,53 @@ const Admin={
     this.switchSection('broadcast');
   },
   deleteNotification:function(id){DB.saveNotifications(DB.notifications().filter(function(n){return n.id!==id}));showToast('تم حذف الإشعار','error');this.switchSection('broadcast')},
+  showAddHw:function(){
+    var isAr=Lang.get()==='ar';
+    var hws=DB.homeworks();
+    var overlay=document.createElement('div');overlay.className='modal-overlay';overlay.id='addHwOverlay';
+    overlay.innerHTML='<div class="modal" style="max-width:500px"><button class="modal-close" onclick="document.getElementById(\'addHwOverlay\').remove()">✕</button>'+
+    '<div class="modal-title">'+(isAr?'إضافة واجب جديد':'Add New Homework')+'</div>'+
+    '<div class="form-group"><label class="form-label">'+(isAr?'عنوان الواجب':'Title')+'</label><input class="form-input" id="hwNewTitle" placeholder="'+(isAr?'مثال: واجب الفصل الأول':'e.g. Chapter 1 Homework')+'"></div>'+
+    '<div class="form-group"><label class="form-label">'+(isAr?'السؤال':'Question')+'</label><textarea class="form-textarea" id="hwNewQuestion" placeholder="'+(isAr?'اكتب سؤال الواجب هنا...':'Write homework question here...')+'" style="min-height:80px"></textarea></div>'+
+    '<div class="form-group"><label class="form-label">'+(isAr?'تعليمات إضافية (اختياري)':'Instructions (optional)')+'</label><textarea class="form-textarea" id="hwNewInstructions" placeholder="'+(isAr?'تعليمات للطلاب...':'Student instructions...')+'" style="min-height:60px"></textarea></div>'+
+    '<div class="form-row"><div class="form-group"><label class="form-label">'+(isAr?'موعد التسليم':'Due Date')+'</label><input class="form-input" type="datetime-local" id="hwNewDue"></div>'+
+    '<div class="form-group"><label class="form-label">'+(isAr?'الدرجة النهائية':'Max Score')+'</label><input class="form-input" type="number" id="hwNewScore" value="10" min="1"></div></div>'+
+    '<div class="form-group"><label class="form-label">'+(isAr?'الصف':'Grade')+'</label><select class="form-select" id="hwNewGrade">'+
+    '<option value="all">'+(isAr?'الكل':'All Grades')+'</option>'+
+    GRADES.map(function(g){return '<option value="'+g+'">'+g+'</option>'}).join('')+'</select></div>'+
+    '<button class="btn btn-primary btn-block" onclick="Admin.saveNewHw()">'+(isAr?'💾 حفظ الواجب':'💾 Save Homework')+'</button></div>';
+    document.body.appendChild(overlay);
+  },
+  saveNewHw:function(){
+    var title=document.getElementById('hwNewTitle').value.trim();
+    var question=document.getElementById('hwNewQuestion').value.trim();
+    var instructions=document.getElementById('hwNewInstructions').value.trim();
+    var due=document.getElementById('hwNewDue').value;
+    var score=parseInt(document.getElementById('hwNewScore').value)||10;
+    var grade=document.getElementById('hwNewGrade').value;
+    if(!title||!question||!due){showToast(Lang.get()==='ar'?'املا كل الحقول المطلوبة':'Fill all required fields','error');return}
+    var hws=DB.homeworks();
+    hws.push({id:'hw_'+Date.now(),title:title,question:question,instructions:instructions,dueDate:new Date(due).getTime(),maxScore:score,grade:grade,createdAt:Date.now()});
+    DB.saveHomeworks(hws);
+    document.getElementById('addHwOverlay').remove();
+    showToast(Lang.get()==='ar'?'تم إضافة الواجب بنجاح':'Homework added successfully','success');
+    Admin.switchSection('homework');
+  },
+  deleteHw:function(id){
+    if(!confirm(Lang.get()==='ar'?'هل أنت متأكد من حذف هذا الواجب؟':'Are you sure you want to delete this homework?'))return;
+    var hws=DB.homeworks().filter(function(h){return h.id!==id});
+    DB.saveHomeworks(hws);
+    showToast(Lang.get()==='ar'?'تم حذف الواجب':'Homework deleted','error');
+    Admin.switchSection('homework');
+  },
   homeworkMgmt:function(){
     var hw=DB.homeworks();
     var subs=DB.hwSubmissions();
-    return '<div class="fade-in"><div class="page-header"><h1 class="page-title">'+Lang.t('hwTitle')+'</h1><p class="page-subtitle">'+hw.length+' '+(Lang.get()==='ar'?'واجب':'homeworks')+'</p></div>'+
+    return '<div class="fade-in"><div class="page-header"><h1 class="page-title">'+Lang.t('hwTitle')+'</h1><p class="page-subtitle">'+hw.length+' '+(Lang.get()==='ar'?'واجب':'homeworks')+'</p>'+
+    '<button class="btn btn-primary" onclick="Admin.showAddHw()">➕ '+(Lang.get()==='ar'?'إضافة واجب':'Add Homework')+'</button></div>'+
     '<div class="card" style="margin-bottom:20px"><div class="card-header"><h3 class="card-title">'+(Lang.get()==='ar'?'الواجبات':'Homeworks')+'</h3></div>'+
     '<div class="table-container"><table><thead><tr><th>'+Lang.t('hwTitle')+'</th><th>'+Lang.t('hwDueDate')+'</th><th>'+Lang.t('hwScore')+'</th><th>'+(Lang.get()==='ar'?'الصف':'Grade')+'</th></tr></thead><tbody>'+
-    hw.map(function(h){return '<tr><td><strong>'+Utils.escHtml(h.title)+'</strong></td><td>'+Utils.formatDate(h.dueDate)+'</td><td>'+h.maxScore+'</td><td>'+Utils.escHtml(h.grade)+'</td></tr>'}).join('')+
+    hw.map(function(h){return '<tr><td><strong>'+Utils.escHtml(h.title)+'</strong></td><td>'+Utils.formatDate(h.dueDate)+'</td><td>'+h.maxScore+'</td><td>'+Utils.escHtml(h.grade)+'</td><td><button class="btn btn-sm btn-danger" onclick="Admin.deleteHw(\''+h.id+'\')">🗑️</button></td></tr>'}).join('')+
     '</tbody></table></div>'+(hw.length===0?'<div class="empty-state"><div class="empty-icon">📚</div><p>'+Lang.t('noResults')+'</p></div>':'')+'</div>'+
     '<div class="card"><div class="card-header"><h3 class="card-title">'+(Lang.get()==='ar'?'تسليمات الطلاب':'Student Submissions')+'</h3></div>'+
     (subs.length===0?'<div class="empty-state"><p>'+(Lang.get()==='ar'?'لا توجد تسليمات بعد':'No submissions yet')+'</p></div>':'')+
