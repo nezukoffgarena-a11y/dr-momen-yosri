@@ -486,6 +486,7 @@ firebase.initializeApp(FIREBASE_CFG);
 var FB_DB=firebase.database();
 const ADMIN_EMAIL="DrMomenYosriTheTopADMINONLY19191#3@ADMIN.COM";
 const ADMIN_PASS="DrMomenYosriTheTopADMINONLY19191#32026/2027";
+const MAX_STUDENTS=4000;
 const GRADES=["رابع ابتدائي","خامس ابتدائي","سادس ابتدائي","أول إعدادي","ثاني إعدادي","ثالث إعدادي","أول ثانوي","ثاني ثانوي","ثالث ثانوي"];
 const TRACKS=["عربي حكومي","لغات"];
 const GRADES_EN=["4th Primary","5th Primary","6th Primary","1st Prep","2nd Prep","3rd Prep","1st Secondary","2nd Secondary","3rd Secondary"];
@@ -1034,7 +1035,7 @@ const VideoStore={
 };
 const DB={
   _get(k){try{return JSON.parse(localStorage.getItem('dm_'+k))}catch{return null}},
-  _set(k,v){try{localStorage.setItem('dm_'+k,JSON.stringify(v))}catch(e){console.error('Storage write failed:',k,e);throw e}},
+  _set(k,v){try{localStorage.setItem('dm_'+k,JSON.stringify(v))}catch(e){console.warn('Storage write failed:',k,e)}},
   users(){return this._get('users')||[]},
   saveUsers(u){this._set('users',u);this._push()},
   lessons(){return this._get('lessons')||[]},
@@ -1582,15 +1583,21 @@ const Auth={
       };
       if(btn){btn.disabled=true;btn.textContent='⏳ '+Lang.t('signupCreating')}
       user.role='student';user.status='pending';user.wallet=0;user.badges=[];user.joinedAt=Date.now();
-      FB_DB.ref('all_users').orderByChild('email').equalTo(email).once('value').then(function(snap){
-        if(snap.exists()){if(btn){btn.disabled=false;btn.textContent=Lang.t('signupBtnText')};errEl.textContent=Lang.t('signupEmailExists');errEl.style.display='block';return}
-        FB_DB.ref('all_users/'+user.id).set(user).then(function(){
-          DB.addUser(user);DB.saveSession({userId:user.id,email:email});App.user=user;
-          App.navigate('pending');
-          if(btn){btn.disabled=false;btn.textContent=Lang.t('signupBtnText')}
-          showToast(Lang.t('signupSuccess'),'info');
+      FB_DB.ref('all_users').once('value').then(function(snap){
+        var count=0;snap.forEach(function(){count++});
+        if(count>=MAX_STUDENTS){if(btn){btn.disabled=false;btn.textContent=Lang.t('signupBtnText')};errEl.textContent=Lang.get()==='ar'?'الحد الأقصى '+MAX_STUDENTS+' طالب. تم اكتمال التسجيل.':'Maximum '+MAX_STUDENTS+' students reached. Registration is full.';errEl.style.display='block';return}
+        FB_DB.ref('all_users').orderByChild('email').equalTo(email).once('value').then(function(snap2){
+          if(snap2.exists()){if(btn){btn.disabled=false;btn.textContent=Lang.t('signupBtnText')};errEl.textContent=Lang.t('signupEmailExists');errEl.style.display='block';return}
+          FB_DB.ref('all_users/'+user.id).set(user).then(function(){
+            DB.addUser(user);DB.saveSession({userId:user.id,email:email});App.user=user;
+            App.navigate('pending');
+            if(btn){btn.disabled=false;btn.textContent=Lang.t('signupBtnText')}
+            showToast(Lang.t('signupSuccess'),'info');
+          });
         });
       }).catch(function(){
+        var localCount=(DB.users()||[]).filter(function(u){return u.role==='student'}).length;
+        if(localCount>=MAX_STUDENTS){if(btn){btn.disabled=false;btn.textContent=Lang.t('signupBtnText')};errEl.textContent=Lang.get()==='ar'?'الحد الأقصى '+MAX_STUDENTS+' طالب. تم اكتمال التسجيل.':'Maximum '+MAX_STUDENTS+' students reached.';errEl.style.display='block';return}
         DB.addUser(user);DB.saveSession({userId:user.id,email:email});App.user=user;App.navigate('pending');
         if(btn){btn.disabled=false;btn.textContent=Lang.t('signupBtnText')}
         showToast(Lang.t('signupSuccessLocal'),'info');
@@ -1675,11 +1682,12 @@ const Admin={
     var users=DB.users().filter(function(u){return u.role==='student'});
     var approved=users.filter(function(u){return u.status==='approved'}).length;
     var pending=users.filter(function(u){return u.status==='pending'}).length;
+    var totalStudents=users.length;
     var lessons=DB.lessons().length;
     var totalWallet=users.reduce(function(s,u){return s+(u.wallet||0)},0);
     return '<div class="fade-in"><div class="page-header"><h1 class="page-title">'+T('adminOverview')+'</h1><p class="page-subtitle">'+T('adminWelcome')+' 👑</p></div>'+
     '<div class="stats-grid">'+
-    '<div class="card stat-card"><div class="stat-icon">👥</div><div class="stat-number">'+approved+'</div><div class="stat-label">'+T('adminStudentsCount')+'</div></div>'+
+    '<div class="card stat-card"><div class="stat-icon">👥</div><div class="stat-number">'+approved+'</div><div class="stat-label">'+T('adminStudentsCount')+' ('+totalStudents+'/'+MAX_STUDENTS+')</div></div>'+
     '<div class="card stat-card"><div class="stat-icon">⏳</div><div class="stat-number">'+pending+'</div><div class="stat-label">'+T('adminPendingCountLabel')+'</div></div>'+
     '<div class="card stat-card"><div class="stat-icon">🎬</div><div class="stat-number">'+lessons+'</div><div class="stat-label">'+T('adminLessonsCount')+'</div></div>'+
     '<div class="card stat-card"><div class="stat-icon">💰</div><div class="stat-number">'+Utils.formatMoney(totalWallet)+'</div><div class="stat-label">'+T('adminTotalWallet')+'</div></div>'+
