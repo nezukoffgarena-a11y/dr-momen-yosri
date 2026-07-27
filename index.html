@@ -1111,31 +1111,19 @@ const Admin={
       {id:'settings',icon:'⚙️',label:Lang.t('settingsTitle')}
     ];
     return '<div class="sidebar" id="adminSidebar"><button class="mobile-sidebar-close" onclick="App.toggleSidebar()">✕</button><div class="mobile-sidebar-header"><div class="sidebar-avatar">👑</div><div class="sidebar-name">'+Utils.escHtml(App.user?App.user.name:'Admin')+'</div><div class="sidebar-role">مدير المنصة</div></div><div class="sidebar-section">التحكم</div>'+
-    links.map(function(l){return '<button class="sidebar-link '+(s===l.id||(!s&&l.id==='overview')?'active':'')+'" onclick="Admin.switchSection(\''+l.id+'\');if(window.innerWidth<=768)App.toggleSidebar()"><span class="link-icon">'+l.icon+'</span><span>'+l.label+'</span></button>'}).join('')+
+    links.map(function(l){return '<button class="sidebar-link '+(s===l.id||(!s&&l.id==='overview')?'active':'')+'" onclick="Admin.switchSection(\''+l.id+'\')"><span class="link-icon">'+l.icon+'</span><span>'+l.label+'</span></button>'}).join('')+
     '</div>';
   },
   switchSection:function(sub){
-    App.currentSubView=sub;
+    App.currentSubView=sub;App.currentView='admin';
+    var doUpdate=function(){var content=document.getElementById('adminContent');if(content){content.innerHTML=Admin.renderSection();Admin.init()}document.querySelectorAll('#adminSidebar .sidebar-link').forEach(function(b){b.classList.remove('active')});var allSubs=['overview','students','pending','lessons','files','exams','homework','wallet','reports','broadcast','aibot','settings'];var idx=allSubs.indexOf(sub);var btns=document.querySelectorAll('#adminSidebar .sidebar-link');if(idx>=0&&btns[idx])btns[idx].classList.add('active')};
     if(sub==='overview'||sub==='students'||sub==='pending'){
       FB_DB.ref('all_users').once('value').then(function(snap){
-        var allData=snap.val()||{};
-        var allUsers=[];
-        Object.keys(allData).forEach(function(id){var u=allData[id];if(u&&u.id)allUsers.push(u)});
-        if(allUsers.length>0){
-          var existing=DB.users();
-          var merged=existing.slice();
-          allUsers.forEach(function(fu){
-            var idx=-1;
-            for(var i=0;i<existing.length;i++){if(existing[i].email===fu.email){idx=i;break}}
-            if(idx>=0){merged[idx]=fu}else{merged.push(fu)}
-          });
-          DB._set('users',merged);
-        }
-        App.navigate('admin',sub);
-      }).catch(function(){App.navigate('admin',sub)});
-    }else{
-      App.navigate('admin',sub);
-    }
+        var allData=snap.val()||{};var allUsers=[];Object.keys(allData).forEach(function(id){var u=allData[id];if(u&&u.id)allUsers.push(u)});
+        if(allUsers.length>0){var existing=DB.users();var merged=existing.slice();allUsers.forEach(function(fu){var idx=-1;for(var i=0;i<existing.length;i++){if(existing[i].email===fu.email){idx=i;break}}if(idx>=0){merged[idx]=fu}else{merged.push(fu)}});DB._set('users',merged)}
+        doUpdate();
+      }).catch(function(){doUpdate()});
+    }else{doUpdate()}
   },
   renderSection:function(){
     var s=App.currentSubView||'overview';
@@ -1800,9 +1788,9 @@ const Student={
     var s=App.currentSubView;
     var links=[{id:'overview',icon:'🏠',label:'الرئيسية'},{id:'lessons',icon:'🎬',label:'الدروس'},{id:'wallet',icon:'💰',label:'محفظتي'},{id:'exams',icon:'📝',label:'الامتحانات'},{id:'homework',icon:'📚',label:Lang.t('hwTitle')},{id:'files',icon:'📁',label:'الملفات والمراجعات'},{id:'reports',icon:'📊',label:'تقاريري'},{id:'badges',icon:'🏆',label:'الإنجازات'},{id:'profile',icon:'👤',label:'معلوماتي الشخصية'},{id:'parent',icon:'👨‍👩‍👦',label:'بيانات ولي الأمر'},{id:'aibot',icon:'🤖',label:'المساعد الذكي'}];
     return '<div class="sidebar" id="studentSidebar"><button class="mobile-sidebar-close" onclick="App.toggleSidebar()">✕</button><div class="mobile-sidebar-header"><div class="sidebar-avatar">'+Utils.escHtml(App.user?App.user.name.charAt(0):'🎓')+'</div><div class="sidebar-name">'+Utils.escHtml(App.user?App.user.name:'Student')+'</div><div class="sidebar-role">'+Utils.escHtml((App.user?App.user.grade:'')+' — '+(App.user?App.user.track:''))+'</div></div><div class="sidebar-section">لوحتي</div>'+
-    links.map(function(l){return '<button class="sidebar-link '+(s===l.id||(!s&&l.id==='overview')?'active':'')+'" onclick="Student.switchSection(\''+l.id+'\');if(window.innerWidth<=768)App.toggleSidebar()"><span class="link-icon">'+l.icon+'</span><span>'+l.label+'</span></button>'}).join('')+'</div>';
+    links.map(function(l){return '<button class="sidebar-link '+(s===l.id||(!s&&l.id==='overview')?'active':'')+'" onclick="Student.switchSection(\''+l.id+'\')"><span class="link-icon">'+l.icon+'</span><span>'+l.label+'</span></button>'}).join('')+'</div>';
   },
-  switchSection:function(sub){App.currentSubView=sub;App.navigate('student',sub)},
+  switchSection:function(sub){App.currentSubView=sub;App.currentView='student';var content=document.getElementById('studentContent');if(content){content.innerHTML=Student.renderSection();Student.init()}document.querySelectorAll('#studentSidebar .sidebar-link').forEach(function(b){b.classList.remove('active')});var idx=['overview','lessons','wallet','exams','homework','files','reports','badges','profile','parent','aibot'].indexOf(sub);var btns=document.querySelectorAll('#studentSidebar .sidebar-link');if(idx>=0&&btns[idx])btns[idx].classList.add('active')},
   renderSection:function(){var s=App.currentSubView||'overview';App.user=DB.getUserById(App.user.id);var self=this;var map={overview:function(){return self.overview()},lessons:function(){return self.lessonsView()},wallet:function(){return self.walletView()},exams:function(){return self.examsView()},homework:function(){return self.homeworkView()},files:function(){return self.filesView()},reports:function(){return self.reportsView()},badges:function(){return self.badgesView()},profile:function(){return self.profileView()},parent:function(){return self.parentView()},aibot:function(){return AIBot.render()}};return (map[s]||map.overview)()},
   init:function(){
     if(App.currentSubView==='aibot')setTimeout(function(){AIBot.init()},50);
