@@ -1804,8 +1804,53 @@ const Admin={
     '<div class="form-group"><label class="form-label">'+T('adminVideoUpload')+'</label><input class="form-input" type="file" id="lVideoFile" accept="video/mp4,video/*"></div>'+
     '<div class="form-group"><label class="form-label">'+T('adminVideoAlt')+'</label><input class="form-input" id="lVideoAlt" dir="ltr" placeholder="https://..." value="'+(isEdit?Utils.escHtml(lesson.videoUrlAlt||''):'')+'"></div>'+
     '<div class="form-group"><label class="form-label">'+T('adminVideoEmbed')+'</label><textarea class="form-textarea" id="lVideoEmbed" dir="ltr" placeholder="<iframe src=...></iframe>" rows="3">'+(isEdit?Utils.escHtml(lesson.videoEmbed||''):'')+'</textarea></div>'+
+    '<div style="border-top:1px solid var(--glass-border);margin:16px 0;padding-top:16px">'+
+    '<h4 style="color:var(--accent);margin-bottom:12px;font-size:0.95rem">🔑 أكواد الدخول (بديل الفلوس)</h4>'+
+    '<p style="color:var(--text-muted);font-size:0.8rem;margin-bottom:8px">ادخل كود واحد في كل سطر. الطالب يقدر يفتح الدرس بالمجان لو معاه الكود.</p>'+
+    '<textarea class="form-textarea" id="lCodes" rows="5" placeholder="CODE001&#10;CODE002&#10;CODE003&#10;..." dir="ltr" style="font-family:var(--font-mono);font-size:0.85rem">'+(isEdit&&lesson.codes?lesson.codes.map(function(c){return c.code}).join('\n'):'')+'</textarea>'+
+    (isEdit&&lesson.codes?'<p style="color:var(--text-muted);font-size:0.75rem;margin-top:4px">'+lesson.codes.length+' كود — '+lesson.codes.filter(function(c){return c.usedBy}).length+' مستخدم</p>':'')+
+    '</div>'+
+    (isEdit?'<div style="border-top:1px solid var(--glass-border);margin:16px 0;padding-top:16px">'+
+    '<h4 style="color:var(--accent);margin-bottom:12px;font-size:0.95rem">👥 إدارة المشاهدين والدخول المجاني</h4>'+
+    '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">'+
+    '<button type="button" class="btn btn-sm btn-secondary" onclick="document.getElementById(\'lessonModal\').remove();Admin.viewLessonViews(\''+lesson.id+'\')">👁️ مين شاف الفيديو</button>'+
+    '<button type="button" class="btn btn-sm btn-secondary" onclick="document.getElementById(\'lessonModal\').remove();Admin.showLessonCodes(\''+lesson.id+'\')">🔑 إدارة الأكواد</button>'+
+    '</div>'+
+    '<div class="form-group"><label class="form-label">فتح الدرس مجاناً لطالب</label>'+
+    '<div style="display:flex;gap:6px"><select class="form-select" id="lFreeStudent" style="flex:1"><option value="">— اختر طالب —</option>'+
+    DB.users().filter(function(u){return u.role==='student'&&u.status==='approved'}).map(function(u){return '<option value="'+u.id+'">'+Utils.escHtml(u.name)+' — '+Utils.escHtml(u.grade)+'</option>'}).join('')+
+    '</select><button type="button" class="btn btn-sm btn-accent" onclick="Admin.quickUnlockFromLesson()">🔓 فتح</button></div>'+
+    '</div>'+
+    '</div>':'')+
     '<button type="submit" class="btn btn-primary btn-block">'+(isEdit?T('adminSaveLesson'):T('adminAddLessonBtn'))+'</button></form></div></div>';
     document.body.insertAdjacentHTML('beforeend',html);
+  },
+  quickUnlockFromLesson:function(){
+    var select=document.getElementById('lFreeStudent');
+    if(!select||!select.value){showToast('اختر طالب أولاً','error');return}
+    var studentId=select.value;
+    var lessons=DB.lessons();
+    var lesson=lessons[lessons.length-1];
+    var currentModal=document.getElementById('lessonModal');
+    var lessonId='';
+    if(currentModal){
+      var form=currentModal.querySelector('form');
+      if(form){
+        var onsubmit=form.getAttribute('onsubmit')||'';
+        var match=onsubmit.match(/Admin\.saveLesson\(event,'([^']*)'\)/);
+        if(match)lessonId=match[1];
+      }
+    }
+    if(!lessonId){showToast('احفظ الدرس أولاً ثم عدله لفتحه لطالب','error');return}
+    var unlocks=(DB._get('unlocks_'+studentId))||[];
+    if(!unlocks.includes(lessonId)){
+      unlocks.push(lessonId);
+      DB._set('unlocks_'+studentId,unlocks);
+      var u=DB.getUserById(studentId);
+      var l=DB.lessons().find(function(x){return x.id===lessonId});
+      Notify.add('unlock','تم فتح درس لك','تم فتح درس "'+(l?l.title:'')+'" لك من الإدارة',studentId);
+      showToast('تم فتح الدرس لـ '+(u?u.name:'الطالب')+'!');
+    }else{showToast('الدرس مفتوح بالفعل لهذا الطالب')}
   },
   saveLesson:function(e,editId){
     e.preventDefault();
@@ -1815,6 +1860,16 @@ const Admin={
     var doSave=function(videoData){
       var data={title:document.getElementById('lTitle').value.trim(),description:document.getElementById('lDesc').value.trim(),subject:document.getElementById('lSubject').value,price:parseInt(document.getElementById('lPrice').value)||0,grade:document.getElementById('lGrade').value,track:document.getElementById('lTrack').value,videoUrl:document.getElementById('lVideo').value.trim(),videoUrlAlt:document.getElementById('lVideoAlt').value.trim(),videoEmbed:document.getElementById('lVideoEmbed').value.trim()};
       if(videoData)data.videoData=videoData;
+      var codesEl=document.getElementById('lCodes');
+      if(codesEl){
+        var rawCodes=codesEl.value.trim();
+        var newCodeLines=rawCodes?rawCodes.split('\n').map(function(s){return s.trim()}).filter(function(s){return s.length>0}):[];
+        var existingCodes=(editId&&DB.lessons().find(function(x){return x.id===editId}))?((DB.lessons().find(function(x){return x.id===editId})).codes||[]):[];
+        var existingMap={};existingCodes.forEach(function(c){existingMap[c.code]=true});
+        var mergedCodes=existingCodes.slice();
+        newCodeLines.forEach(function(code){if(!existingMap[code]){mergedCodes.push({code:code,usedBy:null,usedByName:null,usedAt:null})}});
+        if(mergedCodes.length>0)data.codes=mergedCodes;
+      }
       var lessons=DB.lessons();
       if(editId){var idx=lessons.findIndex(function(l){return l.id===editId});if(idx>=0)lessons[idx]=Object.assign({},lessons[idx],data)}
       else{data.id=Utils.uid();data.createdAt=Date.now();data.files=[];lessons.push(data)}
