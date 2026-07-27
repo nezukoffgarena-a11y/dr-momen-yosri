@@ -237,6 +237,7 @@ tr:hover td{background:rgba(0,245,212,0.03)}
 @keyframes shimmerCard{to{transform:translateX(100%)}}
 .lesson-thumb-overlay{position:absolute;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;opacity:0;transition:var(--transition);backdrop-filter:blur(2px)}
 .lesson-card:hover .lesson-thumb-overlay{opacity:1}
+@media(hover:none){.lesson-thumb-overlay{opacity:1!important}}
 .lesson-body{padding:20px;flex:1;display:flex;flex-direction:column}
 .lesson-meta{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap}
 .lesson-title{font-size:1.02rem;font-weight:800;margin-bottom:6px}
@@ -1168,7 +1169,7 @@ const Utils={
   timeAgo(d){const s=Math.floor((Date.now()-d)/1000);if(s<60)return'الآن';if(s<3600)return Math.floor(s/60)+' دقيقة';if(s<86400)return Math.floor(s/3600)+' ساعة';return Math.floor(s/86400)+' يوم'},
   escHtml(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML},
   searchMatch(text,q){return !q||text.toLowerCase().includes(q.toLowerCase())},
-  loadVideos(){setTimeout(function(){document.querySelectorAll('.video-placeholder[data-lesson-id]').forEach(function(el){var lid=el.getAttribute('data-lesson-id');if(!lid||el.dataset.loaded)return;el.dataset.loaded='1';VideoStore.get(lid,function(data){if(data){var v=document.createElement('video');v.controls=true;v.style.cssText='width:100%;height:100%;object-fit:contain;background:#000;border-radius:0';v.src=data;el.parentNode.replaceChild(v,el)}else{el.innerHTML='▶️';el.style.cursor='default'}})})},100)}
+  loadVideos(){setTimeout(function(){document.querySelectorAll('.video-placeholder[data-lesson-id]').forEach(function(el){var lid=el.getAttribute('data-lesson-id');if(!lid||el.dataset.loaded)return;el.dataset.loaded='1';VideoStore.get(lid,function(data){if(data){var v=document.createElement('video');v.controls=true;v.style.cssText='width:100%;height:100%;object-fit:contain;background:#000;border-radius:0';v.src=data;el.parentNode.replaceChild(v,el)}else{var lessons=DB.lessons();var l=lessons.find(function(x){return x.id===lid});if(l&&l.videoUrl){var a=document.createElement('a');a.href=l.videoUrl;a.target='_blank';a.style.cssText='width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:2rem;text-decoration:none;background:#000;position:absolute;inset:0';a.textContent='▶️';a.onclick=function(e){e.stopPropagation();DB.logVideoView(lid,App.user?App.user.id:'admin',App.user?App.user.name:'Admin')};el.style.position='relative';el.appendChild(a)}else{el.innerHTML='<span style="color:var(--text-muted);font-size:0.8rem">🎬 لا يوجد فيديو</span>';el.style.cursor='default'}}})},100)}
 };
 function showToast(msg,type){
   type=type||'success';
@@ -1793,7 +1794,7 @@ const Admin={
     var sOpts=SUBJECTS.map(function(s){return '<option value="'+s+'" '+(lesson&&lesson.subject===s?'selected':'')+'>'+s+'</option>'}).join('');
     var html='<div class="modal-overlay" id="lessonModal" onclick="if(event.target===this)this.remove()"><div class="modal"><button class="modal-close" onclick="document.getElementById(\'lessonModal\').remove()">✕</button>'+
     '<h3 class="modal-title">'+(isEdit?Lang.t('adminEditLesson'):Lang.t('adminNewLesson'))+'</h3>'+
-    '<form onsubmit="Admin.saveLesson(event,\''+(isEdit?lesson.id:'')+'\')">'+
+    '<form id="lessonForm" onsubmit="Admin.saveLesson(event,\''+(isEdit?lesson.id:'')+'\')">'+
     '<div class="form-group"><label class="form-label">'+T('adminLessonTitleLabel')+'</label><input class="form-input" id="lTitle" required value="'+(isEdit?Utils.escHtml(lesson.title):'')+'"></div>'+
     '<div class="form-group"><label class="form-label">'+T('adminLessonDescLabel')+'</label><textarea class="form-textarea" id="lDesc">'+(isEdit?Utils.escHtml(lesson.description):'')+'</textarea></div>'+
     '<div class="form-row"><div class="form-group"><label class="form-label">'+T('adminLessonSubjectLabel')+'</label><select class="form-select" id="lSubject"><option value="">'+T('adminChooseSubject')+'</option>'+sOpts+'</select></div>'+
@@ -1819,38 +1820,11 @@ const Admin={
     '<div class="form-group"><label class="form-label">فتح الدرس مجاناً لطالب</label>'+
     '<div style="display:flex;gap:6px"><select class="form-select" id="lFreeStudent" style="flex:1"><option value="">— اختر طالب —</option>'+
     DB.users().filter(function(u){return u.role==='student'&&u.status==='approved'}).map(function(u){return '<option value="'+u.id+'">'+Utils.escHtml(u.name)+' — '+Utils.escHtml(u.grade)+'</option>'}).join('')+
-    '</select><button type="button" class="btn btn-sm btn-accent" onclick="Admin.quickUnlockFromLesson()">🔓 فتح</button></div>'+
+    '</select><button type="button" class="btn btn-sm btn-accent" onclick="var s=document.getElementById(\'lFreeStudent\');if(!s||!s.value){showToast(\'اختر طالب أولاً\',\'error\');return}document.getElementById(\'lessonForm\').requestSubmit()">🔓 حفظ + فتح</button></div>'+
     '</div>'+
     '</div>':'')+
     '<button type="submit" class="btn btn-primary btn-block">'+(isEdit?T('adminSaveLesson'):T('adminAddLessonBtn'))+'</button></form></div></div>';
     document.body.insertAdjacentHTML('beforeend',html);
-  },
-  quickUnlockFromLesson:function(){
-    var select=document.getElementById('lFreeStudent');
-    if(!select||!select.value){showToast('اختر طالب أولاً','error');return}
-    var studentId=select.value;
-    var lessons=DB.lessons();
-    var lesson=lessons[lessons.length-1];
-    var currentModal=document.getElementById('lessonModal');
-    var lessonId='';
-    if(currentModal){
-      var form=currentModal.querySelector('form');
-      if(form){
-        var onsubmit=form.getAttribute('onsubmit')||'';
-        var match=onsubmit.match(/Admin\.saveLesson\(event,'([^']*)'\)/);
-        if(match)lessonId=match[1];
-      }
-    }
-    if(!lessonId){showToast('احفظ الدرس أولاً ثم عدله لفتحه لطالب','error');return}
-    var unlocks=(DB._get('unlocks_'+studentId))||[];
-    if(!unlocks.includes(lessonId)){
-      unlocks.push(lessonId);
-      DB._set('unlocks_'+studentId,unlocks);
-      var u=DB.getUserById(studentId);
-      var l=DB.lessons().find(function(x){return x.id===lessonId});
-      Notify.add('unlock','تم فتح درس لك','تم فتح درس "'+(l?l.title:'')+'" لك من الإدارة',studentId);
-      showToast('تم فتح الدرس لـ '+(u?u.name:'الطالب')+'!');
-    }else{showToast('الدرس مفتوح بالفعل لهذا الطالب')}
   },
   saveLesson:function(e,editId){
     e.preventDefault();
@@ -1873,9 +1847,19 @@ const Admin={
       var lessons=DB.lessons();
       if(editId){var idx=lessons.findIndex(function(l){return l.id===editId});if(idx>=0)lessons[idx]=Object.assign({},lessons[idx],data)}
       else{data.id=Utils.uid();data.createdAt=Date.now();data.files=[];lessons.push(data)}
-      try{DB.saveLessons(lessons)}catch(err){showToast(Lang.t('toastStorageFull'),'error');if(submitBtn){submitBtn.disabled=false;submitBtn.textContent=editId?Lang.t('adminSaveLesson'):Lang.t('adminAddLessonBtn')}return}
+      try{DB.saveLessons(lessons)}catch(err){showToast(Lang.t('toastStorageFull'),'error');if(submitBtn){submitBtn.disabled=false;submitBtn.textContent=editId?Lang.t('adminSaveLesson'):T('adminAddLessonBtn')}return}
+      var savedLessonId=editId||data.id;
+      var freeStudentEl=document.getElementById('lFreeStudent');
+      var unlockedNames=[];
+      if(freeStudentEl&&freeStudentEl.value){
+        var sid=freeStudentEl.value;
+        var sUnlocks=(DB._get('unlocks_'+sid))||[];
+        if(!sUnlocks.includes(savedLessonId)){sUnlocks.push(savedLessonId);DB._set('unlocks_'+sid,sUnlocks);var su=DB.getUserById(sid);if(su){unlockedNames.push(su.name);var sek=su.email.replace(/\./g,'_dot_');FB_DB.ref('users/'+sek+'/unlocks/'+sid).set(sUnlocks).catch(function(e){console.log(e)})}Notify.add('unlock','تم فتح درس لك','تم فتح درس "'+data.title+'" لك من الإدارة',sid)}
+      }
       document.getElementById('lessonModal').remove();
-      showToast(editId?Lang.t('toastLessonSaved'):Lang.t('toastLessonAdded'));
+      var msg=editId?Lang.t('toastLessonSaved'):Lang.t('toastLessonAdded');
+      if(unlockedNames.length>0)msg+=' — تم فتحه لـ: '+unlockedNames.join(', ');
+      showToast(msg);
       if(!editId)Notify.add('lesson','درس جديد: '+data.title,'تم إضافة درس جديد في '+data.grade+' - '+data.track);
       Admin.switchSection('lessons');
     };
@@ -1950,6 +1934,7 @@ const Admin={
       DB._set('unlocks_'+studentId,unlocks);
       var l=DB.lessons().find(function(x){return x.id===lessonId});
       var u=DB.getUserById(studentId);
+      if(u){var sek=u.email.replace(/\./g,'_dot_');FB_DB.ref('users/'+sek+'/unlocks/'+studentId).set(unlocks).catch(function(e){console.log(e)})}
       Notify.add('unlock','تم فتح درس لك','تم فتح درس "'+(l?l.title:'')+'" لك من الإدارة',studentId);
       showToast('تم فتح الدرس لـ '+(u?u.name:'الطالب')+'!');
     }else{showToast('الدرس مفتوح بالفعل لهذا الطالب')}
