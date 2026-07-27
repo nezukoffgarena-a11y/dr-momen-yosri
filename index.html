@@ -49,7 +49,8 @@ html[data-theme="light"] .hw-upload-area{border-color:rgba(0,0,0,0.15)}
 html[data-theme="light"] .hw-pdf-viewer{background:#f5f5f5}
 html[data-theme="light"] .hw-pdf-toolbar{background:rgba(0,0,0,0.04)}
 html{scroll-behavior:smooth}
-body{font-family:var(--font-ar);background:var(--bg-primary);color:var(--text-primary);line-height:1.7;overflow-x:hidden;min-height:100vh;background:radial-gradient(ellipse at 20% 50%,rgba(28,37,65,0.5) 0%,transparent 50%),radial-gradient(ellipse at 80% 20%,rgba(0,245,212,0.03) 0%,transparent 40%),radial-gradient(ellipse at 50% 80%,rgba(91,141,239,0.03) 0%,transparent 40%),var(--bg-primary)}
+body{font-family:var(--font-ar);background:var(--bg-primary);color:var(--text-primary);line-height:1.7;overflow-x:hidden;min-height:100vh;-webkit-user-select:none;-moz-user-select:none;user-select:none;-webkit-touch-callout:none;background:radial-gradient(ellipse at 20% 50%,rgba(28,37,65,0.5) 0%,transparent 50%),radial-gradient(ellipse at 80% 20%,rgba(0,245,212,0.03) 0%,transparent 40%),radial-gradient(ellipse at 50% 80%,rgba(91,141,239,0.03) 0%,transparent 40%),var(--bg-primary)}
+input,textarea,select,.form-input,.form-textarea,.form-select{-webkit-user-select:text;-moz-user-select:text;user-select:text}
 ::selection{background:var(--accent);color:var(--bg-primary)}
 ::-webkit-scrollbar{width:6px}
 ::-webkit-scrollbar-track{background:var(--bg-primary)}
@@ -3394,6 +3395,35 @@ const AIBot={
     });
   }
 };
+(function(){
+  document.addEventListener('contextmenu',function(e){
+    if(e.target.tagName!=='INPUT'&&e.target.tagName!=='TEXTAREA'&&e.target.tagName!=='SELECT'){e.preventDefault();return false}
+  });
+  document.addEventListener('keydown',function(e){
+    if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA'||e.target.tagName==='SELECT')return;
+    if(e.key==='PrintScreen'){e.preventDefault();showToast('⚠️ لقطات الشاشة غير مسموحة','error');return false}
+    if(e.ctrlKey&&e.shiftKey&&(e.key==='S'||e.key==='s')){e.preventDefault();return false}
+    if(e.ctrlKey&&(e.key==='u'||e.key==='U')){e.preventDefault();return false}
+    if(e.key==='F12'){e.preventDefault();return false}
+    if(e.ctrlKey&&e.shiftKey&&(e.key==='I'||e.key==='i'||e.key==='J'||e.key==='j')){e.preventDefault();return false}
+  });
+  document.addEventListener('dragstart',function(e){
+    if(e.target.tagName==='IMG'||e.target.tagName==='VIDEO'){e.preventDefault();return false}
+  });
+  document.addEventListener('copy',function(e){
+    if(window.getSelection&&window.getSelection().toString().length>0){/* allow text copy */}
+  });
+  document.addEventListener('selectstart',function(e){
+    if(e.target.tagName!=='INPUT'&&e.target.tagName!=='TEXTAREA'&&e.target.tagName!=='SELECT'&&e.target.contentEditable!=='true'){/* allow for readability */}
+  });
+  if(navigator.mediaDevices&&navigator.mediaDevices.getDisplayMedia){
+    var orig= navigator.mediaDevices.getDisplayMedia.bind(navigator.mediaDevices);
+    navigator.mediaDevices.getDisplayMedia=function(){return Promise.reject(new DOMException('Screen capture is not allowed on this site.','NotAllowedError'))};
+  }
+  var style=document.createElement('style');
+  style.textContent='@media print{body{display:none!important}}';
+  document.head.appendChild(style);
+})();
 document.addEventListener('DOMContentLoaded',function(){App.init()});
 window.addEventListener('error',function(e){
   console.error('Global error:',e);
