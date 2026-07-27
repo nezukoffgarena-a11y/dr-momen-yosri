@@ -545,7 +545,9 @@ const BADGES_LIST=[
   {id:"month_student",name:"طالب الشهر",icon:"⭐",desc:"أعلى تقييم هذا الشهر"},
   {id:"active_community",name:"المجتمع النشط",icon:"💬",desc:"100 رسالة في المجتمع"},
   {id:"first_exam",name:"أول امتحان",icon:"📝",desc:"أكمل أول امتحان"},
-  {id:"wallet_user",name:"محفظة ذهبية",icon:"💰",desc:"أول شراء من المحفظة"}
+  {id:"wallet_user",name:"محفظة ذهبية",icon:"💰",desc:"أول شراء من المحفظة"},
+  {id:"game_master",name:"عبقري الألعاب",icon:"🎮",desc:"أكمل لعبة اليوم بنجاح"},
+  {id:"game_streak7",name:"سلسلة أسبوعية",icon:"🔥",desc:"7 أيام متتالية في الألعاب"}
 ];
 const VideoStore={
   _db:null,
@@ -2527,6 +2529,14 @@ const Game={
     var emoji=percentage>=80?'🏆':percentage>=50?'⭐':'💪';
     var msg=percentage>=80?'ممتاز! أنت عبقري!':percentage>=50?'جيد جداً! واصل التقدم!':'حاول مرة أخرى غداً!';
     var pointsEarned=this.score*10;
+    var u=DB.getUserById(App.user.id);
+    if(u){
+      var badges=u.badges||[];
+      if(!badges.includes('game_master')){badges.push('game_master');DB.updateUser(u.id,{badges:badges})}
+      var streak=this._getStreak();
+      if(streak.count>=7&&!badges.includes('game_streak7')){badges.push('game_streak7');DB.updateUser(u.id,{badges:badges})}
+      App.user=DB.getUserById(u.id);
+    }
     var area=document.getElementById('gameArea');
     if(area)area.innerHTML='<div class="card fade-in" style="text-align:center;padding:40px">'+
       '<div style="font-size:4rem;margin-bottom:16px">'+emoji+'</div>'+
