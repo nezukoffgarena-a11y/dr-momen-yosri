@@ -1785,7 +1785,7 @@ const Admin={
     '</div></div>';
   },
   showAddLessonModal:function(lesson){
-    var isEdit=!!lesson;
+    var T=Lang.t.bind(Lang);var isEdit=!!lesson;
     var gOpts=GRADES.map(function(g){return '<option value="'+g+'" '+(lesson&&lesson.grade===g?'selected':'')+'>'+g+'</option>'}).join('');
     var tOpts=TRACKS.map(function(t){return '<option value="'+t+'" '+(lesson&&lesson.track===t?'selected':'')+'>'+t+'</option>'}).join('');
     var sOpts=SUBJECTS.map(function(s){return '<option value="'+s+'" '+(lesson&&lesson.subject===s?'selected':'')+'>'+s+'</option>'}).join('');
