@@ -124,7 +124,7 @@ tr:hover td{background:rgba(0,245,212,0.03)}
 @keyframes toastIn{from{opacity:0;transform:translateX(-40px) scale(0.9)}to{opacity:1;transform:translateX(0) scale(1)}}
 .navbar{position:fixed;top:0;left:0;right:0;z-index:9999;height:68px;display:flex;align-items:center;justify-content:space-between;padding:0 clamp(16px,4vw,40px);background:rgba(11,19,43,0.75);backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px);border-bottom:1px solid var(--glass-border);transition:var(--transition)}
 .navbar.scrolled{background:rgba(11,19,43,0.95);box-shadow:0 4px 40px rgba(0,0,0,0.6);border-bottom-color:rgba(0,245,212,0.15)}
-.nav-brand{display:flex;align-items:center;gap:12px;cursor:pointer;transition:var(--transition)}
+.nav-brand{display:flex;align-items:center;gap:12px;cursor:pointer;transition:var(--transition);flex-shrink:0}
 .nav-brand:hover{opacity:0.9}
 .nav-brand-icon{width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:1.1rem;color:var(--bg-primary);font-weight:900;box-shadow:0 4px 15px rgba(0,245,212,0.3);transition:var(--transition)}
 .nav-brand:hover .nav-brand-icon{box-shadow:0 4px 25px rgba(0,245,212,0.5);transform:scale(1.05)}
@@ -134,10 +134,11 @@ tr:hover td{background:rgba(0,245,212,0.03)}
 .nav-link{padding:8px 16px;border-radius:var(--radius-xs);font-size:0.88rem;font-weight:600;color:var(--text-secondary);cursor:pointer;transition:var(--transition);border:none;background:none;position:relative}
 .nav-link:hover,.nav-link.active{color:var(--accent);background:rgba(0,245,212,0.06)}
 .nav-link.active::after{content:'';position:absolute;bottom:-1px;left:20%;right:20%;height:2px;background:var(--accent);border-radius:2px}
-.nav-user{display:flex;align-items:center;gap:10px}
+.nav-user{display:flex;align-items:center;gap:10px;overflow:hidden;min-width:0;flex-shrink:1}
+.nav-toggles{display:flex;gap:6px}
 .nav-avatar{width:38px;height:38px;border-radius:var(--radius-full);border:2px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:0.85rem;background:linear-gradient(135deg,var(--cobalt),var(--bg-primary));box-shadow:0 0 15px rgba(0,245,212,0.2);transition:var(--transition)}
 .nav-avatar:hover{box-shadow:0 0 25px rgba(0,245,212,0.4)}
-.nav-hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:8px;background:none;border:none}
+.nav-hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:8px;background:none;border:none;flex-shrink:0}
 .nav-hamburger span{display:block;width:24px;height:2px;background:var(--text-primary);border-radius:2px;transition:var(--transition)}
 .mobile-menu{display:none;position:fixed;inset:0;top:68px;background:rgba(11,19,43,0.97);backdrop-filter:blur(30px);z-index:9998;flex-direction:column;align-items:center;justify-content:center;gap:12px}
 .mobile-menu.open{display:flex}
@@ -364,8 +365,12 @@ tr:hover td{background:rgba(0,245,212,0.03)}
 html{overflow-x:hidden}
 body.sidebar-open{overflow:hidden}
 .nav-links{display:none}
-.nav-hamburger{display:flex}
+.nav-hamburger{display:flex;flex-shrink:0}
+.nav-user{gap:6px;flex-shrink:1;overflow:hidden}.nav-user .btn{padding:6px 10px;font-size:0.72rem;white-space:nowrap}
+.nav-toggles{display:none!important}
+.nav-avatar{width:32px;height:32px;font-size:0.75rem;flex-shrink:0}
 .navbar{padding:0 12px;height:56px}
+#notifBellContainer{display:none}
 .mobile-menu{top:56px}
 .mobile-menu .nav-link{font-size:1.1rem;padding:14px 32px}
 .sidebar{display:block!important;width:280px!important;position:fixed!important;top:0;bottom:0;right:0!important;left:auto!important;z-index:9993;background:var(--bg-primary)!important;border-left:1px solid var(--glass-border)!important;border-right:none!important;padding:0!important;overflow-y:auto;transform:translateX(101%);transition:transform .3s cubic-bezier(0.25,0.46,0.45,0.94);box-shadow:none}
@@ -840,7 +845,7 @@ const App={
     var T=Lang.t.bind(Lang);
     var langBtn='<button class="btn btn-sm btn-secondary" onclick="Lang.set(Lang.get()===\'ar\'?\'en\':\'ar\');App.renderApp()" style="font-size:0.75rem;padding:6px 12px">'+(Lang.get()==='ar'?'EN':'عربي')+'</button>';
     var themeBtn='<button class="btn btn-sm btn-secondary" onclick="Theme.toggle();App.renderApp()" style="font-size:0.75rem;padding:6px 12px">'+(Theme.get()==='dark'?'☀️':'🌙')+'</button>';
-    var toggles=langBtn+themeBtn;
+    var toggles='<div class="nav-toggles">'+langBtn+themeBtn+'</div>';
     const nav=document.getElementById('navLinks');
     const usr=document.getElementById('navUser');
     const mob=document.getElementById('mobileMenu');
