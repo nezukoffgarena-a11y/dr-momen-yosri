@@ -1190,6 +1190,29 @@ function showToast(msg,type){
   c.appendChild(t);
   setTimeout(function(){t.style.opacity='0';t.style.transform='translateX(-30px)';setTimeout(function(){t.remove()},300)},3000);
 }
+function applyWatermark(){
+  var old=document.getElementById('siteWatermark');if(old)old.remove();
+  if(!App.user||App.user.role==='admin')return;
+  var name=App.user.name||'';
+  var email=App.user.email||'';
+  var label=name+' | '+email;
+  var container=document.createElement('div');
+  container.id='siteWatermark';
+  container.style.cssText='position:fixed;inset:0;z-index:1;pointer-events:none;overflow:hidden;opacity:0.07';
+  var rows=12;var cols=4;
+  for(var r=0;r<rows;r++){
+    for(var c=0;c<cols;c++){
+      var sp=document.createElement('div');
+      sp.textContent=label;
+      sp.style.cssText='position:absolute;font-size:14px;font-weight:700;color:#000;white-space:nowrap;transform:rotate(-35deg);font-family:var(--font-ar);letter-spacing:1px';
+      sp.style.top=(r*(100/rows))+'%';
+      sp.style.left=(c*(100/cols)-10)+'%';
+      container.appendChild(sp);
+    }
+  }
+  document.body.appendChild(container);
+}
+function removeWatermark(){var old=document.getElementById('siteWatermark');if(old)old.remove()}
 const Notify={
   _storageKey:function(){return 'dm_read_notifs'},
   getReadIds:function(){try{return JSON.parse(localStorage.getItem(this._storageKey()))||[]}catch(e){return[]}},
@@ -1295,8 +1318,8 @@ const App={
       case'signup':app.innerHTML=Auth.renderSignup();break;
       case'pending':app.innerHTML=PendingPage.render();break;
       case'banned':app.innerHTML='<div style="display:flex;align-items:center;justify-content:center;min-height:80vh;padding:40px"><div class="card" style="max-width:500px;text-align:center"><div style="font-size:4rem;margin-bottom:16px">🚫</div><h1 style="font-size:1.5rem;font-weight:900;margin-bottom:12px;color:var(--danger)">'+Lang.t('bannedTitle')+'</h1><p style="color:var(--text-secondary);line-height:1.8;margin-bottom:24px">'+Lang.t('bannedDesc')+'</p><button class="btn btn-primary" onclick="App.navigate(\'login\')">'+Lang.t('bannedBack')+'</button></div></div>';break;
-      case'admin':if(!this.requireAuth('admin'))return;app.innerHTML=Admin.render();Admin.init();Utils.loadVideos();break;
-      case'student':if(!this.requireAuth('student'))return;app.innerHTML=Student.render();Student.init();Utils.loadVideos();break;
+      case'admin':if(!this.requireAuth('admin'))return;app.innerHTML=Admin.render();Admin.init();Utils.loadVideos();removeWatermark();break;
+      case'student':if(!this.requireAuth('student'))return;app.innerHTML=Student.render();Student.init();Utils.loadVideos();applyWatermark();break;
       case'community':if(!this.requireAuth())return;app.innerHTML=CommunityPage.render();CommunityPage.init();break;
       case'tournament':if(!this.requireAuth())return;app.innerHTML=Tournament.render();break;
     }
