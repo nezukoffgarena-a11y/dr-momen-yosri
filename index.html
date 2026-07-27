@@ -3506,6 +3506,7 @@ function reportScreenshot(reason){
   function showBlock(){if(blockVisible)return;blockVisible=true;var o=document.getElementById('protOverlay');if(o)o.style.display='flex'}
   function hideBlock(){blockVisible=false;var o=document.getElementById('protOverlay');if(o)o.style.display='none'}
   window._showBlock=showBlock;window._hideBlock=hideBlock;
+
   document.addEventListener('contextmenu',function(e){
     if(e.target.tagName!=='INPUT'&&e.target.tagName!=='TEXTAREA'&&e.target.tagName!=='SELECT'){e.preventDefault();return false}
   });
@@ -3522,9 +3523,28 @@ function reportScreenshot(reason){
     if(e.ctrlKey&&(k==='s')){e.preventDefault();return false}
     if(e.altKey&&k==='printscreen'){e.preventDefault();showBlock();reportScreenshot('Alt+PrintScreen');showToast('⚠️ تم تسجيل محاولة لقطة شاشة','error');return false}
     if(e.metaKey&&(k==='shift'||k==='4'||k==='5'||k==='3')){e.preventDefault();showBlock();reportScreenshot('Mac screenshot shortcut');showToast('⚠️ تم تسجيل محاولة لقطة شاشة','error');return false}
+    if(e.ctrlKey&&(k==='c'||k==='x')){e.preventDefault();reportScreenshot('Copy/Cut attempt');showToast('⚠️ النسخ غير مسموح','error');return false}
   });
   document.addEventListener('keyup',function(e){
     if(e.key==='PrintScreen'&&App.user&&App.user.role!=='admin'){showBlock();reportScreenshot('PrintScreen keyup');showToast('⚠️ تم تسجيل محاولة لقطة شاشة','error')}
+  });
+  document.addEventListener('copy',function(e){
+    if(!App.user||App.user.role==='admin')return;
+    e.preventDefault();reportScreenshot('Clipboard copy');showToast('⚠️ النسخ غير مسموح','error');return false;
+  });
+  document.addEventListener('cut',function(e){
+    if(!App.user||App.user.role==='admin')return;
+    e.preventDefault();reportScreenshot('Clipboard cut');showToast('⚠️ القص غير مسموح','error');return false;
+  });
+  document.addEventListener('paste',function(e){
+    if(!App.user||App.user.role==='admin')return;
+    e.preventDefault();return false;
+  });
+  document.addEventListener('selectstart',function(e){
+    if(!App.user||App.user.role==='admin')return;
+    if(e.target.tagName!=='INPUT'&&e.target.tagName!=='TEXTAREA'&&e.target.tagName!=='SELECT'){
+      e.preventDefault();return false;
+    }
   });
   document.addEventListener('dragstart',function(e){
     if(e.target.tagName==='IMG'||e.target.tagName==='VIDEO'){e.preventDefault();return false}
@@ -3535,7 +3555,45 @@ function reportScreenshot(reason){
   var protStyle=document.createElement('style');
   protStyle.textContent='@media print{body{display:none!important}*{display:none!important}}';
   document.head.appendChild(protStyle);
+
   if(App.user&&App.user.role!=='admin'){
+    var wmContainer=document.createElement('div');
+    wmContainer.id='dynamicWatermarks';
+    wmContainer.style.cssText='position:fixed;inset:0;z-index:99998;pointer-events:none;overflow:hidden';
+    document.body.appendChild(wmContainer);
+    var wmRows=8;var wmCols=6;var patterns=[
+      'translate(0,0) rotate(-35deg)',
+      'translate(20px,10px) rotate(-25deg)'
+    ];
+    var nowStr=function(){return new Date().toLocaleString('ar-EG',{timeZone:'Africa/Cairo',hour12:true})};
+    var wmText=function(){
+      var u=App.user||{};
+      return (u.name||'Student')+' | '+(u.email||'')+' | '+nowStr();
+    };
+    function buildWatermarks(){
+      if(!wmContainer)return;
+      wmContainer.innerHTML='';
+      for(var r=0;r<wmRows;r++){
+        for(var c=0;c<wmCols;c++){
+          var span=document.createElement('div');
+          var dur=8+Math.random()*6;
+          var delay=Math.random()*-10;
+          var pat=patterns[(r+c)%patterns.length];
+          span.textContent=wmText();
+          span.style.cssText='position:absolute;white-space:nowrap;font-size:'+(11+Math.random()*3)+'px;color:rgba(0,245,212,0.07);font-family:var(--font-ar);letter-spacing:2px;animation:wmFloat '+dur+'s linear '+delay+'s infinite;transform:'+pat+';top:'+(r*(100/wmRows))+'%;left:'+(c*(100/wmCols)-10)+'%';
+          wmContainer.appendChild(span);
+        }
+      }
+    }
+    var wmKeyframes=document.createElement('style');
+    wmKeyframes.textContent='@keyframes wmFloat{0%{opacity:0.04;transform:translate(0,0) rotate(-35deg)}25%{opacity:0.09}50%{opacity:0.04;transform:translate(-30px,20px) rotate(-25deg)}75%{opacity:0.09}100%{opacity:0.04;transform:translate(0,0) rotate(-35deg)}}';
+    document.head.appendChild(wmKeyframes);
+    buildWatermarks();
+    setInterval(function(){
+      if(App.currentView!=='student')return;
+      buildWatermarks();
+    },10000);
+
     window.addEventListener('blur',function(){if(App.user&&App.user.role!=='admin'){showBlock();reportScreenshot('Window blur / focus loss')}});
     window.addEventListener('focus',function(){hideBlock()});
     document.addEventListener('visibilitychange',function(){
@@ -3548,6 +3606,15 @@ function reportScreenshot(reason){
         try{var el=document.documentElement;var r=el.requestFullscreen||el.webkitRequestFullscreen||el.mozRequestFullScreen||el.msRequestFullscreen;if(r)r.call(el)}catch(x){}
       }
     });
+    if(navigator.clipboard&&navigator.clipboard.writeText){
+      var origWrite=navigator.clipboard.writeText.bind(navigator.clipboard);
+      navigator.clipboard.writeText=function(){reportScreenshot('Clipboard write attempt');return Promise.reject(new DOMException('Clipboard write blocked','NotAllowedError'))};
+    }
+    var origExec=document.execCommand;
+    document.execCommand=function(cmd){
+      if(cmd==='copy'||cmd==='cut'){reportScreenshot('execCommand '+cmd);return false}
+      return origExec.apply(document,arguments);
+    };
   }
 })();
 document.addEventListener('DOMContentLoaded',function(){App.init()});
