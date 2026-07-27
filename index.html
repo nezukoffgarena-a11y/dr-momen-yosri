@@ -651,7 +651,11 @@ const DB={
     FB_DB.ref('shared/data').once('value').then(function(snap){
       var res=snap.val()||{};
       var sharedKeys=['lessons','files','exams','notifications','community','users','homeworks','hwSubmissions'];
-      sharedKeys.forEach(function(k){DB._set(k,res[k]||[])});
+      sharedKeys.forEach(function(k){
+        var data=res[k]||[];
+        if(k==='lessons'&&Array.isArray(data)){data=data.map(function(les){var c=Object.assign({},les);if(c.videoData){c._hasVideo=true;VideoStore.save(c.id,c.videoData);delete c.videoData}else if(!c._hasVideo){delete c._hasVideo}return c})}
+        try{DB._set(k,data)}catch(e){console.error('sync write failed:',k,e)}
+      });
       var emailKey=session.email.replace(/\./g,'_dot_');
       return FB_DB.ref('users/'+emailKey).once('value');
     }).then(function(snap){
@@ -675,6 +679,16 @@ const DB={
     FB_DB.ref('all_users').set(users).catch(function(e){console.log(e)});
   }
 };
+(function migrateVideos(){
+  try{
+    var lessons=DB._get('lessons');
+    if(lessons&&lessons.length){
+      var dirty=false;
+      lessons=lessons.map(function(l){if(l.videoData){var c=Object.assign({},l);c._hasVideo=true;VideoStore.save(c.id,c.videoData);delete c.videoData;dirty=true;return c}return l});
+      if(dirty){try{DB._set('lessons',lessons)}catch(e){console.error('Video migration storage error:',e)}}
+    }
+  }catch(e){console.error('Video migration error:',e)}
+})();
 (function seedAdmin(){
   if(!DB.getUserByEmail(ADMIN_EMAIL)){
     DB.addUser({id:'admin_001',name:'د. مؤمن يسري',email:ADMIN_EMAIL,password:ADMIN_PASS,role:'admin',status:'approved',phone:'',parentName:'',parentPhone:'',track:'',grade:'',school:'',administration:'',governorate:'',avatar:'',wallet:0,badges:[],joinedAt:Date.now()});
