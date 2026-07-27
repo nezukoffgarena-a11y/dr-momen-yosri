@@ -1079,7 +1079,7 @@ const DB={
   clearSession(){localStorage.removeItem('dm_session')},
   getUserById(id){return this.users().find(u=>u.id===id)},
   getUserByEmail(email){return this.users().find(u=>u.email===email)},
-  addUser(user){const u=this.users();u.push(user);this.saveUsers(u)},
+  addUser(user){const u=this.users();var idx=-1;for(var i=0;i<u.length;i++){if(u[i].id===user.id||u[i].email===user.email){idx=i;break}}if(idx>=0){u[idx]=Object.assign({},u[idx],user)}else{u.push(user)}this.saveUsers(u)},
   updateUser(id,updates){
     this.saveUsers(this.users().map(function(u){return u.id===id?Object.assign({},u,updates):u}));
     var u=this.getUserById(id);if(u)FB_DB.ref('all_users/'+id).set(u).catch(function(){});
@@ -1241,6 +1241,8 @@ const App={
         DB.syncFromServer(function(){
           var fresh=DB.getUserById(sess.userId);
           if(fresh)App.user=fresh;
+          if(fresh&&fresh.role==='admin'&&App.currentView!=='admin'){App.navigate('admin');return}
+          if(fresh&&fresh.role!=='admin'&&App.currentView==='admin'){App.navigate('student');return}
           if(App.currentView==='admin'&&typeof Admin!=='undefined'){
             var el=document.getElementById('adminContent');
             if(el){Admin.switchSection(App.currentSubView||'overview')}
@@ -1263,7 +1265,14 @@ const App={
       if(App.user&&App.user.email){
         DB.syncFromServer(function(){
           var fresh=DB.getUserByEmail(App.user.email);
-          if(fresh){App.user=fresh}
+          if(fresh){
+            if(fresh.role!==App.user.role){
+              App.user=fresh;
+              App.navigate(fresh.role==='admin'?'admin':'student');
+              return;
+            }
+            App.user=fresh;
+          }
           Notify.renderBell();
           if(App.currentView==='student'&&typeof Student!=='undefined'){
             var el=document.getElementById('studentContent');
