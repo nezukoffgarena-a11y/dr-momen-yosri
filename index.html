@@ -606,9 +606,6 @@ const I18N={
     toastBanned:"تم حظر الطالب 🚫",confirmUnban:"هل أنت متأكد من إلغاء حظر هذا الطالب؟",
     toastUnbanned:"تم إلغاء الحظر ✅",confirmDeleteStudent:"هل أنت متأكد من مسح هذا الحساب نهائياً؟ لن تتمكن من استرجاعه.",
     toastDeleted:"تم مسح الحساب نهائياً",
-    adminMakeAdmin:"جعل أدمن",adminRemoveAdmin:"إزالة الأدمن",confirmMakeAdmin:"هل أنت متأكد من جعل هذا الحساب أدمن؟ سيكون لديه صلاحيات كاملة.",
-    confirmRemoveAdmin:"هل أنت متأكد من إزالة صلاحيات الأدمن من هذا الحساب؟",
-    toastMadeAdmin:"تم جعل الحساب أدمن 👑",toastRemovedAdmin:"تم إزالة صلاحيات الأدمن",adminRoleCol:"الصلاحية",adminRoleAdmin:"👑 أدمن",adminRoleStudent:"🎓 طالب",
     adminLessonsPageTitle:"إدارة الدروس والفيديوهات",adminAddLesson:"إضافة درس جديد",
     adminNoLessons:"لا توجد دروس بعد. أضف أول درس!",adminEditLesson:"تعديل الدرس",adminNewLesson:"إضافة درس جديد",
     adminLessonTitleLabel:"عنوان الدرس",adminLessonDescLabel:"وصف الدرس",
@@ -855,9 +852,6 @@ const I18N={
     toastBanned:"Student banned",confirmUnban:"Are you sure you want to unban this student?",
     toastUnbanned:"Unbanned",confirmDeleteStudent:"Are you sure? This account will be permanently deleted.",
     toastDeleted:"Account permanently deleted",
-    adminMakeAdmin:"Make Admin",adminRemoveAdmin:"Remove Admin",confirmMakeAdmin:"Are you sure you want to make this account an admin? They will have full privileges.",
-    confirmRemoveAdmin:"Are you sure you want to remove admin privileges from this account?",
-    toastMadeAdmin:"Account promoted to Admin 👑",toastRemovedAdmin:"Admin privileges removed",adminRoleCol:"Role",adminRoleAdmin:"👑 Admin",adminRoleStudent:"🎓 Student",
     adminLessonsPageTitle:"Lesson & Video Management",adminAddLesson:"Add New Lesson",
     adminNoLessons:"No lessons yet. Add the first one!",adminEditLesson:"Edit Lesson",adminNewLesson:"Add New Lesson",
     adminLessonTitleLabel:"Lesson Title",adminLessonDescLabel:"Lesson Description",
@@ -1079,7 +1073,7 @@ const DB={
   clearSession(){localStorage.removeItem('dm_session')},
   getUserById(id){return this.users().find(u=>u.id===id)},
   getUserByEmail(email){return this.users().find(u=>u.email===email)},
-  addUser(user){const u=this.users();var idx=-1;for(var i=0;i<u.length;i++){if(u[i].id===user.id||u[i].email===user.email){idx=i;break}}if(idx>=0){u[idx]=Object.assign({},u[idx],user)}else{u.push(user)}this.saveUsers(u)},
+  addUser(user){const u=this.users();u.push(user);this.saveUsers(u)},
   updateUser(id,updates){
     this.saveUsers(this.users().map(function(u){return u.id===id?Object.assign({},u,updates):u}));
     var u=this.getUserById(id);if(u)FB_DB.ref('all_users/'+id).set(u).catch(function(){});
@@ -1706,7 +1700,7 @@ const Admin={
     '<select class="form-select" id="adminFilterTrack" style="width:180px" onchange="Admin.filterStudents()"><option value="">'+T('adminAllTracks')+'</option>'+TRACKS.map(function(t){return '<option value="'+t+'">'+t+'</option>'}).join('')+'</select>'+
     '<select class="form-select" id="adminFilterStatus" style="width:180px" onchange="Admin.filterStudents()"><option value="">'+T('adminAllStatuses')+'</option><option value="approved">'+T('adminApproved')+'</option><option value="pending">'+T('adminPendingStatus')+'</option><option value="rejected">'+T('adminRejected')+'</option></select>'+
     '</div>'+
-    '<div class="card"><div class="table-container"><table><thead><tr><th>'+T('adminNameCol')+'</th><th>'+T('loginEmail')+'</th><th>'+T('adminStudentPhoneLabel')+'</th><th>'+T('adminParentLabel')+'</th><th>'+T('adminParentPhoneLabel')+'</th><th>'+T('adminGradeCol')+'</th><th>'+T('adminTrackCol')+'</th><th>'+T('adminGovernorateLabel')+'</th><th>'+T('adminRoleCol')+'</th><th>'+T('adminStatusCol')+'</th><th>'+(isAr?'إجراءات':'Actions')+'</th></tr></thead><tbody id="adminStudentsBody"></tbody></table></div>'+
+    '<div class="card"><div class="table-container"><table><thead><tr><th>'+T('adminNameCol')+'</th><th>'+T('loginEmail')+'</th><th>'+T('adminStudentPhoneLabel')+'</th><th>'+T('adminParentLabel')+'</th><th>'+T('adminParentPhoneLabel')+'</th><th>'+T('adminGradeCol')+'</th><th>'+T('adminTrackCol')+'</th><th>'+T('adminGovernorateLabel')+'</th><th>'+T('adminStatusCol')+'</th><th>'+(isAr?'إجراءات':'Actions')+'</th></tr></thead><tbody id="adminStudentsBody"></tbody></table></div>'+
     '<div id="adminStudentsEmpty" class="empty-state" style="display:none"><div class="empty-icon">👥</div><p>'+T('adminNoResults')+'</p></div></div></div>';
   },
   filterStudents:function(){
@@ -1714,7 +1708,7 @@ const Admin={
     var grade=document.getElementById('adminFilterGrade')?document.getElementById('adminFilterGrade').value:'';
     var track=document.getElementById('adminFilterTrack')?document.getElementById('adminFilterTrack').value:'';
     var status=document.getElementById('adminFilterStatus')?document.getElementById('adminFilterStatus').value:'';
-    var users=DB.users().filter(function(u){return u.id!=='admin_001'});
+    var users=DB.users().filter(function(u){return u.role==='student'});
     if(q)users=users.filter(function(u){return Utils.searchMatch(u.name,q)||Utils.searchMatch(u.email,q)});
     if(grade)users=users.filter(function(u){return u.grade===grade});
     if(track)users=users.filter(function(u){return u.track===track});
@@ -1725,10 +1719,7 @@ const Admin={
     if(users.length===0){tbody.innerHTML='';empty.style.display='block';return}
     empty.style.display='none';
     tbody.innerHTML=users.map(function(u){
-      var isAdmin=u.role==='admin';
-      var roleBadge=isAdmin?'<span class="badge badge-accent">'+Lang.t('adminRoleAdmin')+'</span>':'<span class="badge badge-info">'+Lang.t('adminRoleStudent')+'</span>';
-      var roleBtn=isAdmin?'<button class="btn btn-sm btn-danger" onclick="Admin.demoteAdmin(\''+u.id+'\')">⭐ '+Lang.t('adminRemoveAdmin')+'</button>':'<button class="btn btn-sm btn-primary" onclick="Admin.makeAdmin(\''+u.id+'\')">👑 '+Lang.t('adminMakeAdmin')+'</button>';
-      return '<tr><td><strong>'+Utils.escHtml(u.name)+'</strong></td><td style="font-family:var(--font-en);font-size:0.8rem" dir="ltr">'+Utils.escHtml(u.email)+'</td><td dir="ltr">'+Utils.escHtml(u.phone||'-')+'</td><td>'+Utils.escHtml(u.parentName||'-')+'</td><td dir="ltr"><a href="https://wa.me/'+(u.parentPhone||'').replace(/^0/,'20')+'" target="_blank">'+Utils.escHtml(u.parentPhone||'-')+' 📱</a></td><td>'+Utils.escHtml(u.grade||'-')+'</td><td><span class="badge badge-info">'+Utils.escHtml(u.track||'-')+'</span></td><td>'+Utils.escHtml(u.governorate||'-')+'</td><td>'+roleBadge+'</td><td><span class="badge '+(u.status==='approved'?'badge-accent':u.status==='rejected'?'badge-danger':u.status==='banned'?'badge-danger':'badge-warning')+'">'+(u.status==='approved'?Lang.t('adminApproved'):u.status==='rejected'?Lang.t('adminRejected'):u.status==='banned'?Lang.t('adminBanned'):Lang.t('adminPendingStatus'))+'</span></td><td style="display:flex;gap:4px;flex-wrap:wrap">'+roleBtn+(u.status!=='approved'?'<button class="btn btn-sm btn-primary" onclick="Admin.approveStudent(\''+u.id+'\')">'+Lang.t('adminApprove')+'</button>':'')+(u.status!=='rejected'&&u.status!=='banned'?'<button class="btn btn-sm btn-danger" onclick="Admin.rejectStudent(\''+u.id+'\')">'+Lang.t('adminReject')+'</button>':'')+(u.status!=='banned'?'<button class="btn btn-sm btn-danger" onclick="Admin.banStudent(\''+u.id+'\')">🚫 '+Lang.t('adminBan')+'</button>':'<button class="btn btn-sm btn-primary" onclick="Admin.unbanStudent(\''+u.id+'\')">✅ '+Lang.t('adminUnban')+'</button>')+'<button class="btn btn-sm btn-danger" onclick="Admin.deleteStudent(\''+u.id+'\')">🗑️</button></td></tr>';
+      return '<tr><td><strong>'+Utils.escHtml(u.name)+'</strong></td><td style="font-family:var(--font-en);font-size:0.8rem" dir="ltr">'+Utils.escHtml(u.email)+'</td><td dir="ltr">'+Utils.escHtml(u.phone||'-')+'</td><td>'+Utils.escHtml(u.parentName||'-')+'</td><td dir="ltr"><a href="https://wa.me/'+(u.parentPhone||'').replace(/^0/,'20')+'" target="_blank">'+Utils.escHtml(u.parentPhone||'-')+' 📱</a></td><td>'+Utils.escHtml(u.grade)+'</td><td><span class="badge badge-info">'+Utils.escHtml(u.track)+'</span></td><td>'+Utils.escHtml(u.governorate||'-')+'</td><td><span class="badge '+(u.status==='approved'?'badge-accent':u.status==='rejected'?'badge-danger':u.status==='banned'?'badge-danger':'badge-warning')+'">'+(u.status==='approved'?Lang.t('adminApproved'):u.status==='rejected'?Lang.t('adminRejected'):u.status==='banned'?Lang.t('adminBanned'):Lang.t('adminPendingStatus'))+'</span></td><td style="display:flex;gap:4px;flex-wrap:wrap">'+(u.status!=='approved'?'<button class="btn btn-sm btn-primary" onclick="Admin.approveStudent(\''+u.id+'\')">'+Lang.t('adminApprove')+'</button>':'')+(u.status!=='rejected'&&u.status!=='banned'?'<button class="btn btn-sm btn-danger" onclick="Admin.rejectStudent(\''+u.id+'\')">'+Lang.t('adminReject')+'</button>':'')+(u.status!=='banned'?'<button class="btn btn-sm btn-danger" onclick="Admin.banStudent(\''+u.id+'\')">🚫 '+Lang.t('adminBan')+'</button>':'<button class="btn btn-sm btn-primary" onclick="Admin.unbanStudent(\''+u.id+'\')">✅ '+Lang.t('adminUnban')+'</button>')+(u.id!=='admin_001'?'<button class="btn btn-sm btn-danger" onclick="Admin.deleteStudent(\''+u.id+'\')">🗑️</button>':'')+'</td></tr>';
     }).join('');
   },
   approveStudent:function(id){
@@ -1772,22 +1763,6 @@ const Admin={
       if(u.email){var fk=u.email.replace(/\./g,'_dot_');FB_DB.ref('users/'+fk).remove().catch(function(){})}
     }
     showToast(Lang.t('toastDeleted'),'error');
-    this.switchSection(App.currentSubView||'students');
-  },
-  makeAdmin:function(id){
-    if(!confirm(Lang.t('confirmMakeAdmin')))return;
-    DB.updateUser(id,{role:'admin'});
-    var u=DB.getUserById(id);
-    if(u){FB_DB.ref('all_users/'+id).set(u).catch(function(){})}
-    showToast(Lang.t('toastMadeAdmin'));
-    this.switchSection(App.currentSubView||'students');
-  },
-  demoteAdmin:function(id){
-    if(!confirm(Lang.t('confirmRemoveAdmin')))return;
-    DB.updateUser(id,{role:'student'});
-    var u=DB.getUserById(id);
-    if(u){FB_DB.ref('all_users/'+id).set(u).catch(function(){})}
-    showToast(Lang.t('toastRemovedAdmin'));
     this.switchSection(App.currentSubView||'students');
   },
   pendingRequests:function(){
