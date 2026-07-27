@@ -1347,7 +1347,7 @@ const Admin={
       Admin.switchSection('lessons');
     };
     if(file){
-      if(file.size>50*1024*1024){showToast(Lang.get()==='ar'?'حجم الفيديو أكبر من 50MB. استخدم رابط YouTube أو embed بدلها.':'Video too large. Use YouTube link or embed instead.','error');return}
+      if(file.size>3*1024*1024*1024){showToast(Lang.get()==='ar'?'حجم الفيديو أكبر من 3GB.':'Video too large.','error');return}
       if(submitBtn){submitBtn.disabled=true;submitBtn.textContent='⏳ جاري رفع الفيديو...'}
       var reader=new FileReader();
       reader.onload=function(){try{doSave(reader.result)}catch(err){showToast('الذاكرة ممتلئة. جرب حجم فيديو أصغر أو استخدم رابط YouTube.','error');if(submitBtn){submitBtn.disabled=false;submitBtn.textContent=editId?'حفظ التعديلات':'إضافة الدرس'}}};
