@@ -380,7 +380,7 @@ body.sidebar-open{overflow:hidden}
 .sidebar-section{display:block!important;padding:8px 24px!important}
 .mobile-sidebar-close{display:flex}
 .mobile-sidebar-header{display:block}
-.main-content{margin-right:0!important;padding:16px;padding-top:72px}
+.main-content{margin-right:0!important;padding:16px;padding-top:72px;min-height:calc(100vh - 56px)!important}
 .dashboard{padding-top:0}
 .form-row{grid-template-columns:1fr}
 .community-sidebar{display:none}
@@ -501,7 +501,234 @@ const I18N={
     adminStudents:"الطلاب",adminPending:"طلبات التسجيل",adminLessons:"الدروس",adminFiles:"الملفات",adminExams:"الامتحانات",adminHomework:"الواجبات",adminWallet:"المحفظة",adminReports:"التقارير",adminBroadcast:"الإشعارات",adminAI:"المساعد الذكي",
     settingsTitle:"إعدادات الحساب",settingsChangePass:"تغيير كلمة المرور",settingsNewPass:"كلمة المرور الجديدة",settingsConfirmPass:"تأكيد كلمة المرور",settingsSave:"حفظ",
     general:"عام",loading:"جاري التحميل...",save:"حفظ",cancel:"إلغاء",delete:"حذف",edit:"تعديل",add:"إضافة",confirm:"تأكيد",back:"رجوع",search:"بحث...",noResults:"لا توجد نتائج",
-    captchaQ:"ما ناتج",captchaPlus:"+",captchaMinus:"-",captchaMul:"×",captchaEq:"="
+    captchaQ:"ما ناتج",captchaPlus:"+",captchaMinus:"-",captchaMul:"×",captchaEq:"=",
+    landingBadge:"منصة تعليمية متكاملة 2026/2027",landingHeroTitle1:"د.",landingHeroTitle2:"مؤمن يسري",landingHeroTitle3:"تعليم بأثر يدوم",
+    landingHeroDesc:"منصة تعليمية شاملة لمادة العلوم للطلاب من الصف الرابع الابتدائي إلى الثالث الثانوي، تجمع بين الفيديوهات التفاعلية والامتحانات الذكية والمجتمع العلمي النشط.",
+    landingStartBtn:"ابدأ الآن - إنشاء حساب مجاني",landingLoginBtn:"تسجيل الدخول",
+    statLevels:"مستويات دراسية",statTracks:"مسارات دراسية",statLessons:"دروس تفاعلية",
+    featSectionLabel:"المميزات",featTitle:"كل ما يحتاجه الطالب في مكان واحد",featTitleHighlight:"مكان واحد",
+    featDesc:"منصة متكاملة صُممت خصيصاً لتلبية احتياجات الطلاب والمعلمين في جميع المراحل الدراسية.",
+    feat1Title:"دروس فيديو تفاعلية",feat1Desc:"فيديوهات عالية الجودة شرحها د. مؤمن يسري، مع إمكانية التحكم في السرعة والعودة لأي نقطة.",
+    feat2Title:"امتحانات ذكية",feat2Desc:"اختبارات تفاعلية مع تصحيح آلي وشروحات فورية، متعددة الأسئلة واختياري.",
+    feat3Title:"ملفات ومراجعات",feat3Desc:"ملفات PDF، ملخصات، امتحانات سابقة، وصور علمية عالية الدقة.",
+    feat4Title:"محفظة إلكترونية",feat4Desc:"نظام محفظة مرن لشراء الدروس والمواد التعليمية بسهولة وأمان.",
+    feat5Title:"مجتمع تعليمي",feat5Desc:"تواصل مباشر مع الدكتور والزملاء، شارك الأسئلة والملاحظات والملفات.",
+    feat6Title:"تقييم وأداء",feat6Desc:"تقارير أداء شهرية، تقييمات مخصصة، ومتابعة مستمرة للتقدم.",
+    aboutLabel:"مدرسك",aboutTitle:"التقِ بـ",aboutName:"دكتور مؤمن يسري",
+    aboutBadge1:"خبير تعليم",aboutBadge2:"علوم فقط",aboutBadge3:"10+ سنوات",
+    aboutDesc:"مدرس متخصص في تدريس مادة العلوم لطلاب المرحلة الابتدائية والإعدادية والثانوية. خبرة تمتد لأكثر من 10 سنوات في النظم التعليمية الحكومية والخاصة. يقدم محتوى تعليمي مبسط وممتع يجمع بين الفهم العميق والتحصيل الدراسي المتميز.",
+    aboutWhatsApp:"تواصل واتساب",aboutYoutube:"قناة اليوتيوب",
+    tracksLabel:"المسارات الدراسية",tracksTitle:"مساران يغطيان",tracksTitleHighlight:"جميع المناهج",
+    track1Name:"عربي حكومي",track1Desc:"المنهج المصري العام لمادة العلوم للصفوف من الرابع الابتدائي إلى الثالث الثانوي.",
+    track2Name:"لغات",track2Desc:"المنهج المصري باللغة الإنجليزية للطلاب في مدارس اللغات.",
+    footerSupport:"ادعم المنصة",footerSupportDesc:"تبرعك يساعدنا في تطوير المحتوى<br>وتقديم تجربة تعليمية أفضل للجميع",
+    footerDonate:"تبرع الآن",footerRights:"جميع الحقوق محفوظة",
+    savedAccounts:"حسابات محفوظة",lastLogin:"آخر دخول",
+    loginWelcome:"مرحباً بعودتك! أدخل بياناتك للمتابعة.",
+    rememberMe:"تذكر بيانات الدخول",loginLogging:"جاري الدخول...",
+    loginNoAccQ:"ليس لديك حساب؟",loginSignUpLink:"إنشاء حساب جديد",
+    loginWrongPass:"كلمة المرور غير صحيحة",loginNotRegistered:"البريد الإلكتروني غير مسجل",loginConnError:"خطأ في الاتصال",
+    signupWelcome:"سجّل الآن وابدأ رحلتك التعليمية.",
+    signupStudentData:"بيانات الطالب",signupFullName:"الاسم الكامل للطالب",signupNamePlaceholder:"الاسم الكامل",
+    signupStudentPhone:"رقم هاتف الطالب",signupParentData:"بيانات ولي الأمر",
+    signupParentName:"اسم ولي الأمر",signupParentPhoneReq:"رقم هاتف ولي الأمر (إلزامي)",
+    signupAcademicData:"البيانات الدراسية",signupTrackLabel:"المسار الدراسي",signupChooseTrack:"اختر المسار",
+    signupGradeLabel:"الصف الدراسي",signupChooseGrade:"اختر الصف",
+    signupSchoolLabel:"اسم المدرسة",signupAdminLabel:"الإدارة التعليمية",signupGovLabel:"المحافظة",
+    signupAvatar:"صورة الشخصية (اختياري)",signupCreating:"جاري إنشاء الحساب...",
+    signupBtnText:"إنشاء الحساب",signupEmailExists:"هذا البريد الإلكتروني مسجل بالفعل",
+    signupSuccess:"تم إنشاء الحساب بنجاح! في انتظار المراجعة.",signupSuccessLocal:"تم إنشاء الحساب (محلياً). في انتظار المراجعة.",
+    signupHaveAccQ:"لديك حساب بالفعل؟",signupLoginLink:"تسجيل الدخول",
+    signupPasswordPlaceholder:"6 أحرف على الأقل",signupErrPassword:"كلمة المرور يجب أن تكون 6 أحرف على الأقل",
+    pendingPageTitle:"حسابك قيد المراجعة والإنشاء",
+    pendingDesc:"تم استلام طلب التسجيل الخاص بك بنجاح. يقوم د. مؤمن يسري بمراجعة بياناتك وتفعيل حسابك. سيتم إشعارك فور الانتهاء.",
+    pendingNote:"يمكنك تسجيل الدخول مرة أخرى للاطلاع على حالة حسابك.",
+    pendingBack:"العودة لتسجيل الدخول",
+    bannedTitle:"تم حظرك",bannedDesc:"تم حظر حسابك من قبل الإدارة. لا يمكنك الوصول للمنصة في الوقت الحالي.<br><br>للإستفسار تواصل مع الإدارة.",
+    bannedBack:"العودة لصفحة الدخول",
+    sidebarLouhati:"لوحتي",sidebarAdminLouhati:"التحكم",sidebarAdminPlatform:"مدير المنصة",
+    welcome:"مرحباً،",lessonsAvailable:"درس متاح",walletBalance:"رصيد محفظتي",
+    examsCompleted:"امتكام مكتمل",badgesCount:"إنجاز",
+    notificationsTitle:"آخر الإشعارات",availableLessons:"دروس متاحة",
+    watchBtn:"مشاهدة",locked:"مقفل",openBtn:"فتح الدرس",opened:"مفتوح",
+    lessonsTitle:"الدروس المتاحة",lessonsSub:"درس لمادتك ومسارك",
+    noLessons:"لا توجد دروس متاحة لمسارك وصفك حالياً",unlockLesson:"فتح بـ",altLink:"رابط بديل",
+    walletPageTitle:"محفظتي",walletAvailable:"الرصيد المتاح",walletHistory:"سجل المعاملات",
+    walletEmpty:"لا توجد معاملات بعد",walletInsufficient:"رصيد محفظتك غير كافٍ!",
+    walletConfirm:"هل تريد فتح الدرس",walletSuccess:"تم فتح الدرس بنجاح!",
+    examsPageTitle:"الامتحانات",noExams:"لا توجد امتحانات متاحة لصفك حالياً",
+    examSubject:"المادة",examDuration:"المدة",examMinutes:"دقيقة",
+    examQuestions:"أسئلة",examPassGrade:"درجة النجاح",examCompleted:"مكتمل",examAvailable:"متاح",
+    examStartBtn:"بدء الامتحان",examQuestion:"السؤال",
+    examPrevBtn:"السابق",examNextBtn:"التالي",examSubmitBtn:"تسليم",
+    examCongratulations:"أحسنت! لقد نجحت!",examTryAgain:"حاول مرة أخرى",
+    examCorrectAnswers:"إجابات صحيحة",examBackToExams:"العودة للامتحانات",
+    reportsTitle:"تقاريري وتقييماتي",noReports:"لم يتم إرسال أي تقارير لك بعد",
+    reportMonth:"تقرير",reportAttendance:"الحضور",reportRemarks:"ملاحظات الدكتور مؤمن يسري",
+    badgesTitle:"إنجازاتي وشوائعي",badgeEarned:"مكتسب",badgeLocked:"مقفل",
+    profilePageTitle:"معلوماتي الشخصية",profileSubtitle:"يمكنك تعديل بياناتك الشخصية هنا",
+    profileChangePhoto:"تغيير الصورة",profileFullName:"الاسم الكامل",
+    profileSaveBtn:"حفظ التعديلات",profileUpdated:"تم تحديث معلوماتك بنجاح!",
+    profileBackup:"نسخ احتياطي ونقل البيانات",
+    profileBackupDesc:"يمكنك تصدير جميع بياناتك ونقلها لأي جهاز آخر. يتم حفظ: معلومات الحساب، دروس مفتوحة، نتائج امتحانات، محادثات المساعد الذكي، الإنجازات.",
+    profileExport:"تصدير بياناتي",profileImport:"استيراد بيانات",
+    profileExported:"تم تصدير بياناتك بنجاح!",profileImported:"تم استيراد البيانات بنجاح!",
+    profileImportErr:"الملف ليس من هذا التطبيق!",
+    parentTitle:"بيانات ولي الأمر",parentSubtitle:"المعلومات المسجلة لولي الأمر (للقراءة فقط)",
+    parentNameLabel:"الاسم",parentPhoneLabel:"رقم الهاتف",parentNotRegistered:"غير مسجل",
+    filesTitle:"الملفات والمراجعات",filesDesc:"ملفات PDF، ملخصات، صور علمية",
+    filesEmpty:"لا توجد ملفات متاحة حالياً",downloadBtn:"تحميل",
+    adminOverview:"نظرة عامة",adminPlatformLabel:"مدير المنصة",
+    adminWelcome:"مرحباً د. مؤمن يسري",adminStudentsCount:"طالب مسجل",
+    adminPendingCountLabel:"قيد المراجعة",adminLessonsCount:"درس متاح",adminTotalWallet:"إجمالي المحافظ",
+    adminRecentStudents:"أحدث الطلاب المسجلين",
+    adminNameCol:"الاسم",adminGradeCol:"الصف",adminTrackCol:"المسار",adminStatusCol:"الحالة",adminRegDate:"تاريخ التسجيل",
+    adminApproved:"مقبول",adminPendingStatus:"قيد المراجعة",adminNoStudents:"لا يوجد طلاب مسجلين بعد",
+    adminStudentsPageTitle:"إدارة الطلاب",adminStudentsSub:"قائمة بجميع الطلاب المسجلين",
+    adminSearch:"بحث بالاسم أو البريد...",adminAllGrades:"جميع الصفوف",adminAllTracks:"جميع المسارات",adminAllStatuses:"جميع الحالات",
+    adminRejected:"مرفوض",adminBanned:"محظور",adminApprove:"قبول",adminReject:"رفض",adminBan:"حظر",adminUnban:"إلغاء الحظر",
+    adminNoResults:"لا توجد نتائج",
+    adminPendingTitle:"طلبات التسجيل المعلقة",
+    adminPendingReqCount:"طلب(طلبات) في انتظار المراجعة",
+    adminPendingNone:"لا توجد طلبات معلقة!",adminStudentPhoneLabel:"هاتف الطالب",
+    adminParentLabel:"ولي الأمر",adminParentPhoneLabel:"هاتف ولي الأمر",
+    adminSchoolLabel:"المدرسة",adminAdministrationLabel:"الإدارة",adminGovernorateLabel:"المحافظة",
+    adminNotSpecified:"غير محدد",adminWhatsApp:"واتساب",
+    toastApproved:"تم قبول الطالب بنجاح!",confirmReject:"هل أنت متأكد من رفض هذا الطالب؟",
+    toastRejected:"تم رفض الطالب",confirmBan:"هل أنت متأكد من حظر هذا الطالب؟ لن يتمكن من الدخول مجدداً.",
+    toastBanned:"تم حظر الطالب 🚫",confirmUnban:"هل أنت متأكد من إلغاء حظر هذا الطالب؟",
+    toastUnbanned:"تم إلغاء الحظر ✅",confirmDeleteStudent:"هل أنت متأكد من مسح هذا الحساب نهائياً؟ لن تتمكن من استرجاعه.",
+    toastDeleted:"تم مسح الحساب نهائياً",
+    adminLessonsPageTitle:"إدارة الدروس والفيديوهات",adminAddLesson:"إضافة درس جديد",
+    adminNoLessons:"لا توجد دروس بعد. أضف أول درس!",adminEditLesson:"تعديل الدرس",adminNewLesson:"إضافة درس جديد",
+    adminLessonTitleLabel:"عنوان الدرس",adminLessonDescLabel:"وصف الدرس",
+    adminLessonSubjectLabel:"المادة",adminChooseSubject:"اختر المادة",
+    adminLessonPriceLabel:"السعر (ج.م)",adminLessonGradeLabel:"الصف الدراسي",
+    adminChooseGrade:"اختر الصف",adminLessonTrackLabel:"المسار",adminChooseTrack:"اختر المسار",
+    adminVideoUrl:"رابط الفيديو (YouTube / Vimeo / رابط مباشر)",adminVideoUpload:"رفع فيديو MP4 مباشر",
+    adminVideoAlt:"رابط الفيديو البديل (اختياري)",adminVideoEmbed:"Embed Code (اختياري - للصق كود embed من YouTube أو أي مصدر)",
+    adminSaveLesson:"حفظ التعديلات",adminAddLessonBtn:"إضافة الدرس",
+    toastLessonSaved:"تم تعديل الدرس بنجاح!",toastLessonAdded:"تم إضافة الدرس بنجاح!",
+    toastStorageFull:"الذاكرة ممتلئة. جرب حذف بعض الدروس أو استخدم رابط فيديو بدل الرفع المباشر.",
+    confirmDeleteLesson:"هل أنت متأكد من حذف هذا الدرس؟",toastLessonDeleted:"تم حذف الدرس",
+    adminFilesPageTitle:"الملفات والمواد التعليمية",adminFilesCount:"ملف مرفوع",
+    adminUploadFile:"رفع ملف جديد",adminNoFiles:"لا توجد ملفات بعد",
+    adminFileNameLabel:"اسم الملف",adminFilePlaceholder:"مثال: ملخص الفصل الأول",
+    adminFileLessonLabel:"المرتبط بـ (درس اختياري)",adminFileGeneral:"عام - لكل الطلاب",
+    adminFileVisibilityLabel:"الظهور",adminFileRestricted:"مقيّد - لمن اشترى الدرس",
+    adminUploadBtn:"رفع الملف",toastFileUploaded:"تم رفع الملف بنجاح!",
+    confirmDeleteFile:"هل أنت متأكد من حذف هذا الملف؟",toastFileDeleted:"تم حذف الملف",
+    adminWalletPageTitle:"محفظة الطلاب",adminWalletSub:"إضافة رصيد ومتابعة المعاملات",
+    adminCurrentBalance:"الرصيد الحالي",adminAmountLabel:"المبلغ",
+    adminAddBtn:"إضافة",adminDeductBtn:"خصم",
+    adminTxHistory:"سجل المعاملات",adminNoApproved:"لا يوجد طلاب مقبولين بعد",
+    adminDeposit:"إيداع من الإدارة",adminDeduction:"خصم من الإدارة",
+    toastAdded:"تم إضافة",toastDeducted:"تم خصم",
+    adminInsufficient:"الرصيد غير كافي! الرصيد الحالي: ",
+    adminExamsPageTitle:"إدارة الامتحانات",adminExamsCount:"امتحان",
+    adminCreateExam:"إنشاء امتحان جديد",adminNoExams:"لا توجد امتحانات بعد",
+    adminExamTitleLabel:"عنوان الامتحان",adminExamTitlePlaceholder:"مثال: امتحان الفصل الأول",
+    adminExamDurationLabel:"المدة (دقيقة)",adminExamPassLabel:"درجة النجاح (%)",
+    adminExamCreateBtn:"إنشاء الامتحان",
+    adminAddQuestion:"إضافة سؤال",adminQuestionLabel:"السؤال",
+    adminQuestionTypeMcq:"اختيار من متعدد",adminQuestionTypeTf:"صح / خطأ",adminQuestionTypeShort:"إجابة قصيرة",
+    adminQuestionText:"نص السؤال",adminOptionLabel:"الخيار",
+    adminCorrectAnswerLabel:"الإجابة الصحيحة",adminCorrectAnswerPlaceholder:"رقم الخيار (1-4) أو الإجابة",
+    toastExamCreated:"تم إنشاء الامتحان بنجاح!",confirmDeleteExam:"هل أنت متأكد من حذف هذا الامتحان؟",
+    toastExamDeleted:"تم حذف الامتحان",adminViewResults:"النتائج",
+    adminNoOneTried:"لم يلُد أحد هذا الامتحان بعد",adminUnknown:"غير معروف",
+    adminAddAtLeast:"أضف سؤالاً واحداً على الأقل",
+    adminReportsPageTitle:"التقييمات والتقارير",adminReportsSub:"إرسال تقييمات وسجلات أداء للطلاب",
+    adminSendReport:"إرسال تقرير جديد",adminNoReportsYet:"لم يتم إرسال تقارير بعد",
+    adminGradesLabel:"الدرجات",adminEvalLabel:"التقييم",
+    adminReportModal:"إرسال تقرير تقييم",adminChooseStudent:"اختر الطالب",
+    adminMonthLabel:"الشهر",adminMonthPlaceholder:"مثال: يناير 2027",
+    adminAttendanceLabel:"الحضور (%)",adminRemarksLabel:"ملاحظات وتقييم الدكتور",
+    adminRemarksPlaceholder:"ملاحظاتك على أداء الطالب...",
+    adminSubjectGrades:"درجات المواد (JSON)",adminSendReportBtn:"إرسال التقرير",
+    toastReportSent:"تم إرسال التقرير بنجاح!",
+    adminBroadcastPageTitle:"الإشعارات العامة",adminBroadcastSub:"إرسال تنبيهات لجميع الطلاب",
+    adminSendNotif:"إرسال إشعار جديد",adminNoNotifs:"لا توجد إشعارات بعد",
+    adminNotifModal:"إرسال إشعار عام",adminNotifTitleLabel:"عنوان الإشعار",
+    adminNotifTitlePlaceholder:"مثال: إشعار هام",adminNotifMessageLabel:"الرسالة",
+    adminNotifMsgPlaceholder:"اكتب رسالتك هنا...",adminSendAll:"إرسال للجميع",
+    toastNotifSent:"تم إرسال الإشعار لجميع الطلاب!",toastNotifDeleted:"تم حذف الإشعار",
+    adminCurrentPassLabel:"كلمة المرور الحالية",
+    gameTitle:"لعبة اليوم",gameStreak:"سلسلة أيام",gameScoreLabel:"النقاط",gameProgressLabel:"التقدم",
+    gameCompleted:"لقد أكملت لعبة اليوم!",gameCompletedSub:"عد غداً للعبة جديدة",
+    gameRetry:"أعد المحاولة",gameLoading:"جاري تحضير الأسئلة...",
+    gameError:"تعذر تحميل الأسئلة. حاول مرة أخرى.",gameRetryBtn:"إعادة المحاولة",
+    gameConnectError:"خطأ في الاتصال",gameQuestionNum:"السؤال",
+    gameRiddleReveal:"أظهر الإجابة",gameAnswerLabel:"الإجابة",
+    gameCorrect:"أحسنت!",gameWrong:"خطأ",gameNext:"السؤال التالي",
+    gameOrderConfirm:"تأكيد الترتيب",gameFillConfirm:"تأكيد",
+    gameFillPlaceholder:"اكتب الإجابة هنا...",
+    gameExcellent:"ممتاز! أنت عبقري!",gameGood:"جيد جداً! واصل التقدم!",gameTryAgainMsg:"حاول مرة أخرى غداً!",
+    gameResult:"النتيجة",gamePoints:"نقطة",gameResetBtn:"أعد المحاولة",
+    communityGeneralFull:"عام - جميع الطلاب",communityPrimary:"المرحلة الابتدائية",
+    communityPrep:"المرحلة الإعدادية",communityArabic:"عربي حكومي",communityLanguages:"لغات",
+    communityShareFile:"مشاركة ملف",communityWriteMsg:"اكتب رسالتك...",
+    communityEmpty:"لا توجد رسائل بعد. كن أول من يبدأ المحادثة!",
+    communityShareFileModal:"مشاركة ملف في المجتمع",communityFileLabel:"الملف (صورة أو PDF)",
+    communityMsgOptional:"رسالة (اختياري)",communityMsgPlaceholder:"أضف تعليقاً...",
+    communityUploadBtn:"رفع ومشاركة",communityFileSelected:"تم اختيار",
+    communityFileShared:"تم مشاركة الملف بنجاح!",communityDeleteMsg:"هل أنت متأكد من حذف هذه الرسالة؟",
+    toastMsgDeleted:"تم حذف الرسالة",communitySelectFile:"اختر ملفاً أولاً",
+    communityAdminName:"د. مؤمن يسري",communityDeleteBtn:"حذف",communityFileLink:"مشاركة ملف",
+    tournamentSub:"أفضل الطلاب أداءً هذا الفصل",tournamentNoStudents:"لا يوجد طلاب مسجلين",
+    logout:"خروج",confirmYes:"نعم",confirmNo:"لا",saving:"جاري الحفظ...",
+    authLogoText:"د.م",aiPlaceholderShort:"اكتب سؤالك هنا...",aiClearChat:"مسح المحادثة",
+    aiWelcomeMsg:"مرحباً! أنا المساعد الذكي لمادة العلوم.<br>اسألني أي سؤال في العلوم من الصف الرابع الابتدائي إلى الثالث الثانوي.<br><br>💡 أتذكر محادثاتنا السابقة!",
+    aiCleared:"تم مسح المحادثة. ابدأ محادثة جديدة!",aiChatCleared:"تم مسح المحادثة",
+    aiThinkingLabel:"جاري التفكير...",aiErrorPrefix:"خطأ في الخادم",
+    adminPassWrong:"كلمة المرور الحالية خاطئة",adminPassMismatch:"كلمتا المرور غير متطابقتين",
+    adminNoChanges:"لا توجد تغييرات",adminUpdated:"تم تحديث الحساب بنجاح!",
+    hwTitleSingular:"واجب",hwAddHomework:"إضافة واجب",hwAllGrades:"الكل",
+    hwAddTitle:"إضافة واجب جديد",hwTitleLabel:"عنوان الواجب",hwTitlePlaceholder:"مثال: واجب الفصل الأول",
+    hwQuestionLabel:"السؤال",hwQuestionPlaceholder:"اكتب سؤال الواجب هنا...",
+    hwInstructionsLabel:"تعليمات إضافية (اختياري)",hwInstructionsPlaceholder:"تعليمات للطلاب...",
+    hwDueDateLabel:"موعد التسليم",hwMaxScoreLabel:"الدرجة النهائية",
+    hwGradeLabel:"الصف",hwSaveBtn:"💾 حفظ الواجب",
+    hwFillFields:"املا كل الحقول المطلوبة",hwAdded:"تم إضافة الواجب بنجاح",
+    hwDeleteConfirm:"هل أنت متأكد من حذف هذا الواجب؟",hwDeleted:"تم حذف الواجب",
+    hwHomeworks:"الواجبات",hwStudentSubmissions:"تسليمات الطلاب",
+    hwNoSubmissions:"لا توجد تسليمات بعد",hwStudentFiles:"ملفات الطالب",
+    hwGradeAction:"تقييم وحفظ",hwGradeLabel:"الدرجة",hwFeedbackLabel:"ملاحظات",
+    hwFeedbackPlaceholder:"ملاحظات على التصحيح...",hwStudentName:"طالب",
+    hwNoFileYet:"لم يرفع الطالب ملف بعد",hwHasAnnotations:"يوجد تأشيرات",
+    hwGradedMsg:"تم التقييم!",hwGradedEgp:" ج.م",hwGradeEgpBonus:"Graded! +",
+    hwAnnotationCleared:"تم مسح التأشيرات",hwAnnotationsCleared:"Annotations cleared",
+    hwGradedSuccess:"تم التقييم بنجاح!",
+    hwFileGradingTitle:"تصحيح واجب الطالب",hwGradeHomework:"Grade Student Homework",
+    hwPenRed:"🔴 أحمر",hwPenGreen:"🟢 أخضر",hwPenClear:"🗑️ مسح التأشيرات",hwPenClearEn:"Clear",
+    hwDownload:"تحميل",hwDownloadEn:"Download",
+    hwSaveGrade:"💾 تقييم وحفظ",hwSaveGradeEn:"💾 Save Grade",
+    hwMaxFiles:"الحد الأقصى 130 ملف",hwMaxFilesEn:"Max 130 files",
+    hwFilesSelected:"ملف(ات) مختار",hwFilesSelectedEn:"file(s) selected",
+    hwUploadFirst:"ارفع ملفات أولاً",hwUploadFirstEn:"Upload files first",
+    hwSubmitted:"تم تسليم الواجب بنجاح!",hwSubmittedEn:"Homework submitted!",
+    hwNoHwAvailable:"لا توجد واجبات متاحة",hwNoHwAvailableEn:"No homework available",
+    hwSubmittedLabel:"واجبك المُسلّم",hwSubmittedLabelEn:"Submitted Homework",
+    hwFile:"ملف",hwFileEn:"files",
+    hwOverdue:"منتهي",hwOverdueEn:"Overdue",
+    hwQuestionLabel2:"السؤال",hwQuestionLabel2En:"Question",
+    hwUploadLabel:"ارفع واجبك (صورة أو PDF)",hwUploadLabelEn:"Upload homework (Image or PDF)",
+    hwDragHere:"اضغط هنا أو اسحب ملفات",hwDragHereEn:"Click here or drag files",
+    hwFileTypes:"PDF أو صور (JPG, PNG) — حتى 130 صورة",hwFileTypesEn:"PDF or Images (JPG, PNG) — up to 130 images",
+    hwTeacherNotes:"ملاحظات المعلم",hwTeacherNotesEn:"Teacher Notes",
+    hwHomeworkGraded:"تم تقييم واجبك",hwHomeworkGradedEn:"Homework Graded",
+    hwScoreLabel2:"الدرجة: ",hwScoreLabel2En:"Score: ",
+    hwHomeworksTitle:"الواجبات",hwHomeworksTitleEn:"Homeworks",
+    hwDeleteHw:"هل أنت متأكد من حذف هذا الواجب؟",hwDeleteHwEn:"Are you sure you want to delete this homework?",
+    hwDeletedMsg:"تم حذف الواجب",hwDeletedMsgEn:"Homework deleted",
+    hwAddedMsg:"تم إضافة الواجب بنجاح",hwAddedMsgEn:"Homework added successfully",
+    hwFillFieldsMsg:"املا كل الحقول المطلوبة",hwFillFieldsMsgEn:"Fill all required fields",
+    adminGradedLabel:"الدرجة",adminGradedLabelEn:"Grade",
+    adminFeedbackLabel:"ملاحظات",adminFeedbackLabelEn:"Feedback",
+    adminGradingBtn:"تقييم وحفظ",adminGradingBtnEn:"Grade & Save",
+    adminFileUploaded:"ملف جديد",adminFileUploadedEn:"New file",
+    adminFileUploadedMsg:"ملف جديد متاح للطلاب",adminFileUploadedMsgEn:"New file available for students",
+    adminTransactionNoteDeposit:"إيداع من الإدارة",adminTransactionNoteDeduct:"خصم من الإدارة"
   },
   en:{
     appTitle:"Dr. Momen Yosri - Education Platform",navHome:"Home",navLogin:"Login",navSignup:"Sign Up",navDashboard:"My Dashboard",navAdmin:"Admin Panel",navCommunity:"Community",navTournament:"Tournament",
@@ -520,7 +747,234 @@ const I18N={
     adminStudents:"Students",adminPending:"Pending Requests",adminLessons:"Lessons",adminFiles:"Files",adminExams:"Exams",adminHomework:"Homework",adminWallet:"Wallet",adminReports:"Reports",adminBroadcast:"Notifications",adminAI:"AI Assistant",
     settingsTitle:"Account Settings",settingsChangePass:"Change Password",settingsNewPass:"New Password",settingsConfirmPass:"Confirm Password",settingsSave:"Save",
     general:"General",loading:"Loading...",save:"Save",cancel:"Cancel",delete:"Delete",edit:"Edit",add:"Add",confirm:"Confirm",back:"Back",search:"Search...",noResults:"No results",
-    captchaQ:"What is",captchaPlus:"+",captchaMinus:"-",captchaMul:"×",captchaEq:"="
+    captchaQ:"What is",captchaPlus:"+",captchaMinus:"-",captchaMul:"×",captchaEq:"=",
+    landingBadge:"Complete Educational Platform 2026/2027",landingHeroTitle1:"Dr.",landingHeroTitle2:"Momen Yosri",landingHeroTitle3:"Education that Lasts",
+    landingHeroDesc:"A comprehensive science education platform for students from 4th Primary to 3rd Secondary, combining interactive videos, smart exams, and an active scientific community.",
+    landingStartBtn:"Start Now - Create Free Account",landingLoginBtn:"Login",
+    statLevels:"Grade Levels",statTracks:"Study Tracks",statLessons:"Interactive Lessons",
+    featSectionLabel:"Features",featTitle:"Everything a Student Needs in One Place",featTitleHighlight:"One Place",
+    featDesc:"A complete platform designed specifically to meet the needs of students and teachers at all grade levels.",
+    feat1Title:"Interactive Video Lessons",feat1Desc:"High quality videos explained by Dr. Momen Yosri, with speed control and the ability to return to any point.",
+    feat2Title:"Smart Exams",feat2Desc:"Interactive quizzes with auto-grading and instant feedback, multiple question types.",
+    feat3Title:"Files & References",feat3Desc:"PDF files, summaries, past exams, and high-resolution science images.",
+    feat4Title:"E-Wallet",feat4Desc:"Flexible wallet system to purchase lessons and educational materials easily and securely.",
+    feat5Title:"Educational Community",feat5Desc:"Direct communication with the doctor and peers, share questions, notes, and files.",
+    feat6Title:"Evaluation & Performance",feat6Desc:"Monthly performance reports, personalized evaluations, and continuous progress tracking.",
+    aboutLabel:"Your Teacher",aboutTitle:"Meet",aboutName:"Dr. Momen Yosri",
+    aboutBadge1:"Education Expert",aboutBadge2:"Science Only",aboutBadge3:"10+ Years",
+    aboutDesc:"Specialized science teacher for primary, preparatory, and secondary school students. Over 10 years of experience in public and private education systems. Delivers simplified and enjoyable educational content that combines deep understanding with academic excellence.",
+    aboutWhatsApp:"WhatsApp Contact",aboutYoutube:"YouTube Channel",
+    tracksLabel:"Study Tracks",tracksTitle:"Two Tracks Covering",tracksTitleHighlight:"All Curricula",
+    track1Name:"Arabic Government",track1Desc:"Egyptian general science curriculum for grades from 4th Primary to 3rd Secondary.",
+    track2Name:"Languages",track2Desc:"Egyptian curriculum taught in English for language school students.",
+    footerSupport:"Support the Platform",footerSupportDesc:"Your donation helps us develop content<br>and provide a better learning experience for everyone",
+    footerDonate:"Donate Now",footerRights:"All Rights Reserved",
+    savedAccounts:"Saved Accounts",lastLogin:"Last login",
+    loginWelcome:"Welcome back! Enter your credentials to continue.",
+    rememberMe:"Remember login info",loginLogging:"Logging in...",
+    loginNoAccQ:"Don't have an account?",loginSignUpLink:"Create new account",
+    loginWrongPass:"Incorrect password",loginNotRegistered:"Email not registered",loginConnError:"Connection error",
+    signupWelcome:"Sign up now and start your learning journey.",
+    signupStudentData:"Student Information",signupFullName:"Student Full Name",signupNamePlaceholder:"Full Name",
+    signupStudentPhone:"Student Phone Number",signupParentData:"Parent Information",
+    signupParentName:"Parent Name",signupParentPhoneReq:"Parent Phone Number (Required)",
+    signupAcademicData:"Academic Information",signupTrackLabel:"Study Track",signupChooseTrack:"Choose Track",
+    signupGradeLabel:"Grade",signupChooseGrade:"Choose Grade",
+    signupSchoolLabel:"School Name",signupAdminLabel:"Educational Administration",signupGovLabel:"Governorate",
+    signupAvatar:"Profile Picture (Optional)",signupCreating:"Creating Account...",
+    signupBtnText:"Create Account",signupEmailExists:"This email is already registered",
+    signupSuccess:"Account created! Pending review.",signupSuccessLocal:"Account created (locally). Pending review.",
+    signupHaveAccQ:"Already have an account?",signupLoginLink:"Login",
+    signupPasswordPlaceholder:"6 characters minimum",signupErrPassword:"Password must be at least 6 characters",
+    pendingPageTitle:"Your Account is Under Review",
+    pendingDesc:"Your registration request has been received successfully. Dr. Momen Yosri is reviewing your information and activating your account. You will be notified upon completion.",
+    pendingNote:"You can log in again to check your account status.",
+    pendingBack:"Back to Login",
+    bannedTitle:"You are Banned",bannedDesc:"Your account has been banned by the administration. You cannot access the platform at this time.<br><br>For inquiries, contact the administration.",
+    bannedBack:"Back to Login",
+    sidebarLouhati:"My Dashboard",sidebarAdminLouhati:"Control Panel",sidebarAdminPlatform:"Platform Admin",
+    welcome:"Hello,",lessonsAvailable:"lessons available",walletBalance:"My Wallet Balance",
+    examsCompleted:"Exams Completed",badgesCount:"Achievements",
+    notificationsTitle:"Latest Notifications",availableLessons:"Available Lessons",
+    watchBtn:"Watch",locked:"Locked",openBtn:"Unlock Lesson",opened:"Unlocked",
+    lessonsTitle:"Available Lessons",lessonsSub:"lessons for your subject and track",
+    noLessons:"No lessons available for your track and grade",unlockLesson:"Unlock for",altLink:"Alternative Link",
+    walletPageTitle:"My Wallet",walletAvailable:"Available Balance",walletHistory:"Transaction History",
+    walletEmpty:"No transactions yet",walletInsufficient:"Insufficient balance!",
+    walletConfirm:"Do you want to unlock the lesson",walletSuccess:"Lesson unlocked!",
+    examsPageTitle:"Exams",noExams:"No exams available for your grade",
+    examSubject:"Subject",examDuration:"Duration",examMinutes:"minutes",
+    examQuestions:"questions",examPassGrade:"Pass Grade",examCompleted:"Completed",examAvailable:"Available",
+    examStartBtn:"Start Exam",examQuestion:"Question",
+    examPrevBtn:"Previous",examNextBtn:"Next",examSubmitBtn:"Submit",
+    examCongratulations:"Congratulations! You passed!",examTryAgain:"Try Again",
+    examCorrectAnswers:"correct answers",examBackToExams:"Back to Exams",
+    reportsTitle:"My Reports",noReports:"No reports sent yet",
+    reportMonth:"Report",reportAttendance:"Attendance",reportRemarks:"Dr. Momen Yosri's Notes",
+    badgesTitle:"My Achievements",badgeEarned:"Earned",badgeLocked:"Locked",
+    profilePageTitle:"My Personal Information",profileSubtitle:"You can edit your personal info here",
+    profileChangePhoto:"Change Photo",profileFullName:"Full Name",
+    profileSaveBtn:"Save Changes",profileUpdated:"Profile updated successfully!",
+    profileBackup:"Backup & Transfer Data",
+    profileBackupDesc:"You can export all your data and transfer it to another device. Saved: account info, unlocked lessons, exam results, AI chat history, achievements.",
+    profileExport:"Export My Data",profileImport:"Import Data",
+    profileExported:"Data exported successfully!",profileImported:"Data imported successfully!",
+    profileImportErr:"File is not from this app!",
+    parentTitle:"Parent Information",parentSubtitle:"Parent information (read only)",
+    parentNameLabel:"Name",parentPhoneLabel:"Phone Number",parentNotRegistered:"Not registered",
+    filesTitle:"Files & References",filesDesc:"PDFs, summaries, science images",
+    filesEmpty:"No files available",downloadBtn:"Download",
+    adminOverview:"Overview",adminPlatformLabel:"Platform Admin",
+    adminWelcome:"Hello Dr. Momen Yosri",adminStudentsCount:"Registered Students",
+    adminPendingCountLabel:"Under Review",adminLessonsCount:"Lessons Available",adminTotalWallet:"Total Wallets",
+    adminRecentStudents:"Recent Students",
+    adminNameCol:"Name",adminGradeCol:"Grade",adminTrackCol:"Track",adminStatusCol:"Status",adminRegDate:"Registration Date",
+    adminApproved:"Approved",adminPendingStatus:"Under Review",adminNoStudents:"No students registered yet",
+    adminStudentsPageTitle:"Student Management",adminStudentsSub:"List of all registered students",
+    adminSearch:"Search by name or email...",adminAllGrades:"All Grades",adminAllTracks:"All Tracks",adminAllStatuses:"All Statuses",
+    adminRejected:"Rejected",adminBanned:"Banned",adminApprove:"Approve",adminReject:"Reject",adminBan:"Ban",adminUnban:"Unban",
+    adminNoResults:"No results",
+    adminPendingTitle:"Pending Registration Requests",
+    adminPendingReqCount:"request(s) pending review",
+    adminPendingNone:"No pending requests!",adminStudentPhoneLabel:"Student Phone",
+    adminParentLabel:"Parent",adminParentPhoneLabel:"Parent Phone",
+    adminSchoolLabel:"School",adminAdministrationLabel:"Administration",adminGovernorateLabel:"Governorate",
+    adminNotSpecified:"Not specified",adminWhatsApp:"WhatsApp",
+    toastApproved:"Student approved!",confirmReject:"Are you sure you want to reject this student?",
+    toastRejected:"Student rejected",confirmBan:"Are you sure? They won't be able to login again.",
+    toastBanned:"Student banned",confirmUnban:"Are you sure you want to unban this student?",
+    toastUnbanned:"Unbanned",confirmDeleteStudent:"Are you sure? This account will be permanently deleted.",
+    toastDeleted:"Account permanently deleted",
+    adminLessonsPageTitle:"Lesson & Video Management",adminAddLesson:"Add New Lesson",
+    adminNoLessons:"No lessons yet. Add the first one!",adminEditLesson:"Edit Lesson",adminNewLesson:"Add New Lesson",
+    adminLessonTitleLabel:"Lesson Title",adminLessonDescLabel:"Lesson Description",
+    adminLessonSubjectLabel:"Subject",adminChooseSubject:"Choose Subject",
+    adminLessonPriceLabel:"Price (EGP)",adminLessonGradeLabel:"Grade",
+    adminChooseGrade:"Choose Grade",adminLessonTrackLabel:"Track",adminChooseTrack:"Choose Track",
+    adminVideoUrl:"Video URL (YouTube / Vimeo / Direct Link)",adminVideoUpload:"Upload MP4 Video",
+    adminVideoAlt:"Alternative Video URL (Optional)",adminVideoEmbed:"Embed Code (Optional)",
+    adminSaveLesson:"Save Changes",adminAddLessonBtn:"Add Lesson",
+    toastLessonSaved:"Lesson updated!",toastLessonAdded:"Lesson added!",
+    toastStorageFull:"Storage full. Try deleting some lessons or use a video link instead.",
+    confirmDeleteLesson:"Are you sure you want to delete this lesson?",toastLessonDeleted:"Lesson deleted",
+    adminFilesPageTitle:"Files & Educational Materials",adminFilesCount:"files uploaded",
+    adminUploadFile:"Upload New File",adminNoFiles:"No files yet",
+    adminFileNameLabel:"File Name",adminFilePlaceholder:"e.g. Chapter 1 Summary",
+    adminFileLessonLabel:"Linked to (lesson, optional)",adminFileGeneral:"General - All Students",
+    adminFileVisibilityLabel:"Visibility",adminFileRestricted:"Restricted - For buyers only",
+    adminUploadBtn:"Upload File",toastFileUploaded:"File uploaded!",
+    confirmDeleteFile:"Are you sure you want to delete this file?",toastFileDeleted:"File deleted",
+    adminWalletPageTitle:"Student Wallets",adminWalletSub:"Add balance and track transactions",
+    adminCurrentBalance:"Current Balance",adminAmountLabel:"Amount",
+    adminAddBtn:"Add",adminDeductBtn:"Deduct",
+    adminTxHistory:"Transaction History",adminNoApproved:"No approved students yet",
+    adminDeposit:"Admin Deposit",adminDeduction:"Admin Deduction",
+    toastAdded:"Added",toastDeducted:"Deducted",
+    adminInsufficient:"Insufficient balance! Current: ",
+    adminExamsPageTitle:"Exam Management",adminExamsCount:"exams",
+    adminCreateExam:"Create New Exam",adminNoExams:"No exams yet",
+    adminExamTitleLabel:"Exam Title",adminExamTitlePlaceholder:"e.g. Chapter 1 Exam",
+    adminExamDurationLabel:"Duration (minutes)",adminExamPassLabel:"Pass Grade (%)",
+    adminExamCreateBtn:"Create Exam",
+    adminAddQuestion:"Add Question",adminQuestionLabel:"Question",
+    adminQuestionTypeMcq:"Multiple Choice",adminQuestionTypeTf:"True / False",adminQuestionTypeShort:"Short Answer",
+    adminQuestionText:"Question Text",adminOptionLabel:"Option",
+    adminCorrectAnswerLabel:"Correct Answer",adminCorrectAnswerPlaceholder:"Option number (1-4) or answer",
+    toastExamCreated:"Exam created!",confirmDeleteExam:"Are you sure you want to delete this exam?",
+    toastExamDeleted:"Exam deleted",adminViewResults:"Results",
+    adminNoOneTried:"No one has taken this exam yet",adminUnknown:"Unknown",
+    adminAddAtLeast:"Add at least one question",
+    adminReportsPageTitle:"Evaluations & Reports",adminReportsSub:"Send evaluations and performance records",
+    adminSendReport:"Send New Report",adminNoReportsYet:"No reports sent yet",
+    adminGradesLabel:"Grades",adminEvalLabel:"Evaluation",
+    adminReportModal:"Send Evaluation Report",adminChooseStudent:"Choose Student",
+    adminMonthLabel:"Month",adminMonthPlaceholder:"e.g. January 2027",
+    adminAttendanceLabel:"Attendance (%)",adminRemarksLabel:"Doctor's Notes & Evaluation",
+    adminRemarksPlaceholder:"Your notes on student performance...",
+    adminSubjectGrades:"Subject Grades (JSON)",adminSendReportBtn:"Send Report",
+    toastReportSent:"Report sent!",
+    adminBroadcastPageTitle:"Public Notifications",adminBroadcastSub:"Send alerts to all students",
+    adminSendNotif:"Send New Notification",adminNoNotifs:"No notifications yet",
+    adminNotifModal:"Send Public Notification",adminNotifTitleLabel:"Notification Title",
+    adminNotifTitlePlaceholder:"e.g. Important Notice",adminNotifMessageLabel:"Message",
+    adminNotifMsgPlaceholder:"Write your message here...",adminSendAll:"Send to All",
+    toastNotifSent:"Notification sent to all students!",toastNotifDeleted:"Notification deleted",
+    adminCurrentPassLabel:"Current Password",
+    gameTitle:"Game of the Day",gameStreak:"Day Streak",gameScoreLabel:"Score",gameProgressLabel:"Progress",
+    gameCompleted:"You completed today's game!",gameCompletedSub:"Come back tomorrow for a new game",
+    gameRetry:"Try Again",gameLoading:"Loading questions...",
+    gameError:"Failed to load questions. Try again.",gameRetryBtn:"Retry",
+    gameConnectError:"Connection error",gameQuestionNum:"Question",
+    gameRiddleReveal:"Show Answer",gameAnswerLabel:"Answer",
+    gameCorrect:"Correct!",gameWrong:"Wrong",gameNext:"Next Question",
+    gameOrderConfirm:"Confirm Order",gameFillConfirm:"Confirm",
+    gameFillPlaceholder:"Type your answer here...",
+    gameExcellent:"Excellent! You're a genius!",gameGood:"Very good! Keep it up!",gameTryAgainMsg:"Try again tomorrow!",
+    gameResult:"Result",gamePoints:"points",gameResetBtn:"Try Again",
+    communityGeneralFull:"General - All Students",communityPrimary:"Primary School",
+    communityPrep:"Preparatory School",communityArabic:"Arabic Government",communityLanguages:"Languages",
+    communityShareFile:"Share File",communityWriteMsg:"Type your message...",
+    communityEmpty:"No messages yet. Be the first!",
+    communityShareFileModal:"Share File in Community",communityFileLabel:"File (Image or PDF)",
+    communityMsgOptional:"Message (optional)",communityMsgPlaceholder:"Add a comment...",
+    communityUploadBtn:"Upload & Share",communityFileSelected:"Selected",
+    communityFileShared:"File shared!",communityDeleteMsg:"Are you sure you want to delete this message?",
+    toastMsgDeleted:"Message deleted",communitySelectFile:"Select a file first",
+    communityAdminName:"Dr. Momen Yosri",communityDeleteBtn:"Delete",communityFileLink:"File shared",
+    tournamentSub:"Top performing students this semester",tournamentNoStudents:"No students registered",
+    logout:"Logout",confirmYes:"Yes",confirmNo:"No",saving:"Saving...",
+    authLogoText:"د.م",aiPlaceholderShort:"Type your question here...",aiClearChat:"Clear Chat",
+    aiWelcomeMsg:"Hello! I'm the AI science assistant.<br>Ask me any science question from 4th Primary to 3rd Secondary.<br><br>💡 I remember our previous conversations!",
+    aiCleared:"Chat cleared. Start a new conversation!",aiChatCleared:"Chat cleared",
+    aiThinkingLabel:"Thinking...",aiErrorPrefix:"Server error",
+    adminPassWrong:"Wrong current password",adminPassMismatch:"Passwords do not match",
+    adminNoChanges:"No changes",adminUpdated:"Account updated!",
+    hwTitleSingular:"homework",hwAddHomework:"Add Homework",hwAllGrades:"All Grades",
+    hwAddTitle:"Add New Homework",hwTitleLabel:"Title",hwTitlePlaceholder:"e.g. Chapter 1 Homework",
+    hwQuestionLabel:"Question",hwQuestionPlaceholder:"Write homework question here...",
+    hwInstructionsLabel:"Instructions (optional)",hwInstructionsPlaceholder:"Student instructions...",
+    hwDueDateLabel:"Due Date",hwMaxScoreLabel:"Max Score",
+    hwGradeLabel:"Grade",hwSaveBtn:"💾 Save Homework",
+    hwFillFields:"Fill all required fields",hwAdded:"Homework added successfully",
+    hwDeleteConfirm:"Are you sure you want to delete this homework?",hwDeleted:"Homework deleted",
+    hwHomeworks:"Homeworks",hwStudentSubmissions:"Student Submissions",
+    hwNoSubmissions:"No submissions yet",hwStudentFiles:"Student Files",
+    hwGradeAction:"Grade & Save",hwGradeLabel2:"Grade",hwFeedbackLabel:"Feedback",
+    hwFeedbackPlaceholder:"Correction notes...",hwStudentName:"student",
+    hwNoFileYet:"No file uploaded yet",hwHasAnnotations:"Has annotations",
+    hwGradedMsg:"Graded!",hwGradedEgp:" EGP",hwGradeEgpBonus:"Graded! +",
+    hwAnnotationCleared:"Annotations cleared",hwAnnotationsCleared:"Annotations cleared",
+    hwGradedSuccess:"Graded successfully!",
+    hwFileGradingTitle:"Grade Student Homework",hwGradeHomework:"Grade Student Homework",
+    hwPenRed:"Red",hwPenGreen:"Green",hwPenClear:"Clear",hwPenClearEn:"Clear",
+    hwDownload:"Download",hwDownloadEn:"Download",
+    hwSaveGrade:"💾 Save Grade",hwSaveGradeEn:"💾 Save Grade",
+    hwMaxFiles:"Max 130 files",hwMaxFilesEn:"Max 130 files",
+    hwFilesSelected:"file(s) selected",hwFilesSelectedEn:"file(s) selected",
+    hwUploadFirst:"Upload files first",hwUploadFirstEn:"Upload files first",
+    hwSubmitted:"Homework submitted!",hwSubmittedEn:"Homework submitted!",
+    hwNoHwAvailable:"No homework available",hwNoHwAvailableEn:"No homework available",
+    hwSubmittedLabel:"Submitted Homework",hwSubmittedLabelEn:"Submitted Homework",
+    hwFile:"files",hwFileEn:"files",
+    hwOverdue:"Overdue",hwOverdueEn:"Overdue",
+    hwQuestionLabel2:"Question",hwQuestionLabel2En:"Question",
+    hwUploadLabel:"Upload homework (Image or PDF)",hwUploadLabelEn:"Upload homework (Image or PDF)",
+    hwDragHere:"Click here or drag files",hwDragHereEn:"Click here or drag files",
+    hwFileTypes:"PDF or Images (JPG, PNG) — up to 130 images",hwFileTypesEn:"PDF or Images (JPG, PNG) — up to 130 images",
+    hwTeacherNotes:"Teacher Notes",hwTeacherNotesEn:"Teacher Notes",
+    hwHomeworkGraded:"Homework Graded",hwHomeworkGradedEn:"Homework Graded",
+    hwScoreLabel2:"Score: ",hwScoreLabel2En:"Score: ",
+    hwHomeworksTitle:"Homeworks",hwHomeworksTitleEn:"Homeworks",
+    hwDeleteHw:"Are you sure you want to delete this homework?",hwDeleteHwEn:"Are you sure you want to delete this homework?",
+    hwDeletedMsg:"Homework deleted",hwDeletedMsgEn:"Homework deleted",
+    hwAddedMsg:"Homework added successfully",hwAddedMsgEn:"Homework added successfully",
+    hwFillFieldsMsg:"Fill all required fields",hwFillFieldsMsgEn:"Fill all required fields",
+    adminGradedLabel:"Grade",adminGradedLabelEn:"Grade",
+    adminFeedbackLabel:"Feedback",adminFeedbackLabelEn:"Feedback",
+    adminGradingBtn:"Grade & Save",adminGradingBtnEn:"Grade & Save",
+    adminFileUploaded:"New file",adminFileUploadedEn:"New file",
+    adminFileUploadedMsg:"New file available for students",adminFileUploadedMsgEn:"New file available for students",
+    adminTransactionNoteDeposit:"Admin Deposit",adminTransactionNoteDeduct:"Admin Deduction"
   }
 };
 var Lang={
@@ -596,6 +1050,13 @@ const DB={
   saveHomeworks(h){this._set('homeworks',h);this._push()},
   hwSubmissions(){return this._get('hwSubmissions')||[]},
   saveHwSubmissions(s){this._set('hwSubmissions',s);this._push()},
+  videoViews(){return this._get('videoViews')||[]},
+  saveVideoViews(v){this._set('videoViews',v);this._push()},
+  logVideoView:function(lessonId,studentId,studentName){
+    var views=this.videoViews();
+    var exists=views.find(function(v){return v.lessonId===lessonId&&v.studentId===studentId});
+    if(!exists){views.push({id:Utils.uid(),lessonId:lessonId,studentId:studentId,studentName:studentName,viewedAt:Date.now()});this.saveVideoViews(views)}
+  },
   session(){return this._get('session')},
   saveSession(s){this._set('session',s)},
   clearSession(){localStorage.removeItem('dm_session')},
@@ -811,7 +1272,7 @@ const App={
       case'login':app.innerHTML=Auth.renderLogin();break;
       case'signup':app.innerHTML=Auth.renderSignup();break;
       case'pending':app.innerHTML=PendingPage.render();break;
-      case'banned':app.innerHTML='<div style="display:flex;align-items:center;justify-content:center;min-height:80vh;padding:40px"><div class="card" style="max-width:500px;text-align:center"><div style="font-size:4rem;margin-bottom:16px">🚫</div><h1 style="font-size:1.5rem;font-weight:900;margin-bottom:12px;color:var(--danger)">تم حظرك</h1><p style="color:var(--text-secondary);line-height:1.8;margin-bottom:24px">تم حظر حسابك من قبل الإدارة. لا يمكنك الوصول للمنصة في الوقت الحالي.<br><br>للإستفسار تواصل مع الإدارة.</p><button class="btn btn-primary" onclick="App.navigate(\'login\')">العودة لصفحة الدخول</button></div></div>';break;
+      case'banned':app.innerHTML='<div style="display:flex;align-items:center;justify-content:center;min-height:80vh;padding:40px"><div class="card" style="max-width:500px;text-align:center"><div style="font-size:4rem;margin-bottom:16px">🚫</div><h1 style="font-size:1.5rem;font-weight:900;margin-bottom:12px;color:var(--danger)">'+Lang.t('bannedTitle')+'</h1><p style="color:var(--text-secondary);line-height:1.8;margin-bottom:24px">'+Lang.t('bannedDesc')+'</p><button class="btn btn-primary" onclick="App.navigate(\'login\')">'+Lang.t('bannedBack')+'</button></div></div>';break;
       case'admin':if(!this.requireAuth('admin'))return;app.innerHTML=Admin.render();Admin.init();Utils.loadVideos();break;
       case'student':if(!this.requireAuth('student'))return;app.innerHTML=Student.render();Student.init();Utils.loadVideos();break;
       case'community':if(!this.requireAuth())return;app.innerHTML=CommunityPage.render();CommunityPage.init();break;
@@ -829,7 +1290,7 @@ const App={
     var self=this;
     var u=DB.getUserByEmail(email);
     if(u){
-      if(u.password!==password){callback({error:'كلمة المرور غير صحيحة'});return}
+      if(u.password!==password){callback({error:Lang.t('loginWrongPass')});return}
       FB_DB.ref('all_users').orderByChild('email').equalTo(email).once('value').then(function(snap){
         var latest=null;
         snap.forEach(function(child){latest=child.val()});
@@ -853,15 +1314,15 @@ const App={
     FB_DB.ref('all_users').orderByChild('email').equalTo(email).once('value').then(function(snap){
       var found=null;
       snap.forEach(function(child){found=child.val()});
-      if(!found){callback({error:'البريد الإلكتروني غير مسجل'});return}
-      if(found.password!==password){callback({error:'كلمة المرور غير صحيحة'});return}
+      if(!found){callback({error:Lang.t('loginNotRegistered')});return}
+      if(found.password!==password){callback({error:Lang.t('loginWrongPass')});return}
       if(found.status==='pending'){callback({pending:true});return}
       if(found.status==='banned'){callback({banned:true});return}
       DB.addUser(found);
       DB.saveSession({userId:found.id,email:email});
       self.user=found;
       DB.syncFromServer(function(){var fresh=DB.getUserByEmail(email);if(fresh)self.user=fresh;callback({success:true,role:found.role})});
-    }).catch(function(){callback({error:'خطأ في الاتصال'})});
+    }).catch(function(){callback({error:Lang.t('loginConnError')})});
   },
   logout(){DB.clearSession();this.user=null;this.navigate('landing')},
   toggleMobile(){document.getElementById('mobileMenu').classList.toggle('open')},
@@ -893,12 +1354,12 @@ const App={
       usr.innerHTML=toggles;
     }else if(this.user.role==='admin'){
       nav.innerHTML='<button class="nav-link '+(this.currentView==='admin'?'active':'')+'" onclick="App.navigate(\'admin\')">'+T('navAdmin')+'</button><button class="nav-link '+(this.currentView==='community'?'active':'')+'" onclick="App.navigate(\'community\')">'+T('navCommunity')+'</button><button class="nav-link '+(this.currentView==='tournament'?'active':'')+'" onclick="App.navigate(\'tournament\')">'+T('navTournament')+'</button>';
-      usr.innerHTML=toggles+'<div id="notifBellContainer" style="position:relative"></div><div class="nav-avatar">👑</div><button class="btn btn-sm btn-secondary" onclick="App.logout()">'+T('general')==='general'?'خروج':Lang.get()==='ar'?'خروج':'Logout'+'</button>';
+      usr.innerHTML=toggles+'<div id="notifBellContainer" style="position:relative"></div><div class="nav-avatar">👑</div><button class="btn btn-sm btn-secondary" onclick="App.logout()">'+Lang.t('logout')+'</button>';
     }else{
       nav.innerHTML='<button class="nav-link '+(this.currentView==='student'?'active':'')+'" onclick="App.navigate(\'student\')">'+T('navDashboard')+'</button><button class="nav-link '+(this.currentView==='community'?'active':'')+'" onclick="App.navigate(\'community\')">'+T('navCommunity')+'</button><button class="nav-link '+(this.currentView==='tournament'?'active':'')+'" onclick="App.navigate(\'tournament\')">'+T('navTournament')+'</button>';
-      usr.innerHTML=toggles+'<div id="notifBellContainer" style="position:relative"></div><div class="nav-avatar">'+Utils.escHtml(this.user.name.charAt(0))+'</div><button class="btn btn-sm btn-secondary" onclick="App.logout()">'+(Lang.get()==='ar'?'خروج':'Logout')+'</button>';
+      usr.innerHTML=toggles+'<div id="notifBellContainer" style="position:relative"></div><div class="nav-avatar">'+Utils.escHtml(this.user.name.charAt(0))+'</div><button class="btn btn-sm btn-secondary" onclick="App.logout()">'+Lang.t('logout')+'</button>';
     }
-    mob.innerHTML=nav.innerHTML+(this.user?'<button class="nav-link" onclick="App.logout()">'+(Lang.get()==='ar'?'خروج':'Logout')+'</button>':'');
+    mob.innerHTML=nav.innerHTML+(this.user?'<button class="nav-link" onclick="App.logout()">'+Lang.t('logout')+'</button>':'');
     mob.querySelectorAll('.nav-link').forEach(function(b){b.addEventListener('click',function(){mob.classList.remove('open')})});
     if(this.user&&this.user.role!=='landing')setTimeout(function(){Notify.renderBell()},100);
   },
@@ -923,65 +1384,67 @@ const App={
 };
 const Landing={
   render(){
+    var T=Lang.t.bind(Lang);
+    var isAr=Lang.get()==='ar';
     return '<div class="landing">'+
     '<section class="hero"><div class="hero-content fade-in">'+
-    '<div class="hero-badge"><span class="hero-badge-dot"></span> منصة تعليمية متكاملة 2026/2027</div>'+
-    '<h1 class="hero-title">د. <span class="accent">مؤمن يسري</span><br>تعليم بأثر يدوم</h1>'+
-    '<p class="hero-subtitle">منصة تعليمية شاملة لمادة العلوم للطلاب من الصف الرابع الابتدائي إلى الثالث الثانوي، تجمع بين الفيديوهات التفاعلية والامتحانات الذكية والمجتمع العلمي النشط.</p>'+
-    '<div class="hero-cta"><button class="btn btn-primary" onclick="App.navigate(\'signup\')">🚀 ابدأ الآن - إنشاء حساب مجاني</button><button class="btn btn-secondary" onclick="App.navigate(\'login\')">📋 تسجيل الدخول</button></div>'+
-    '<div class="hero-stats"><div><div class="hero-stat-number">9</div><div class="hero-stat-label">مستويات دراسية</div></div><div><div class="hero-stat-number">2</div><div class="hero-stat-label">مسارات دراسية</div></div><div><div class="hero-stat-number">+</div><div class="hero-stat-label">دروس تفاعلية</div></div></div>'+
+    '<div class="hero-badge"><span class="hero-badge-dot"></span> '+T('landingBadge')+'</div>'+
+    '<h1 class="hero-title">'+T('landingHeroTitle1')+' <span class="accent">'+T('landingHeroTitle2')+'</span><br>'+T('landingHeroTitle3')+'</h1>'+
+    '<p class="hero-subtitle">'+T('landingHeroDesc')+'</p>'+
+    '<div class="hero-cta"><button class="btn btn-primary" onclick="App.navigate(\'signup\')">🚀 '+T('landingStartBtn')+'</button><button class="btn btn-secondary" onclick="App.navigate(\'login\')">📋 '+T('landingLoginBtn')+'</button></div>'+
+    '<div class="hero-stats"><div><div class="hero-stat-number">9</div><div class="hero-stat-label">'+T('statLevels')+'</div></div><div><div class="hero-stat-number">2</div><div class="hero-stat-label">'+T('statTracks')+'</div></div><div><div class="hero-stat-number">+</div><div class="hero-stat-label">'+T('statLessons')+'</div></div></div>'+
     '</div>'+
     '<div class="hero-visual"><div class="hero-ring hero-ring-1"></div><div class="hero-ring hero-ring-2"></div><div class="hero-ring hero-ring-3"></div><div class="hero-ring-center">🔬</div></div>'+
     '</section>'+
     '<section class="features-section">'+
-    '<div class="section-label">المميزات</div>'+
-    '<h2 class="section-title">كل ما يحتاجه الطالب في <span style="color:var(--accent)">مكان واحد</span></h2>'+
-    '<p class="section-desc">منصة متكاملة صُممت خصيصاً لتلبية احتياجات الطلاب والمعلمين في جميع المراحل الدراسية.</p>'+
+    '<div class="section-label">'+T('featSectionLabel')+'</div>'+
+    '<h2 class="section-title">'+T('featTitle').replace(T('featTitleHighlight'),'<span style="color:var(--accent)">'+T('featTitleHighlight')+'</span>')+'</h2>'+
+    '<p class="section-desc">'+T('featDesc')+'</p>'+
     '<div class="features-grid">'+
-    '<div class="card feature-card fade-in"><div class="feature-icon">🎬</div><h3 class="feature-title">دروس فيديو تفاعلية</h3><p class="feature-desc">فيديوهات عالية الجودة شرحها د. مؤمن يسري، مع إمكانية التحكم في السرعة والعودة لأي نقطة.</p></div>'+
-    '<div class="card feature-card fade-in"><div class="feature-icon">📝</div><h3 class="feature-title">امتحانات ذكية</h3><p class="feature-desc">اختبارات تفاعلية مع تصحيح آلي وشروحات فورية، متعددة الأسئلة واختياري.</p></div>'+
-    '<div class="card feature-card fade-in"><div class="feature-icon">📚</div><h3 class="feature-title">ملفات ومراجعات</h3><p class="feature-desc">ملفات PDF، ملخصات، امتحانات سابقة، وصور علمية عالية الدقة.</p></div>'+
-    '<div class="card feature-card fade-in"><div class="feature-icon">💰</div><h3 class="feature-title">محفظة إلكترونية</h3><p class="feature-desc">نظام محفظة مرن لشراء الدروس والمواد التعليمية بسهولة وأمان.</p></div>'+
-    '<div class="card feature-card fade-in"><div class="feature-icon">💬</div><h3 class="feature-title">مجتمع تعليمي</h3><p class="feature-desc">تواصل مباشر مع الدكتور والزملاء، شارك الأسئلة والملاحظات والملفات.</p></div>'+
-    '<div class="card feature-card fade-in"><div class="feature-icon">📊</div><h3 class="feature-title">تقييم وأداء</h3><p class="feature-desc">تقارير أداء شهرية، تقييمات مخصصة، ومتابعة مستمرة للتقدم.</p></div>'+
+    '<div class="card feature-card fade-in"><div class="feature-icon">🎬</div><h3 class="feature-title">'+T('feat1Title')+'</h3><p class="feature-desc">'+T('feat1Desc')+'</p></div>'+
+    '<div class="card feature-card fade-in"><div class="feature-icon">📝</div><h3 class="feature-title">'+T('feat2Title')+'</h3><p class="feature-desc">'+T('feat2Desc')+'</p></div>'+
+    '<div class="card feature-card fade-in"><div class="feature-icon">📚</div><h3 class="feature-title">'+T('feat3Title')+'</h3><p class="feature-desc">'+T('feat3Desc')+'</p></div>'+
+    '<div class="card feature-card fade-in"><div class="feature-icon">💰</div><h3 class="feature-title">'+T('feat4Title')+'</h3><p class="feature-desc">'+T('feat4Desc')+'</p></div>'+
+    '<div class="card feature-card fade-in"><div class="feature-icon">💬</div><h3 class="feature-title">'+T('feat5Title')+'</h3><p class="feature-desc">'+T('feat5Desc')+'</p></div>'+
+    '<div class="card feature-card fade-in"><div class="feature-icon">📊</div><h3 class="feature-title">'+T('feat6Title')+'</h3><p class="feature-desc">'+T('feat6Desc')+'</p></div>'+
     '</div></section>'+
     '<section style="padding:80px clamp(16px,4vw,40px);max-width:1200px;margin:0 auto">'+
-    '<div class="section-label">مدرسك</div>'+
-    '<h2 class="section-title">التقِ بـ <span style="color:var(--accent)">د. مؤمن يسري</span></h2>'+
+    '<div class="section-label">'+T('aboutLabel')+'</div>'+
+    '<h2 class="section-title">'+T('aboutTitle')+' <span style="color:var(--accent)">'+T('aboutName')+'</span></h2>'+
     '<div style="display:flex;align-items:center;gap:40px;flex-wrap:wrap;margin-top:32px;padding:32px;border-radius:var(--radius);background:var(--glass);backdrop-filter:blur(20px);border:1px solid var(--glass-border);box-shadow:var(--shadow);transition:var(--transition)" onmouseover="this.style.borderColor=\'rgba(0,245,212,0.3)\';this.style.boxShadow=\'var(--shadow-lg), 0 0 40px rgba(0,245,212,0.1)\'" onmouseout="this.style.borderColor=\'var(--glass-border)\';this.style.boxShadow=\'var(--shadow)\'">'+
     '<div style="width:160px;height:160px;border-radius:50%;border:3px solid var(--accent);overflow:hidden;flex-shrink:0;box-shadow:0 0 40px rgba(0,245,212,0.2);position:relative">'+
-    '<img src="https://i.ibb.co/LDrCzR39/Gemini-Generated-Image-yv0nwwyv0nwwyv0n.png" alt="د. مؤمن يسري" style="width:100%;height:100%;object-fit:cover" />'+
+    '<img src="https://i.ibb.co/LDrCzR39/Gemini-Generated-Image-yv0nwwyv0nwwyv0n.png" alt="'+T('aboutName')+'" style="width:100%;height:100%;object-fit:cover" />'+
     '<div style="position:absolute;bottom:0;left:0;right:0;height:4px;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:2px"></div>'+
     '</div>'+
     '<div style="flex:1;min-width:220px;text-align:right">'+
-    '<h3 style="font-size:1.4rem;font-weight:900;margin-bottom:6px">دكتور مؤمن يسري</h3>'+
-    '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px"><span class="badge badge-accent">🎓 خبير تعليم</span><span class="badge badge-info">🔬 علوم فقط</span><span class="badge badge-accent">🏆 10+ سنوات</span></div>'+
-    '<p style="color:var(--text-secondary);font-size:0.9rem;line-height:1.9">مدرس متخصص في تدريس مادة العلوم لطلاب المرحلة الابتدائية والإعدادية والثانوية. خبرة تمتد لأكثر من 10 سنوات في النظم التعليمية الحكومية والخاصة. يقدم محتوى تعليمي مبسط وممتع يجمع بين الفهم العميق والتحصيل الدراسي المتميز.</p>'+
-    '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px"><a href="https://wa.me/201551346605" target="_blank" class="btn btn-primary" style="font-size:0.82rem;padding:8px 16px">📱 تواصل واتساب</a><a href="https://youtube.com/@phmomenyoussry4101" target="_blank" class="btn btn-secondary" style="font-size:0.82rem;padding:8px 16px">🎬 قناة اليوتيوب</a></div>'+
+    '<h3 style="font-size:1.4rem;font-weight:900;margin-bottom:6px">'+T('aboutName')+'</h3>'+
+    '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px"><span class="badge badge-accent">🎓 '+T('aboutBadge1')+'</span><span class="badge badge-info">🔬 '+T('aboutBadge2')+'</span><span class="badge badge-accent">🏆 '+T('aboutBadge3')+'</span></div>'+
+    '<p style="color:var(--text-secondary);font-size:0.9rem;line-height:1.9">'+T('aboutDesc')+'</p>'+
+    '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px"><a href="https://wa.me/201551346605" target="_blank" class="btn btn-primary" style="font-size:0.82rem;padding:8px 16px">📱 '+T('aboutWhatsApp')+'</a><a href="https://youtube.com/@phmomenyoussry4101" target="_blank" class="btn btn-secondary" style="font-size:0.82rem;padding:8px 16px">🎬 '+T('aboutYoutube')+'</a></div>'+
     '</div></div></section>'+
     '<section class="tracks-section">'+
-    '<div class="section-label">المسارات الدراسية</div>'+
-    '<h2 class="section-title">مساران يغطيان <span style="color:var(--accent)">جميع المناهج</span></h2>'+
+    '<div class="section-label">'+T('tracksLabel')+'</div>'+
+    '<h2 class="section-title">'+T('tracksTitle')+' <span style="color:var(--accent)">'+T('tracksTitleHighlight')+'</span></h2>'+
     '<div class="tracks-grid">'+
-    '<div class="card track-card fade-in"><div class="track-icon">🏫</div><h3 class="track-name">عربي حكومي</h3><p class="track-desc">المنهج المصري العام لمادة العلوم للصفوف من الرابع الابتدائي إلى الثالث الثانوي.</p></div>'+
-    '<div class="card track-card fade-in"><div class="track-icon">🌍</div><h3 class="track-name">لغات</h3><p class="track-desc">المنهج المصري باللغة الإنجليزية للطلاب في مدارس اللغات.</p></div>'+
+    '<div class="card track-card fade-in"><div class="track-icon">🏫</div><h3 class="track-name">'+T('track1Name')+'</h3><p class="track-desc">'+T('track1Desc')+'</p></div>'+
+    '<div class="card track-card fade-in"><div class="track-icon">🌍</div><h3 class="track-name">'+T('track2Name')+'</h3><p class="track-desc">'+T('track2Desc')+'</p></div>'+
     '</div></section>'+
 '<footer class="footer-landing">'+
     '<div style="margin-bottom:24px">'+
     '<div style="display:flex;align-items:center;justify-content:center;gap:40px;flex-wrap:wrap">'+
     '<div style="text-align:right;flex:1;min-width:200px">'+
-    '<div style="color:var(--accent);font-weight:800;font-size:1.1rem;margin-bottom:4px">💰 ادعم المنصة</div>'+
-    '<div style="color:var(--text-secondary);font-size:0.82rem;line-height:1.8">تبرعك يساعدنا في تطوير المحتوى<br>وتقديم تجربة تعليمية أفضل للجميع</div>'+
+    '<div style="color:var(--accent);font-weight:800;font-size:1.1rem;margin-bottom:4px">💰 '+T('footerSupport')+'</div>'+
+    '<div style="color:var(--text-secondary);font-size:0.82rem;line-height:1.8">'+T('footerSupportDesc')+'</div>'+
     '</div>'+
     '<div style="background:var(--glass);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid rgba(0,245,212,0.15);border-radius:var(--radius);padding:20px 28px;box-shadow:0 0 30px rgba(0,245,212,0.08);transition:var(--transition)" onmouseover="this.style.borderColor=\'rgba(0,245,212,0.3)\';this.style.boxShadow=\'0 0 50px rgba(0,245,212,0.15)\'" onmouseout="this.style.borderColor=\'rgba(0,245,212,0.15)\';this.style.boxShadow=\'0 0 30px rgba(0,245,212,0.08)\'">'+
     '<style>.pp-TRHGHKPBHW4EE{text-align:center;border:none;border-radius:0.25rem;min-width:11.625rem;padding:0 2rem;height:2.625rem;font-weight:bold;background-color:#FFD140;color:#000000;font-family:"Helvetica Neue",Arial,sans-serif;font-size:1rem;line-height:1.25rem;cursor:pointer;transition:all 0.3s ease;box-shadow:0 4px 15px rgba(255,209,64,0.3)}.pp-TRHGHKPBHW4EE:hover{transform:translateY(-2px);box-shadow:0 8px 25px rgba(255,209,64,0.5)}</style>'+
     '<form action="https://www.paypal.com/ncp/payment/TRHGHKPBHW4EE" method="post" target="_blank" style="display:inline-grid;justify-items:center;align-content:start;gap:0.5rem;">'+
-    '<input class="pp-TRHGHKPBHW4EE" type="submit" value="💳  تبرع الآن  " />'+
+    '<input class="pp-TRHGHKPBHW4EE" type="submit" value="💳  '+T('footerDonate')+'  " />'+
     '<img src=https://www.paypalobjects.com/images/Debit_Credit.svg alt="cards" style="filter:brightness(1.1)" />'+
-    '<section style="font-size:0.75rem;color:var(--text-muted)">مدعوم من <img src="https://www.paypalobjects.com/paypal-ui/logos/svg/paypal-wordmark-color.svg" alt="paypal" style="height:0.875rem;vertical-align:middle;filter:brightness(1.2)"/></section>'+
+    '<section style="font-size:0.75rem;color:var(--text-muted)">'+(isAr?'مدعوم من':'Powered by')+' <img src="https://www.paypalobjects.com/paypal-ui/logos/svg/paypal-wordmark-color.svg" alt="paypal" style="height:0.875rem;vertical-align:middle;filter:brightness(1.2)"/></section>'+
     '</form></div></div>'+
     '<div style="border-top:1px solid var(--glass-border);padding-top:16px;margin-top:16px">'+
-    '© 2026 <span>د. مؤمن يسري</span> — جميع الحقوق محفوظة<br>'+
+    '© 2026 <span>'+T('aboutName')+'</span> — '+T('footerRights')+'<br>'+
     '<span style="font-size:0.75rem;color:var(--text-muted)">Built with ❤️ by <strong style="color:var(--accent)">Mohamed Mohamed Gamal</strong> | Web Developer & Vibe Coding Specialist</span>'+
     '</div></footer>'+
     '</div>';
@@ -991,27 +1454,28 @@ const Landing={
 };
 const Auth={
   renderLogin(){
+    var T=Lang.t.bind(Lang);
     var savedArr=JSON.parse(localStorage.getItem('savedLogins')||'[]');
     var last=savedArr.length>0?savedArr[0]:{email:'',password:''};
     var accountsHtml='';
     if(savedArr.length>0){
-      accountsHtml='<div style="margin-bottom:14px"><label class="form-label">حسابات محفوظة</label>'+
+      accountsHtml='<div style="margin-bottom:14px"><label class="form-label">'+T('savedAccounts')+'</label>'+
       savedArr.map(function(a,i){return '<div onclick="Auth.fillLogin(\''+Utils.escHtml(a.email).replace(/'/g,"\\'")+'\',\''+Utils.escHtml(a.password).replace(/'/g,"\\'")+'\')" style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:var(--radius-xs);border:1px solid var(--glass-border);cursor:pointer;transition:var(--transition);margin-bottom:6px;background:rgba(0,245,212,0.03)" onmouseover="this.style.borderColor=\'rgba(0,245,212,0.3)\';this.style.background=\'rgba(0,245,212,0.06)\'" onmouseout="this.style.borderColor=\'var(--glass-border)\';this.style.background=\'rgba(0,245,212,0.03)\'">'+
       '<div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:0.85rem;color:var(--bg-primary);font-weight:800;flex-shrink:0">'+Utils.escHtml(a.email.charAt(0).toUpperCase())+'</div>'+
-      '<div style="flex:1;overflow:hidden"><div style="font-size:0.85rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" dir="ltr">'+Utils.escHtml(a.email)+'</div><div style="font-size:0.72rem;color:var(--text-muted)">آخر دخول: '+Utils.timeAgo(a.date)+'</div></div>'+
+      '<div style="flex:1;overflow:hidden"><div style="font-size:0.85rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" dir="ltr">'+Utils.escHtml(a.email)+'</div><div style="font-size:0.72rem;color:var(--text-muted)">'+T('lastLogin')+': '+Utils.timeAgo(a.date)+'</div></div>'+
       '</div>'}).join('')+'</div>';
     }
     return '<div class="auth-page"><div class="auth-container fade-in"><div class="card auth-card">'+
-    '<div class="auth-logo"><div class="auth-logo-icon">د.م</div><h2 class="auth-title">تسجيل الدخول</h2><p class="auth-subtitle">مرحباً بعودتك! أدخل بياناتك للمتابعة.</p></div>'+
+    '<div class="auth-logo"><div class="auth-logo-icon">'+T('authLogoText')+'</div><h2 class="auth-title">'+T('loginTitle')+'</h2><p class="auth-subtitle">'+T('loginWelcome')+'</p></div>'+
     accountsHtml+
     '<form onsubmit="Auth.handleLogin(event)">'+
-    '<div class="form-group"><label class="form-label">البريد الإلكتروني</label><input class="form-input" type="email" id="loginEmail" required placeholder="example@email.com" dir="ltr" value="'+Utils.escHtml(last.email)+'"></div>'+
-    '<div class="form-group"><label class="form-label">كلمة المرور</label><input class="form-input" type="password" id="loginPass" required placeholder="••••••••" dir="ltr" value="'+Utils.escHtml(last.password)+'"></div>'+
+    '<div class="form-group"><label class="form-label">'+T('loginEmail')+'</label><input class="form-input" type="email" id="loginEmail" required placeholder="example@email.com" dir="ltr" value="'+Utils.escHtml(last.email)+'"></div>'+
+    '<div class="form-group"><label class="form-label">'+T('loginPass')+'</label><input class="form-input" type="password" id="loginPass" required placeholder="••••••••" dir="ltr" value="'+Utils.escHtml(last.password)+'"></div>'+
     '<div id="loginError" class="form-error" style="display:none;margin-bottom:14px"></div>'+
-    '<label style="display:flex;align-items:center;gap:8px;font-size:0.85rem;color:var(--text-secondary);cursor:pointer;margin-bottom:14px"><input type="checkbox" id="rememberMe" checked> تذكر بيانات الدخول</label>'+
-    '<button type="submit" class="btn btn-primary btn-block">دخول</button>'+
+    '<label style="display:flex;align-items:center;gap:8px;font-size:0.85rem;color:var(--text-secondary);cursor:pointer;margin-bottom:14px"><input type="checkbox" id="rememberMe" checked> '+T('rememberMe')+'</label>'+
+    '<button type="submit" class="btn btn-primary btn-block">'+T('loginBtn')+'</button>'+
     '</form>'+
-    '<div class="auth-toggle">ليس لديك حساب؟ <a onclick="App.navigate(\'signup\')">إنشاء حساب جديد</a></div>'+
+    '<div class="auth-toggle">'+T('loginNoAccQ')+' <a onclick="App.navigate(\'signup\')">'+T('loginSignUpLink')+'</a></div>'+
     '</div></div></div>';
   },
   fillLogin:function(email,pass){
@@ -1019,34 +1483,35 @@ const Auth={
     if(e)e.value=email;if(p)p.value=pass;
   },
   renderSignup(){
+    var T=Lang.t.bind(Lang);
     var gOpts=GRADES.map(function(g){return '<option value="'+g+'">'+g+'</option>'}).join('');
     var tOpts=TRACKS.map(function(t){return '<option value="'+t+'">'+t+'</option>'}).join('');
     return '<div class="auth-page"><div class="auth-container fade-in" style="max-width:640px"><div class="card auth-card">'+
-    '<div class="auth-logo"><div class="auth-logo-icon">د.م</div><h2 class="auth-title">إنشاء حساب جديد</h2><p class="auth-subtitle">سجّل الآن وابدأ رحلتك التعليمية.</p></div>'+
+    '<div class="auth-logo"><div class="auth-logo-icon">'+T('authLogoText')+'</div><h2 class="auth-title">'+T('signupTitle')+'</h2><p class="auth-subtitle">'+T('signupWelcome')+'</p></div>'+
     '<form id="signupForm" onsubmit="Auth.handleSignup(event)">'+
-    '<h3 style="font-size:0.92rem;color:var(--accent);margin-bottom:14px;border-bottom:1px solid var(--glass-border);padding-bottom:8px">بيانات الطالب</h3>'+
-    '<div class="form-group"><label class="form-label">الاسم الكامل للطالب</label><input class="form-input" type="text" id="sName" required placeholder="الاسم الكامل"></div>'+
+    '<h3 style="font-size:0.92rem;color:var(--accent);margin-bottom:14px;border-bottom:1px solid var(--glass-border);padding-bottom:8px">'+T('signupStudentData')+'</h3>'+
+    '<div class="form-group"><label class="form-label">'+T('signupFullName')+'</label><input class="form-input" type="text" id="sName" required placeholder="'+T('signupNamePlaceholder')+'"></div>'+
     '<div class="form-row">'+
-    '<div class="form-group"><label class="form-label">رقم هاتف الطالب</label><input class="form-input" type="tel" id="sPhone" placeholder="01XXXXXXXXX" dir="ltr"></div>'+
-    '<div class="form-group"><label class="form-label">البريد الإلكتروني</label><input class="form-input" type="email" id="sEmail" required placeholder="example@email.com" dir="ltr"></div></div>'+
-    '<div class="form-group"><label class="form-label">كلمة المرور</label><input class="form-input" type="password" id="sPass" required placeholder="6 أحرف على الأقل" dir="ltr" minlength="6"></div>'+
-    '<h3 style="font-size:0.92rem;color:var(--accent);margin:20px 0 14px;border-bottom:1px solid var(--glass-border);padding-bottom:8px">بيانات ولي الأمر</h3>'+
+    '<div class="form-group"><label class="form-label">'+T('signupStudentPhone')+'</label><input class="form-input" type="tel" id="sPhone" placeholder="01XXXXXXXXX" dir="ltr"></div>'+
+    '<div class="form-group"><label class="form-label">'+T('signupEmail')+'</label><input class="form-input" type="email" id="sEmail" required placeholder="example@email.com" dir="ltr"></div></div>'+
+    '<div class="form-group"><label class="form-label">'+T('signupPass')+'</label><input class="form-input" type="password" id="sPass" required placeholder="'+T('signupPasswordPlaceholder')+'" dir="ltr" minlength="6"></div>'+
+    '<h3 style="font-size:0.92rem;color:var(--accent);margin:20px 0 14px;border-bottom:1px solid var(--glass-border);padding-bottom:8px">'+T('signupParentData')+'</h3>'+
     '<div class="form-row">'+
-    '<div class="form-group"><label class="form-label">اسم ولي الأمر</label><input class="form-input" type="text" id="pName" required placeholder="الاسم الكامل"></div>'+
-    '<div class="form-group"><label class="form-label">رقم هاتف ولي الأمر (إلزامي)</label><input class="form-input" type="tel" id="pPhone" required placeholder="01XXXXXXXXX" dir="ltr"></div></div>'+
-    '<h3 style="font-size:0.92rem;color:var(--accent);margin:20px 0 14px;border-bottom:1px solid var(--glass-border);padding-bottom:8px">البيانات الدراسية</h3>'+
+    '<div class="form-group"><label class="form-label">'+T('signupParentName')+'</label><input class="form-input" type="text" id="pName" required placeholder="'+T('signupNamePlaceholder')+'"></div>'+
+    '<div class="form-group"><label class="form-label">'+T('signupParentPhoneReq')+'</label><input class="form-input" type="tel" id="pPhone" required placeholder="01XXXXXXXXX" dir="ltr"></div></div>'+
+    '<h3 style="font-size:0.92rem;color:var(--accent);margin:20px 0 14px;border-bottom:1px solid var(--glass-border);padding-bottom:8px">'+T('signupAcademicData')+'</h3>'+
     '<div class="form-row">'+
-    '<div class="form-group"><label class="form-label">المسار الدراسي</label><select class="form-select" id="sTrack" required><option value="">اختر المسار</option>'+tOpts+'</select></div>'+
-    '<div class="form-group"><label class="form-label">الصف الدراسي</label><select class="form-select" id="sGrade" required><option value="">اختر الصف</option>'+gOpts+'</select></div></div>'+
+    '<div class="form-group"><label class="form-label">'+T('signupTrackLabel')+'</label><select class="form-select" id="sTrack" required><option value="">'+T('signupChooseTrack')+'</option>'+tOpts+'</select></div>'+
+    '<div class="form-group"><label class="form-label">'+T('signupGradeLabel')+'</label><select class="form-select" id="sGrade" required><option value="">'+T('signupChooseGrade')+'</option>'+gOpts+'</select></div></div>'+
     '<div class="form-row">'+
-    '<div class="form-group"><label class="form-label">اسم المدرسة</label><input class="form-input" type="text" id="sSchool" placeholder="اسم المدرسة"></div>'+
-    '<div class="form-group"><label class="form-label">الإدارة التعليمية</label><input class="form-input" type="text" id="sAdmin2" placeholder="الإدارة التعليمية"></div></div>'+
-    '<div class="form-group"><label class="form-label">المحافظة</label><input class="form-input" type="text" id="sGov" placeholder="المحافظة"></div>'+
-    '<div class="form-group"><label class="form-label">صورة الشخصية (اختياري)</label><input class="form-input" type="file" id="sAvatar" accept="image/*"></div>'+
+    '<div class="form-group"><label class="form-label">'+T('signupSchoolLabel')+'</label><input class="form-input" type="text" id="sSchool" placeholder="'+T('signupSchoolLabel')+'"></div>'+
+    '<div class="form-group"><label class="form-label">'+T('signupAdminLabel')+'</label><input class="form-input" type="text" id="sAdmin2" placeholder="'+T('signupAdminLabel')+'"></div></div>'+
+    '<div class="form-group"><label class="form-label">'+T('signupGovLabel')+'</label><input class="form-input" type="text" id="sGov" placeholder="'+T('signupGovLabel')+'"></div>'+
+    '<div class="form-group"><label class="form-label">'+T('signupAvatar')+'</label><input class="form-input" type="file" id="sAvatar" accept="image/*"></div>'+
     '<div id="signupError" class="form-error" style="display:none;margin-bottom:14px"></div>'+
-    '<button type="submit" class="btn btn-primary btn-block">إنشاء الحساب</button>'+
+    '<button type="submit" class="btn btn-primary btn-block">'+T('signupBtnText')+'</button>'+
     '</form>'+
-    '<div class="auth-toggle">لديك حساب بالفعل؟ <a onclick="App.navigate(\'login\')">تسجيل الدخول</a></div>'+
+    '<div class="auth-toggle">'+T('signupHaveAccQ')+' <a onclick="App.navigate(\'login\')">'+T('signupLoginLink')+'</a></div>'+
     '</div></div></div>';
   },
   handleLogin(e){
@@ -1056,9 +1521,9 @@ const Auth={
     var errEl=document.getElementById('loginError');
     errEl.style.display='none';
     var btn=document.querySelector('button[type="submit"]');
-    if(btn){btn.disabled=true;btn.textContent=Lang.get()==='ar'?'⏳ جاري الدخول...':'Logging in...'}
+    if(btn){btn.disabled=true;btn.textContent='⏳ '+Lang.t('loginLogging')}
     App.login(email,pass,function(result){
-      if(btn){btn.disabled=false;btn.textContent='دخول'}
+      if(btn){btn.disabled=false;btn.textContent=Lang.t('loginBtn')}
       if(result.error){errEl.textContent=result.error;errEl.style.display='block';return}
       if(result.pending){App.navigate('pending');return}
       if(result.banned){App.navigate('banned');return}
@@ -1095,20 +1560,20 @@ const Auth={
         governorate:document.getElementById('sGov').value.trim(),
         avatar:avatarData
       };
-      if(btn){btn.disabled=true;btn.textContent='⏳ جاري إنشاء الحساب...'}
+      if(btn){btn.disabled=true;btn.textContent='⏳ '+Lang.t('signupCreating')}
       user.role='student';user.status='pending';user.wallet=0;user.badges=[];user.joinedAt=Date.now();
       FB_DB.ref('all_users').orderByChild('email').equalTo(email).once('value').then(function(snap){
-        if(snap.exists()){if(btn){btn.disabled=false;btn.textContent='إنشاء الحساب'};errEl.textContent='هذا البريد الإلكتروني مسجل بالفعل';errEl.style.display='block';return}
+        if(snap.exists()){if(btn){btn.disabled=false;btn.textContent=Lang.t('signupBtnText')};errEl.textContent=Lang.t('signupEmailExists');errEl.style.display='block';return}
         FB_DB.ref('all_users/'+user.id).set(user).then(function(){
           DB.addUser(user);DB.saveSession({userId:user.id,email:email});App.user=user;
           App.navigate('pending');
-          if(btn){btn.disabled=false;btn.textContent='إنشاء الحساب'}
-          showToast('تم إنشاء الحساب بنجاح! في انتظار المراجعة.','info');
+          if(btn){btn.disabled=false;btn.textContent=Lang.t('signupBtnText')}
+          showToast(Lang.t('signupSuccess'),'info');
         });
       }).catch(function(){
         DB.addUser(user);DB.saveSession({userId:user.id,email:email});App.user=user;App.navigate('pending');
-        if(btn){btn.disabled=false;btn.textContent='إنشاء الحساب'}
-        showToast('تم إنشاء الحساب (محلياً). في انتظار المراجعة.','info');
+        if(btn){btn.disabled=false;btn.textContent=Lang.t('signupBtnText')}
+        showToast(Lang.t('signupSuccessLocal'),'info');
       });
     };
     if(avatarInput.files&&avatarInput.files[0]){
@@ -1120,12 +1585,13 @@ const Auth={
 };
 const PendingPage={
   render(){
+    var T=Lang.t.bind(Lang);
     return '<div class="pending-page"><div class="pending-content fade-in glass" style="padding:50px 40px;border-radius:var(--radius)">'+
     '<div class="pending-icon">⏳</div>'+
-    '<h2 class="pending-title">حسابك قيد المراجعة والإنشاء</h2>'+
-    '<p class="pending-desc">تم استلام طلب التسجيل الخاص بك بنجاح. يقوم د. مؤمن يسري بمراجعة بياناتك وتفعيل حسابك. سيتم إشعارك فور الانتهاء.</p>'+
-    '<p style="color:var(--text-muted);font-size:0.85rem;margin-bottom:24px">يمكنك تسجيل الدخول مرة أخرى للاطلاع على حالة حسابك.</p>'+
-    '<button class="btn btn-secondary" onclick="DB.clearSession();App.user=null;App.navigate(\'login\')">العودة لتسجيل الدخول</button>'+
+    '<h2 class="pending-title">'+T('pendingPageTitle')+'</h2>'+
+    '<p class="pending-desc">'+T('pendingDesc')+'</p>'+
+    '<p style="color:var(--text-muted);font-size:0.85rem;margin-bottom:24px">'+T('pendingNote')+'</p>'+
+    '<button class="btn btn-secondary" onclick="DB.clearSession();App.user=null;App.navigate(\'login\')">'+T('pendingBack')+'</button>'+
     '</div></div>';
   }
 };
@@ -1134,9 +1600,10 @@ const Admin={
     return '<div class="dashboard">'+this.renderSidebar()+'<div class="main-content" id="adminContent">'+this.renderSection()+'</div></div>';
   },
   renderSidebar:function(){
+    var T=Lang.t.bind(Lang);
     var s=App.currentSubView;
     var links=[
-      {id:'overview',icon:'📊',label:Lang.t('general')==='general'?'نظرة عامة':Lang.get()==='ar'?'نظرة عامة':'Overview'},
+      {id:'overview',icon:'📊',label:T('adminOverview')},
       {id:'students',icon:'👥',label:Lang.t('adminStudents')},
       {id:'pending',icon:'⏳',label:Lang.t('adminPending')},
       {id:'lessons',icon:'🎬',label:Lang.t('adminLessons')},
@@ -1149,7 +1616,7 @@ const Admin={
       {id:'aibot',icon:'🤖',label:Lang.t('adminAI')},
       {id:'settings',icon:'⚙️',label:Lang.t('settingsTitle')}
     ];
-    return '<div class="sidebar" id="adminSidebar"><button class="mobile-sidebar-close" onclick="App.toggleSidebar()">✕</button><div class="mobile-sidebar-header"><div class="sidebar-avatar">👑</div><div class="sidebar-name">'+Utils.escHtml(App.user?App.user.name:'Admin')+'</div><div class="sidebar-role">مدير المنصة</div></div><div class="sidebar-section">التحكم</div>'+
+    return '<div class="sidebar" id="adminSidebar"><button class="mobile-sidebar-close" onclick="App.toggleSidebar()">✕</button><div class="mobile-sidebar-header"><div class="sidebar-avatar">👑</div><div class="sidebar-name">'+Utils.escHtml(App.user?App.user.name:'Admin')+'</div><div class="sidebar-role">'+T('sidebarAdminPlatform')+'</div></div><div class="sidebar-section">'+T('sidebarAdminLouhati')+'</div>'+
     links.map(function(l){return '<button class="sidebar-link '+(s===l.id||(!s&&l.id==='overview')?'active':'')+'" onclick="Admin.switchSection(\''+l.id+'\')"><span class="link-icon">'+l.icon+'</span><span>'+l.label+'</span></button>'}).join('')+
     '</div>';
   },
@@ -1184,35 +1651,37 @@ const Admin={
     });
   },
   overview:function(){
+    var T=Lang.t.bind(Lang);
     var users=DB.users().filter(function(u){return u.role==='student'});
     var approved=users.filter(function(u){return u.status==='approved'}).length;
     var pending=users.filter(function(u){return u.status==='pending'}).length;
     var lessons=DB.lessons().length;
     var totalWallet=users.reduce(function(s,u){return s+(u.wallet||0)},0);
-    return '<div class="fade-in"><div class="page-header"><h1 class="page-title">نظرة عامة</h1><p class="page-subtitle">مرحباً د. مؤمن يسري 👑</p></div>'+
+    return '<div class="fade-in"><div class="page-header"><h1 class="page-title">'+T('adminOverview')+'</h1><p class="page-subtitle">'+T('adminWelcome')+' 👑</p></div>'+
     '<div class="stats-grid">'+
-    '<div class="card stat-card"><div class="stat-icon">👥</div><div class="stat-number">'+approved+'</div><div class="stat-label">طالب مسجل</div></div>'+
-    '<div class="card stat-card"><div class="stat-icon">⏳</div><div class="stat-number">'+pending+'</div><div class="stat-label">قيد المراجعة</div></div>'+
-    '<div class="card stat-card"><div class="stat-icon">🎬</div><div class="stat-number">'+lessons+'</div><div class="stat-label">درس متاح</div></div>'+
-    '<div class="card stat-card"><div class="stat-icon">💰</div><div class="stat-number">'+Utils.formatMoney(totalWallet)+'</div><div class="stat-label">إجمالي المحافظ</div></div>'+
+    '<div class="card stat-card"><div class="stat-icon">👥</div><div class="stat-number">'+approved+'</div><div class="stat-label">'+T('adminStudentsCount')+'</div></div>'+
+    '<div class="card stat-card"><div class="stat-icon">⏳</div><div class="stat-number">'+pending+'</div><div class="stat-label">'+T('adminPendingCountLabel')+'</div></div>'+
+    '<div class="card stat-card"><div class="stat-icon">🎬</div><div class="stat-number">'+lessons+'</div><div class="stat-label">'+T('adminLessonsCount')+'</div></div>'+
+    '<div class="card stat-card"><div class="stat-icon">💰</div><div class="stat-number">'+Utils.formatMoney(totalWallet)+'</div><div class="stat-label">'+T('adminTotalWallet')+'</div></div>'+
     '</div>'+
-    '<div class="card" style="margin-top:20px"><div class="card-header"><h3 class="card-title">أحدث الطلاب المسجلين</h3></div>'+
-    '<div class="table-container"><table><thead><tr><th>الاسم</th><th>الصف</th><th>المسار</th><th>الحالة</th><th>تاريخ التسجيل</th></tr></thead><tbody>'+
-    users.slice(-5).reverse().map(function(u){return '<tr><td><strong>'+Utils.escHtml(u.name)+'</strong></td><td>'+Utils.escHtml(u.grade)+'</td><td><span class="badge badge-info">'+Utils.escHtml(u.track)+'</span></td><td><span class="badge '+(u.status==='approved'?'badge-accent':'badge-warning')+'">'+(u.status==='approved'?'مقبول':'قيد المراجعة')+'</span></td><td>'+Utils.formatDate(u.joinedAt)+'</td></tr>'}).join('')+
+    '<div class="card" style="margin-top:20px"><div class="card-header"><h3 class="card-title">'+T('adminRecentStudents')+'</h3></div>'+
+    '<div class="table-container"><table><thead><tr><th>'+T('adminNameCol')+'</th><th>'+T('adminGradeCol')+'</th><th>'+T('adminTrackCol')+'</th><th>'+T('adminStatusCol')+'</th><th>'+T('adminRegDate')+'</th></tr></thead><tbody>'+
+    users.slice(-5).reverse().map(function(u){return '<tr><td><strong>'+Utils.escHtml(u.name)+'</strong></td><td>'+Utils.escHtml(u.grade)+'</td><td><span class="badge badge-info">'+Utils.escHtml(u.track)+'</span></td><td><span class="badge '+(u.status==='approved'?'badge-accent':'badge-warning')+'">'+(u.status==='approved'?T('adminApproved'):T('adminPendingStatus'))+'</span></td><td>'+Utils.formatDate(u.joinedAt)+'</td></tr>'}).join('')+
     '</tbody></table></div>'+
-    (users.length===0?'<div class="empty-state"><div class="empty-icon">👥</div><p>لا يوجد طلاب مسجلين بعد</p></div>':'')+
+    (users.length===0?'<div class="empty-state"><div class="empty-icon">👥</div><p>'+T('adminNoStudents')+'</p></div>':'')+
     '</div></div>';
   },
   students:function(){
-    return '<div class="fade-in"><div class="page-header"><h1 class="page-title">إدارة الطلاب</h1><p class="page-subtitle">قائمة بجميع الطلاب المسجلين</p></div>'+
+    var T=Lang.t.bind(Lang);var isAr=Lang.get()==='ar';
+    return '<div class="fade-in"><div class="page-header"><h1 class="page-title">'+T('adminStudentsPageTitle')+'</h1><p class="page-subtitle">'+T('adminStudentsSub')+'</p></div>'+
     '<div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px">'+
-    '<div class="search-bar" style="flex:1;min-width:200px"><input class="form-input" id="adminStudentSearch" placeholder="بحث بالاسم أو البريد..." oninput="Admin.filterStudents()"></div>'+
-    '<select class="form-select" id="adminFilterGrade" style="width:180px" onchange="Admin.filterStudents()"><option value="">جميع الصفوف</option>'+GRADES.map(function(g){return '<option value="'+g+'">'+g+'</option>'}).join('')+'</select>'+
-    '<select class="form-select" id="adminFilterTrack" style="width:180px" onchange="Admin.filterStudents()"><option value="">جميع المسارات</option>'+TRACKS.map(function(t){return '<option value="'+t+'">'+t+'</option>'}).join('')+'</select>'+
-    '<select class="form-select" id="adminFilterStatus" style="width:180px" onchange="Admin.filterStudents()"><option value="">جميع الحالات</option><option value="approved">مقبول</option><option value="pending">قيد المراجعة</option><option value="rejected">مرفوض</option></select>'+
+    '<div class="search-bar" style="flex:1;min-width:200px"><input class="form-input" id="adminStudentSearch" placeholder="'+T('adminSearch')+'" oninput="Admin.filterStudents()"></div>'+
+    '<select class="form-select" id="adminFilterGrade" style="width:180px" onchange="Admin.filterStudents()"><option value="">'+T('adminAllGrades')+'</option>'+GRADES.map(function(g){return '<option value="'+g+'">'+g+'</option>'}).join('')+'</select>'+
+    '<select class="form-select" id="adminFilterTrack" style="width:180px" onchange="Admin.filterStudents()"><option value="">'+T('adminAllTracks')+'</option>'+TRACKS.map(function(t){return '<option value="'+t+'">'+t+'</option>'}).join('')+'</select>'+
+    '<select class="form-select" id="adminFilterStatus" style="width:180px" onchange="Admin.filterStudents()"><option value="">'+T('adminAllStatuses')+'</option><option value="approved">'+T('adminApproved')+'</option><option value="pending">'+T('adminPendingStatus')+'</option><option value="rejected">'+T('adminRejected')+'</option></select>'+
     '</div>'+
-    '<div class="card"><div class="table-container"><table><thead><tr><th>الاسم</th><th>البريد</th><th>هاتف الطالب</th><th>ولي الأمر</th><th>هاتف ولي الأمر</th><th>الصف</th><th>المسار</th><th>المحافظة</th><th>الحالة</th><th>إجراءات</th></tr></thead><tbody id="adminStudentsBody"></tbody></table></div>'+
-    '<div id="adminStudentsEmpty" class="empty-state" style="display:none"><div class="empty-icon">👥</div><p>لا توجد نتائج</p></div></div></div>';
+    '<div class="card"><div class="table-container"><table><thead><tr><th>'+T('adminNameCol')+'</th><th>'+T('loginEmail')+'</th><th>'+T('adminStudentPhoneLabel')+'</th><th>'+T('adminParentLabel')+'</th><th>'+T('adminParentPhoneLabel')+'</th><th>'+T('adminGradeCol')+'</th><th>'+T('adminTrackCol')+'</th><th>'+T('adminGovernorateLabel')+'</th><th>'+T('adminStatusCol')+'</th><th>'+(isAr?'إجراءات':'Actions')+'</th></tr></thead><tbody id="adminStudentsBody"></tbody></table></div>'+
+    '<div id="adminStudentsEmpty" class="empty-state" style="display:none"><div class="empty-icon">👥</div><p>'+T('adminNoResults')+'</p></div></div></div>';
   },
   filterStudents:function(){
     var q=(document.getElementById('adminStudentSearch')?document.getElementById('adminStudentSearch').value:'').trim();
@@ -1230,42 +1699,42 @@ const Admin={
     if(users.length===0){tbody.innerHTML='';empty.style.display='block';return}
     empty.style.display='none';
     tbody.innerHTML=users.map(function(u){
-      return '<tr><td><strong>'+Utils.escHtml(u.name)+'</strong></td><td style="font-family:var(--font-en);font-size:0.8rem" dir="ltr">'+Utils.escHtml(u.email)+'</td><td dir="ltr">'+Utils.escHtml(u.phone||'-')+'</td><td>'+Utils.escHtml(u.parentName||'-')+'</td><td dir="ltr"><a href="https://wa.me/'+(u.parentPhone||'').replace(/^0/,'20')+'" target="_blank">'+Utils.escHtml(u.parentPhone||'-')+' 📱</a></td><td>'+Utils.escHtml(u.grade)+'</td><td><span class="badge badge-info">'+Utils.escHtml(u.track)+'</span></td><td>'+Utils.escHtml(u.governorate||'-')+'</td><td><span class="badge '+(u.status==='approved'?'badge-accent':u.status==='rejected'?'badge-danger':u.status==='banned'?'badge-danger':'badge-warning')+'">'+(u.status==='approved'?'مقبول':u.status==='rejected'?'مرفوض':u.status==='banned'?'محظور':'قيد المراجعة')+'</span></td><td style="display:flex;gap:4px;flex-wrap:wrap">'+(u.status!=='approved'?'<button class="btn btn-sm btn-primary" onclick="Admin.approveStudent(\''+u.id+'\')">قبول</button>':'')+(u.status!=='rejected'&&u.status!=='banned'?'<button class="btn btn-sm btn-danger" onclick="Admin.rejectStudent(\''+u.id+'\')">رفض</button>':'')+(u.status!=='banned'?'<button class="btn btn-sm btn-danger" onclick="Admin.banStudent(\''+u.id+'\')">🚫 حظر</button>':'<button class="btn btn-sm btn-primary" onclick="Admin.unbanStudent(\''+u.id+'\')">✅ إلغاء الحظر</button>')+(u.id!=='admin_001'?'<button class="btn btn-sm btn-danger" onclick="Admin.deleteStudent(\''+u.id+'\')">🗑️</button>':'')+'</td></tr>';
+      return '<tr><td><strong>'+Utils.escHtml(u.name)+'</strong></td><td style="font-family:var(--font-en);font-size:0.8rem" dir="ltr">'+Utils.escHtml(u.email)+'</td><td dir="ltr">'+Utils.escHtml(u.phone||'-')+'</td><td>'+Utils.escHtml(u.parentName||'-')+'</td><td dir="ltr"><a href="https://wa.me/'+(u.parentPhone||'').replace(/^0/,'20')+'" target="_blank">'+Utils.escHtml(u.parentPhone||'-')+' 📱</a></td><td>'+Utils.escHtml(u.grade)+'</td><td><span class="badge badge-info">'+Utils.escHtml(u.track)+'</span></td><td>'+Utils.escHtml(u.governorate||'-')+'</td><td><span class="badge '+(u.status==='approved'?'badge-accent':u.status==='rejected'?'badge-danger':u.status==='banned'?'badge-danger':'badge-warning')+'">'+(u.status==='approved'?Lang.t('adminApproved'):u.status==='rejected'?Lang.t('adminRejected'):u.status==='banned'?Lang.t('adminBanned'):Lang.t('adminPendingStatus'))+'</span></td><td style="display:flex;gap:4px;flex-wrap:wrap">'+(u.status!=='approved'?'<button class="btn btn-sm btn-primary" onclick="Admin.approveStudent(\''+u.id+'\')">'+Lang.t('adminApprove')+'</button>':'')+(u.status!=='rejected'&&u.status!=='banned'?'<button class="btn btn-sm btn-danger" onclick="Admin.rejectStudent(\''+u.id+'\')">'+Lang.t('adminReject')+'</button>':'')+(u.status!=='banned'?'<button class="btn btn-sm btn-danger" onclick="Admin.banStudent(\''+u.id+'\')">🚫 '+Lang.t('adminBan')+'</button>':'<button class="btn btn-sm btn-primary" onclick="Admin.unbanStudent(\''+u.id+'\')">✅ '+Lang.t('adminUnban')+'</button>')+(u.id!=='admin_001'?'<button class="btn btn-sm btn-danger" onclick="Admin.deleteStudent(\''+u.id+'\')">🗑️</button>':'')+'</td></tr>';
     }).join('');
   },
   approveStudent:function(id){
     DB.updateUser(id,{status:'approved'});
     var u=DB.getUserById(id);
     if(u){FB_DB.ref('all_users/'+id).set(u).catch(function(){})}
-    showToast('تم قبول الطالب بنجاح!');
+    showToast(Lang.t('toastApproved'));
     this.switchSection(App.currentSubView||'students');
   },
   rejectStudent:function(id){
-    if(!confirm('هل أنت متأكد من رفض هذا الطالب؟'))return;
+    if(!confirm(Lang.t('confirmReject')))return;
     DB.updateUser(id,{status:'rejected'});
     var u=DB.getUserById(id);
     if(u){FB_DB.ref('all_users/'+id).set(u).catch(function(){})}
-    showToast('تم رفض الطالب','error');
+    showToast(Lang.t('toastRejected'),'error');
     this.switchSection(App.currentSubView||'students');
   },
   banStudent:function(id){
-    if(!confirm('هل أنت متأكد من حظر هذا الطالب؟ لن يتمكن من الدخول مجدداً.'))return;
+    if(!confirm(Lang.t('confirmBan')))return;
     DB.updateUser(id,{status:'banned'});
     var u=DB.getUserById(id);
     if(u){FB_DB.ref('all_users/'+id).set(u).catch(function(){})}
-    showToast('تم حظر الطالب 🚫','error');
+    showToast(Lang.t('toastBanned'),'error');
     this.switchSection(App.currentSubView||'students');
   },
   unbanStudent:function(id){
-    if(!confirm('هل أنت متأكد من إلغاء حظر هذا الطالب؟'))return;
+    if(!confirm(Lang.t('confirmUnban')))return;
     DB.updateUser(id,{status:'approved'});
     var u=DB.getUserById(id);
     if(u){FB_DB.ref('all_users/'+id).set(u).catch(function(){})}
-    showToast('تم إلغاء الحظر ✅');
+    showToast(Lang.t('toastUnbanned'));
     this.switchSection(App.currentSubView||'students');
   },
   deleteStudent:function(id){
-    if(!confirm('هل أنت متأكد من مسح هذا الحساب نهائياً؟ لن تتمكن من استرجاعه.'))return;
+    if(!confirm(Lang.t('confirmDeleteStudent')))return;
     var u=DB.getUserById(id);
     var users=DB.users().filter(function(u){return u.id!==id});
     DB.saveUsers(users);
@@ -1273,41 +1742,46 @@ const Admin={
       FB_DB.ref('all_users/'+id).remove().catch(function(){});
       if(u.email){var fk=u.email.replace(/\./g,'_dot_');FB_DB.ref('users/'+fk).remove().catch(function(){})}
     }
-    showToast('تم مسح الحساب نهائياً','error');
+    showToast(Lang.t('toastDeleted'),'error');
     this.switchSection(App.currentSubView||'students');
   },
   pendingRequests:function(){
+    var T=Lang.t.bind(Lang);
     var users=DB.users().filter(function(u){return u.role==='student'&&u.status==='pending'});
-    return '<div class="fade-in"><div class="page-header"><h1 class="page-title">طلبات التسجيل المعلقة</h1><p class="page-subtitle">'+users.length+' طلب(طلبات) في انتظار المراجعة</p></div>'+
-    (users.length===0?'<div class="card empty-state"><div class="empty-icon">✅</div><p>لا توجد طلبات معلقة!</p></div>':'')+
+    return '<div class="fade-in"><div class="page-header"><h1 class="page-title">'+T('adminPendingTitle')+'</h1><p class="page-subtitle">'+users.length+' '+T('adminPendingReqCount')+'</p></div>'+
+    (users.length===0?'<div class="card empty-state"><div class="empty-icon">✅</div><p>'+T('adminPendingNone')+'</p></div>':'')+
     '<div class="content-grid">'+
-    users.map(function(u){return '<div class="card fade-in"><div class="card-header"><h3 class="card-title">'+Utils.escHtml(u.name)+'</h3><span class="badge badge-warning">قيد المراجعة</span></div>'+
+    users.map(function(u){return '<div class="card fade-in"><div class="card-header"><h3 class="card-title">'+Utils.escHtml(u.name)+'</h3><span class="badge badge-warning">'+T('adminPendingStatus')+'</span></div>'+
     '<div style="font-size:0.88rem;color:var(--text-secondary);line-height:2">'+
     '<div>📧 <span dir="ltr" style="font-family:var(--font-en)">'+Utils.escHtml(u.email)+'</span></div>'+
-    '<div>📱 هاتف الطالب: '+Utils.escHtml(u.phone||'غير محدد')+'</div>'+
-    '<div>👨‍👩‍👦 ولي الأمر: '+Utils.escHtml(u.parentName||'غير محدد')+'</div>'+
-    '<div>📱 هاتف ولي الأمر: '+Utils.escHtml(u.parentPhone||'غير محدد')+'</div>'+
-    '<div>🏫 المدرسة: '+Utils.escHtml(u.school||'غير محدد')+'</div>'+
-    '<div>📖 المسار: <span class="badge badge-info">'+Utils.escHtml(u.track)+'</span></div>'+
-    '<div>📚 الصف: '+Utils.escHtml(u.grade)+'</div>'+
-    '<div>🏛️ الإدارة: '+Utils.escHtml(u.administration||'غير محدد')+'</div>'+
-    '<div>🗺️ المحافظة: '+Utils.escHtml(u.governorate||'غير محدد')+'</div></div>'+
+    '<div>📱 '+T('adminStudentPhoneLabel')+': '+Utils.escHtml(u.phone||T('adminNotSpecified'))+'</div>'+
+    '<div>👨‍👩‍👦 '+T('adminParentLabel')+': '+Utils.escHtml(u.parentName||T('adminNotSpecified'))+'</div>'+
+    '<div>📱 '+T('adminParentPhoneLabel')+': '+Utils.escHtml(u.parentPhone||T('adminNotSpecified'))+'</div>'+
+    '<div>🏫 '+T('adminSchoolLabel')+': '+Utils.escHtml(u.school||T('adminNotSpecified'))+'</div>'+
+    '<div>📖 '+T('signupTrackLabel')+': <span class="badge badge-info">'+Utils.escHtml(u.track)+'</span></div>'+
+    '<div>📚 '+T('signupGradeLabel')+': '+Utils.escHtml(u.grade)+'</div>'+
+    '<div>🏛️ '+T('adminAdministrationLabel')+': '+Utils.escHtml(u.administration||T('adminNotSpecified'))+'</div>'+
+    '<div>🗺️ '+T('adminGovernorateLabel')+': '+Utils.escHtml(u.governorate||T('adminNotSpecified'))+'</div></div>'+
     '<div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap">'+
-    '<button class="btn btn-primary" onclick="Admin.approveStudent(\''+u.id+'\')">✅ قبول</button>'+
-    '<button class="btn btn-danger" onclick="Admin.rejectStudent(\''+u.id+'\')">❌ رفض</button>'+
-    '<a href="https://wa.me/'+(u.parentPhone||'').replace(/^0/,'20')+'" target="_blank" class="btn btn-secondary">📱 واتساب</a>'+
+    '<button class="btn btn-primary" onclick="Admin.approveStudent(\''+u.id+'\')">✅ '+T('adminApprove')+'</button>'+
+    '<button class="btn btn-danger" onclick="Admin.rejectStudent(\''+u.id+'\')">❌ '+T('adminReject')+'</button>'+
+    '<a href="https://wa.me/'+(u.parentPhone||'').replace(/^0/,'20')+'" target="_blank" class="btn btn-secondary">📱 '+T('adminWhatsApp')+'</a>'+
     '</div></div>'}).join('')+'</div></div>';
   },
   lessonsMgmt:function(){
+    var T=Lang.t.bind(Lang);var isAr=Lang.get()==='ar';
     var lessons=DB.lessons();
-    return '<div class="fade-in"><div class="card-header"><div><h1 class="page-title">إدارة الدروس والفيديوهات</h1><p class="page-subtitle">'+lessons.length+' درس متاح</p></div>'+
-    '<button class="btn btn-primary" onclick="Admin.showAddLessonModal()">+ إضافة درس جديد</button></div>'+
+    var allViews=DB.videoViews();
+    return '<div class="fade-in"><div class="card-header"><div><h1 class="page-title">'+T('adminLessonsPageTitle')+'</h1><p class="page-subtitle">'+lessons.length+' '+T('lessonsAvailable')+'</p></div>'+
+    '<button class="btn btn-primary" onclick="Admin.showAddLessonModal()">+ '+T('adminAddLesson')+'</button></div>'+
     '<div class="content-grid" id="adminLessonsGrid">'+
-    (lessons.length===0?'<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">🎬</div><p>لا توجد دروس بعد. أضف أول درس!</p></div>':'')+
-    lessons.map(function(l){return '<div class="card lesson-card fade-in"><div class="lesson-thumb">'+(l.videoEmbed?'<span>🎬</span><div class="lesson-thumb-overlay"><button class="btn btn-sm btn-primary" onclick="Student.showLessonEmbed(\''+l.id+'\')">▶️ مشاهدة</button></div>':(l._hasVideo||l.videoData)?'<div class="video-placeholder" data-lesson-id="'+l.id+'" style="width:100%;height:100%;background:#000;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:1.5rem">🎬</div>':'<span>🎬</span><div class="lesson-thumb-overlay"><a href="'+Utils.escHtml(l.videoUrl||'#')+'" target="_blank" class="btn btn-sm btn-primary">▶️ مشاهدة</a></div>')+'</div>'+
+    (lessons.length===0?'<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">🎬</div><p>'+T('adminNoLessons')+'</p></div>':'')+
+    lessons.map(function(l){var viewCount=allViews.filter(function(v){return v.lessonId===l.id}).length;var codeCount=(l.codes||[]).length;var usedCodes=(l.codes||[]).filter(function(c){return c.usedBy}).length;
+      return '<div class="card lesson-card fade-in"><div class="lesson-thumb">'+(l.videoEmbed?'<span>🎬</span><div class="lesson-thumb-overlay"><button class="btn btn-sm btn-primary" onclick="Student.showLessonEmbed(\''+l.id+'\')">▶️ مشاهدة</button></div>':(l._hasVideo||l.videoData)?'<div class="video-placeholder" data-lesson-id="'+l.id+'" style="width:100%;height:100%;background:#000;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:1.5rem">🎬</div>':'<span>🎬</span><div class="lesson-thumb-overlay"><a href="'+Utils.escHtml(l.videoUrl||'#')+'" target="_blank" class="btn btn-sm btn-primary">▶️ مشاهدة</a></div>')+'</div>'+
     '<div class="lesson-body"><div class="lesson-meta"><span class="badge badge-info">'+Utils.escHtml(l.grade)+'</span><span class="badge badge-accent">'+Utils.escHtml(l.track)+'</span><span class="badge badge-warning">'+Utils.escHtml(l.subject||'عام')+'</span></div>'+
     '<h3 class="lesson-title">'+Utils.escHtml(l.title)+'</h3><p class="lesson-desc">'+Utils.escHtml(l.description||'')+'</p>'+
-    '<div class="lesson-footer"><span class="lesson-price">'+Utils.formatMoney(l.price)+'</span><div style="display:flex;gap:6px"><button class="btn btn-sm btn-secondary" onclick="Admin.editLesson(\''+l.id+'\')">✏️</button><button class="btn btn-sm btn-danger" onclick="Admin.deleteLesson(\''+l.id+'\')">🗑️</button></div></div></div></div>'}).join('')+
+    '<div style="display:flex;gap:6px;flex-wrap:wrap;margin:8px 0"><span class="badge badge-info" style="font-size:0.72rem">👁️ '+viewCount+' مشاهدة</span><span class="badge badge-accent" style="font-size:0.72rem">🔑 '+usedCodes+'/'+codeCount+' كود</span></div>'+
+    '<div class="lesson-footer"><span class="lesson-price">'+Utils.formatMoney(l.price)+'</span><div style="display:flex;gap:4px;flex-wrap:wrap"><button class="btn btn-sm btn-secondary" onclick="Admin.showLessonCodes(\''+l.id+'\')" title="إدارة الأكواد">🔑</button><button class="btn btn-sm btn-secondary" onclick="Admin.showUnlockForStudent(\''+l.id+'\')" title="فتح لطالب">🔓</button><button class="btn btn-sm btn-secondary" onclick="Admin.viewLessonViews(\''+l.id+'\')" title="المشاهدين">👁️</button><button class="btn btn-sm btn-secondary" onclick="Admin.editLesson(\''+l.id+'\')">✏️</button><button class="btn btn-sm btn-danger" onclick="Admin.deleteLesson(\''+l.id+'\')">🗑️</button></div></div></div></div>'}).join('')+
     '</div></div>';
   },
   showAddLessonModal:function(lesson){
@@ -1316,19 +1790,19 @@ const Admin={
     var tOpts=TRACKS.map(function(t){return '<option value="'+t+'" '+(lesson&&lesson.track===t?'selected':'')+'>'+t+'</option>'}).join('');
     var sOpts=SUBJECTS.map(function(s){return '<option value="'+s+'" '+(lesson&&lesson.subject===s?'selected':'')+'>'+s+'</option>'}).join('');
     var html='<div class="modal-overlay" id="lessonModal" onclick="if(event.target===this)this.remove()"><div class="modal"><button class="modal-close" onclick="document.getElementById(\'lessonModal\').remove()">✕</button>'+
-    '<h3 class="modal-title">'+(isEdit?'تعديل الدرس':'إضافة درس جديد')+'</h3>'+
+    '<h3 class="modal-title">'+(isEdit?Lang.t('adminEditLesson'):Lang.t('adminNewLesson'))+'</h3>'+
     '<form onsubmit="Admin.saveLesson(event,\''+(isEdit?lesson.id:'')+'\')">'+
-    '<div class="form-group"><label class="form-label">عنوان الدرس</label><input class="form-input" id="lTitle" required value="'+(isEdit?Utils.escHtml(lesson.title):'')+'"></div>'+
-    '<div class="form-group"><label class="form-label">وصف الدرس</label><textarea class="form-textarea" id="lDesc">'+(isEdit?Utils.escHtml(lesson.description):'')+'</textarea></div>'+
-    '<div class="form-row"><div class="form-group"><label class="form-label">المادة</label><select class="form-select" id="lSubject"><option value="">اختر المادة</option>'+sOpts+'</select></div>'+
-    '<div class="form-group"><label class="form-label">السعر (ج.م)</label><input class="form-input" type="number" id="lPrice" required min="0" value="'+(isEdit?lesson.price:0)+'"></div></div>'+
-    '<div class="form-row"><div class="form-group"><label class="form-label">الصف الدراسي</label><select class="form-select" id="lGrade" required><option value="">اختر الصف</option>'+gOpts+'</select></div>'+
-    '<div class="form-group"><label class="form-label">المسار</label><select class="form-select" id="lTrack" required><option value="">اختر المسار</option>'+tOpts+'</select></div></div>'+
-    '<div class="form-group"><label class="form-label">رابط الفيديو (YouTube / Vimeo / رابط مباشر)</label><input class="form-input" id="lVideo" dir="ltr" placeholder="https://..." value="'+(isEdit?Utils.escHtml(lesson.videoUrl||''):'')+'"></div>'+
-    '<div class="form-group"><label class="form-label">رفع فيديو MP4 مباشر</label><input class="form-input" type="file" id="lVideoFile" accept="video/mp4,video/*"></div>'+
-    '<div class="form-group"><label class="form-label">رابط الفيديو البديل (اختياري)</label><input class="form-input" id="lVideoAlt" dir="ltr" placeholder="https://..." value="'+(isEdit?Utils.escHtml(lesson.videoUrlAlt||''):'')+'"></div>'+
-    '<div class="form-group"><label class="form-label">Embed Code (اختياري - للصق كود embed من YouTube أو أي مصدر)</label><textarea class="form-textarea" id="lVideoEmbed" dir="ltr" placeholder="<iframe src=...></iframe>" rows="3">'+(isEdit?Utils.escHtml(lesson.videoEmbed||''):'')+'</textarea></div>'+
-    '<button type="submit" class="btn btn-primary btn-block">'+(isEdit?'حفظ التعديلات':'إضافة الدرس')+'</button></form></div></div>';
+    '<div class="form-group"><label class="form-label">'+T('adminLessonTitleLabel')+'</label><input class="form-input" id="lTitle" required value="'+(isEdit?Utils.escHtml(lesson.title):'')+'"></div>'+
+    '<div class="form-group"><label class="form-label">'+T('adminLessonDescLabel')+'</label><textarea class="form-textarea" id="lDesc">'+(isEdit?Utils.escHtml(lesson.description):'')+'</textarea></div>'+
+    '<div class="form-row"><div class="form-group"><label class="form-label">'+T('adminLessonSubjectLabel')+'</label><select class="form-select" id="lSubject"><option value="">'+T('adminChooseSubject')+'</option>'+sOpts+'</select></div>'+
+    '<div class="form-group"><label class="form-label">'+T('adminLessonPriceLabel')+'</label><input class="form-input" type="number" id="lPrice" required min="0" value="'+(isEdit?lesson.price:0)+'"></div></div>'+
+    '<div class="form-row"><div class="form-group"><label class="form-label">'+T('adminLessonGradeLabel')+'</label><select class="form-select" id="lGrade" required><option value="">'+T('adminChooseGrade')+'</option>'+gOpts+'</select></div>'+
+    '<div class="form-group"><label class="form-label">'+T('adminLessonTrackLabel')+'</label><select class="form-select" id="lTrack" required><option value="">'+T('adminChooseTrack')+'</option>'+tOpts+'</select></div></div>'+
+    '<div class="form-group"><label class="form-label">'+T('adminVideoUrl')+'</label><input class="form-input" id="lVideo" dir="ltr" placeholder="https://..." value="'+(isEdit?Utils.escHtml(lesson.videoUrl||''):'')+'"></div>'+
+    '<div class="form-group"><label class="form-label">'+T('adminVideoUpload')+'</label><input class="form-input" type="file" id="lVideoFile" accept="video/mp4,video/*"></div>'+
+    '<div class="form-group"><label class="form-label">'+T('adminVideoAlt')+'</label><input class="form-input" id="lVideoAlt" dir="ltr" placeholder="https://..." value="'+(isEdit?Utils.escHtml(lesson.videoUrlAlt||''):'')+'"></div>'+
+    '<div class="form-group"><label class="form-label">'+T('adminVideoEmbed')+'</label><textarea class="form-textarea" id="lVideoEmbed" dir="ltr" placeholder="<iframe src=...></iframe>" rows="3">'+(isEdit?Utils.escHtml(lesson.videoEmbed||''):'')+'</textarea></div>'+
+    '<button type="submit" class="btn btn-primary btn-block">'+(isEdit?T('adminSaveLesson'):T('adminAddLessonBtn'))+'</button></form></div></div>';
     document.body.insertAdjacentHTML('beforeend',html);
   },
   saveLesson:function(e,editId){
@@ -1342,9 +1816,9 @@ const Admin={
       var lessons=DB.lessons();
       if(editId){var idx=lessons.findIndex(function(l){return l.id===editId});if(idx>=0)lessons[idx]=Object.assign({},lessons[idx],data)}
       else{data.id=Utils.uid();data.createdAt=Date.now();data.files=[];lessons.push(data)}
-      try{DB.saveLessons(lessons)}catch(err){showToast('الذاكرة ممتلئة. جرب حذف بعض الدروس أو استخدم رابط فيديو بدل الرفع المباشر.','error');if(submitBtn){submitBtn.disabled=false;submitBtn.textContent=editId?'حفظ التعديلات':'إضافة الدرس'}return}
+      try{DB.saveLessons(lessons)}catch(err){showToast(Lang.t('toastStorageFull'),'error');if(submitBtn){submitBtn.disabled=false;submitBtn.textContent=editId?Lang.t('adminSaveLesson'):Lang.t('adminAddLessonBtn')}return}
       document.getElementById('lessonModal').remove();
-      showToast(editId?'تم تعديل الدرس بنجاح!':'تم إضافة الدرس بنجاح!');
+      showToast(editId?Lang.t('toastLessonSaved'):Lang.t('toastLessonAdded'));
       if(!editId)Notify.add('lesson','درس جديد: '+data.title,'تم إضافة درس جديد في '+data.grade+' - '+data.track);
       Admin.switchSection('lessons');
     };
@@ -1358,25 +1832,106 @@ const Admin={
     }else{doSave(null)}
   },
   editLesson:function(id){var l=DB.lessons().find(function(x){return x.id===id});if(l)this.showAddLessonModal(l)},
-  deleteLesson:function(id){if(!confirm('هل أنت متأكد من حذف هذا الدرس؟'))return;DB.saveLessons(DB.lessons().filter(function(l){return l.id!==id}));showToast('تم حذف الدرس','error');this.switchSection('lessons')},
+  deleteLesson:function(id){if(!confirm(Lang.t('confirmDeleteLesson')))return;DB.saveLessons(DB.lessons().filter(function(l){return l.id!==id}));showToast(Lang.t('toastLessonDeleted'),'error');this.switchSection('lessons')},
+  showLessonCodes:function(lessonId){
+    var l=DB.lessons().find(function(x){return x.id===lessonId});if(!l)return;
+    var codes=l.codes||[];
+    var html='<div class="modal-overlay" id="codesModal" onclick="if(event.target===this)this.remove()"><div class="modal" style="max-width:700px"><button class="modal-close" onclick="document.getElementById(\'codesModal\').remove()">✕</button>'+
+    '<h3 class="modal-title">🔑 أكواد الدس: '+Utils.escHtml(l.title)+'</h3>'+
+    '<p style="color:var(--text-muted);font-size:0.85rem;margin-bottom:12px">'+codes.length+' كود — '+codes.filter(function(c){return c.usedBy}).length+' مستخدم</p>'+
+    '<div class="form-group"><label class="form-label">إضافة أكواد جديدة (كود واحد في كل سطر)</label>'+
+    '<textarea class="form-textarea" id="newCodes" rows="6" placeholder="CODE001&#10;CODE002&#10;CODE003&#10;..." dir="ltr" style="font-family:var(--font-mono);font-size:0.85rem"></textarea></div>'+
+    '<button class="btn btn-primary btn-block" onclick="Admin.addLessonCodes(\''+lessonId+'\')" style="margin-bottom:16px">➕ إضافة الأكواد</button>'+
+    (codes.length>0?'<div style="max-height:300px;overflow-y:auto">'+codes.map(function(c,i){
+      return '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-bottom:1px solid var(--glass-border);font-size:0.85rem">'+
+      '<code style="font-family:var(--font-mono);color:var(--accent)">'+Utils.escHtml(c.code)+'</code>'+
+      (c.usedBy?'<span class="badge badge-accent" style="font-size:0.7rem">✅ مستخدم — '+Utils.escHtml(c.usedByName||'')+'</span>':'<span class="badge badge-warning" style="font-size:0.7rem">متاح</span>')+
+      '</div>'}).join('')+'</div>':'<p style="text-align:center;color:var(--text-muted);padding:20px">لا توجد أكواد بعد</p>')+
+    '</div></div>';
+    document.body.insertAdjacentHTML('beforeend',html);
+  },
+  addLessonCodes:function(lessonId){
+    var textarea=document.getElementById('newCodes');
+    if(!textarea)return;
+    var raw=textarea.value.trim();
+    if(!raw){showToast('اكتب أكواد أولاً','error');return}
+    var newCodes=raw.split('\n').map(function(s){return s.trim()}).filter(function(s){return s.length>0});
+    if(newCodes.length===0){showToast('لا توجد أكواد صالحة','error');return}
+    var lessons=DB.lessons();
+    var lIdx=lessons.findIndex(function(x){return x.id===lessonId});
+    if(lIdx<0)return;
+    var existing=lessons[lIdx].codes||[];
+    var existingMap={};existing.forEach(function(c){existingMap[c.code]=true});
+    var added=0;
+    newCodes.forEach(function(code){if(!existingMap[code]){existing.push({code:code,usedBy:null,usedByName:null,usedAt:null});added++}});
+    lessons[lIdx].codes=existing;
+    DB.saveLessons(lessons);
+    showToast('تم إضافة '+added+' كود جديد!');
+    document.getElementById('codesModal').remove();
+    Admin.showLessonCodes(lessonId);
+  },
+  showUnlockForStudent:function(lessonId){
+    var l=DB.lessons().find(function(x){return x.id===lessonId});if(!l)return;
+    var students=DB.users().filter(function(u){return u.role==='student'&&u.status==='approved'});
+    var html='<div class="modal-overlay" id="unlockModal" onclick="if(event.target===this)this.remove()"><div class="modal" style="max-width:500px"><button class="modal-close" onclick="document.getElementById(\'unlockModal\').remove()">✕</button>'+
+    '<h3 class="modal-title">🔓 فتح الدرس لطالب</h3>'+
+    '<p style="color:var(--text-muted);font-size:0.85rem;margin-bottom:16px">الدرس: <strong>'+Utils.escHtml(l.title)+'</strong></p>'+
+    '<div class="form-group"><label class="form-label">اختر الطالب</label>'+
+    '<select class="form-select" id="unlockStudent"><option value="">— اختر طالب —</option>'+
+    students.map(function(u){return '<option value="'+u.id+'">'+Utils.escHtml(u.name)+' — '+Utils.escHtml(u.grade)+'</option>'}).join('')+
+    '</select></div>'+
+    '<button class="btn btn-primary btn-block" onclick="Admin.unlockForStudent(\''+lessonId+'\')">🔓 فتح الدرس</button></div></div>';
+    document.body.insertAdjacentHTML('beforeend',html);
+  },
+  unlockForStudent:function(lessonId){
+    var select=document.getElementById('unlockStudent');
+    if(!select||!select.value){showToast('اختر طالب أولاً','error');return}
+    var studentId=select.value;
+    var unlocks=(DB._get('unlocks_'+studentId))||[];
+    if(!unlocks.includes(lessonId)){
+      unlocks.push(lessonId);
+      DB._set('unlocks_'+studentId,unlocks);
+      var l=DB.lessons().find(function(x){return x.id===lessonId});
+      var u=DB.getUserById(studentId);
+      Notify.add('unlock','تم فتح درس لك','تم فتح درس "'+(l?l.title:'')+'" لك من الإدارة',studentId);
+      showToast('تم فتح الدرس لـ '+(u?u.name:'الطالب')+'!');
+    }else{showToast('الدرس مفتوح بالفعل لهذا الطالب')}
+    document.getElementById('unlockModal').remove();
+  },
+  viewLessonViews:function(lessonId){
+    var l=DB.lessons().find(function(x){return x.id===lessonId});if(!l)return;
+    var views=DB.videoViews().filter(function(v){return v.lessonId===lessonId});
+    var html='<div class="modal-overlay" id="viewsModal" onclick="if(event.target===this)this.remove()"><div class="modal" style="max-width:500px"><button class="modal-close" onclick="document.getElementById(\'viewsModal\').remove()">✕</button>'+
+    '<h3 class="modal-title">👁️ المشاهدين: '+Utils.escHtml(l.title)+'</h3>'+
+    '<p style="color:var(--text-muted);font-size:0.85rem;margin-bottom:16px">'+views.length+' مشاهدة فريدة</p>'+
+    (views.length>0?'<div style="max-height:400px;overflow-y:auto">'+views.map(function(v){
+      return '<div style="display:flex;align-items:center;gap:12px;padding:10px 12px;border-bottom:1px solid var(--glass-border)">'+
+      '<div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:0.8rem;color:var(--bg-primary);font-weight:800;flex-shrink:0">'+Utils.escHtml((v.studentName||'?').charAt(0))+'</div>'+
+      '<div style="flex:1"><div style="font-weight:600;font-size:0.88rem">'+Utils.escHtml(v.studentName||'غير معروف')+'</div><div style="font-size:0.72rem;color:var(--text-muted)">'+Utils.timeAgo(v.viewedAt)+'</div></div></div>'}).join('')+'</div>':
+    '<p style="text-align:center;color:var(--text-muted);padding:30px">لم يشاهد أحد هذا الدرس بعد</p>')+
+    '</div></div>';
+    document.body.insertAdjacentHTML('beforeend',html);
+  },
   filesMgmt:function(){
+    var T=Lang.t.bind(Lang);var isAr=Lang.get()==='ar';
     var files=DB.files();
-    return '<div class="fade-in"><div class="card-header"><div><h1 class="page-title">الملفات والمواد التعليمية</h1><p class="page-subtitle">'+files.length+' ملف مرفوع</p></div>'+
-    '<button class="btn btn-primary" onclick="Admin.showAddFileModal()">+ رفع ملف جديد</button></div>'+
-    '<div class="card"><div class="table-container"><table><thead><tr><th>الاسم</th><th>النوع</th><th>المرتبط بـ</th><th>الحالة</th><th>الحجم</th><th>إجراءات</th></tr></thead><tbody>'+
-    files.map(function(f){return '<tr><td><strong>'+Utils.escHtml(f.name)+'</strong></td><td><span class="badge '+(f.type==='pdf'?'badge-danger':'badge-info')+'">'+f.type.toUpperCase()+'</span></td><td>'+Utils.escHtml(f.lessonTitle||'عام')+'</td><td><span class="badge '+(f.visibility==='public'?'badge-accent':'badge-warning')+'">'+(f.visibility==='public'?'عام':'مقيّد')+'</span></td><td>'+f.size+'</td><td><button class="btn btn-sm btn-danger" onclick="Admin.deleteFile(\''+f.id+'\')">🗑️</button></td></tr>'}).join('')+
+    return '<div class="fade-in"><div class="card-header"><div><h1 class="page-title">'+T('adminFilesPageTitle')+'</h1><p class="page-subtitle">'+files.length+' '+T('adminFilesCount')+'</p></div>'+
+    '<button class="btn btn-primary" onclick="Admin.showAddFileModal()">+ '+T('adminUploadFile')+'</button></div>'+
+    '<div class="card"><div class="table-container"><table><thead><tr><th>'+T('adminFileNameLabel')+'</th><th>'+(isAr?'النوع':'Type')+'</th><th>'+T('adminFileLessonLabel')+'</th><th>'+T('adminStatusCol')+'</th><th>'+(isAr?'الحجم':'Size')+'</th><th>'+(isAr?'إجراءات':'Actions')+'</th></tr></thead><tbody>'+
+    files.map(function(f){return '<tr><td><strong>'+Utils.escHtml(f.name)+'</strong></td><td><span class="badge '+(f.type==='pdf'?'badge-danger':'badge-info')+'">'+f.type.toUpperCase()+'</span></td><td>'+Utils.escHtml(f.lessonTitle||T('adminFileGeneral'))+'</td><td><span class="badge '+(f.visibility==='public'?'badge-accent':'badge-warning')+'">'+(f.visibility==='public'?T('adminFileGeneral'):T('adminFileRestricted'))+'</span></td><td>'+f.size+'</td><td><button class="btn btn-sm btn-danger" onclick="Admin.deleteFile(\''+f.id+'\')">🗑️</button></td></tr>'}).join('')+
     '</tbody></table></div>'+
-    (files.length===0?'<div class="empty-state"><div class="empty-icon">📁</div><p>لا توجد ملفات بعد</p></div>':'')+'</div></div>';
+    (files.length===0?'<div class="empty-state"><div class="empty-icon">📁</div><p>'+T('adminNoFiles')+'</p></div>':'')+'</div></div>';
   },
   showAddFileModal:function(){
+    var T=Lang.t.bind(Lang);var isAr=Lang.get()==='ar';
     var lessons=DB.lessons();
     var html='<div class="modal-overlay" id="fileModal" onclick="if(event.target===this)this.remove()"><div class="modal"><button class="modal-close" onclick="document.getElementById(\'fileModal\').remove()">✕</button>'+
-    '<h3 class="modal-title">رفع ملف جديد</h3><form onsubmit="Admin.saveFile(event)">'+
-    '<div class="form-group"><label class="form-label">اسم الملف</label><input class="form-input" id="fName" required placeholder="مثال: ملخص الفصل الأول"></div>'+
-    '<div class="form-group"><label class="form-label">الملف</label><input class="form-input" type="file" id="fFile" required accept=".pdf,image/*,.doc,.docx"></div>'+
-    '<div class="form-group"><label class="form-label">المرتبط بـ (درس اختياري)</label><select class="form-select" id="fLesson"><option value="">عام - لكل الطلاب</option>'+lessons.map(function(l){return '<option value="'+l.id+'">'+Utils.escHtml(l.title)+'</option>'}).join('')+'</select></div>'+
-    '<div class="form-group"><label class="form-label">الظهور</label><select class="form-select" id="fVis"><option value="public">عام - لكل الطلاب</option><option value="restricted">مقيّد - لمن اشترى الدرس</option></select></div>'+
-    '<button type="submit" class="btn btn-primary btn-block">رفع الملف</button></form></div></div>';
+    '<h3 class="modal-title">'+T('adminUploadFile')+'</h3><form onsubmit="Admin.saveFile(event)">'+
+    '<div class="form-group"><label class="form-label">'+T('adminFileNameLabel')+'</label><input class="form-input" id="fName" required placeholder="'+T('adminFilePlaceholder')+'"></div>'+
+    '<div class="form-group"><label class="form-label">'+(isAr?'الملف':'File')+'</label><input class="form-input" type="file" id="fFile" required accept=".pdf,image/*,.doc,.docx"></div>'+
+    '<div class="form-group"><label class="form-label">'+T('adminFileLessonLabel')+'</label><select class="form-select" id="fLesson"><option value="">'+T('adminFileGeneral')+'</option>'+lessons.map(function(l){return '<option value="'+l.id+'">'+Utils.escHtml(l.title)+'</option>'}).join('')+'</select></div>'+
+    '<div class="form-group"><label class="form-label">'+T('adminFileVisibilityLabel')+'</label><select class="form-select" id="fVis"><option value="public">'+T('adminFileGeneral')+'</option><option value="restricted">'+T('adminFileRestricted')+'</option></select></div>'+
+    '<button type="submit" class="btn btn-primary btn-block">'+T('adminUploadBtn')+'</button></form></div></div>';
     document.body.insertAdjacentHTML('beforeend',html);
   },
   saveFile:function(e){
@@ -1391,23 +1946,24 @@ const Admin={
       var fileObj={id:Utils.uid(),name:document.getElementById('fName').value.trim(),type:file.name.split('.').pop().toLowerCase()==='pdf'?'pdf':'image',visibility:document.getElementById('fVis').value,lessonId:lessonId||null,lessonTitle:lesson?lesson.title:'',data:reader.result,size:(file.size/1024).toFixed(1)+' KB',uploadedAt:Date.now()};
       var files=DB.files();files.push(fileObj);DB.saveFiles(files);
       document.getElementById('fileModal').remove();
-      showToast('تم رفع الملف بنجاح!');
+      showToast(Lang.t('toastFileUploaded'));
       Notify.add('file','ملف جديد: '+fileObj.name,'ملف جديد '+fileObj.type.toUpperCase()+' متاح للطلاب');
       Admin.switchSection('files');
     };
     reader.readAsDataURL(file);
   },
-  deleteFile:function(id){if(!confirm('هل أنت متأكد من حذف هذا الملف؟'))return;DB.saveFiles(DB.files().filter(function(f){return f.id!==id}));showToast('تم حذف الملف','error');this.switchSection('files')},
+  deleteFile:function(id){if(!confirm(Lang.t('confirmDeleteFile')))return;DB.saveFiles(DB.files().filter(function(f){return f.id!==id}));showToast(Lang.t('toastFileDeleted'),'error');this.switchSection('files')},
   walletMgmt:function(){
+    var T=Lang.t.bind(Lang);
     var users=DB.users().filter(function(u){return u.role==='student'&&u.status==='approved'});
-    return '<div class="fade-in"><div class="page-header"><h1 class="page-title">محفظة الطلاب</h1><p class="page-subtitle">إضافة رصيد ومتابعة المعاملات</p></div>'+
+    return '<div class="fade-in"><div class="page-header"><h1 class="page-title">'+T('adminWalletPageTitle')+'</h1><p class="page-subtitle">'+T('adminWalletSub')+'</p></div>'+
     '<div class="content-grid">'+
     users.map(function(u){return '<div class="card fade-in"><div class="card-header"><h3 class="card-title">'+Utils.escHtml(u.name)+'</h3><span class="badge badge-accent">'+Utils.escHtml(u.grade)+'</span></div>'+
-    '<div style="text-align:center;margin:16px 0"><div style="font-size:2rem;font-weight:900;color:var(--accent)">'+Utils.formatMoney(u.wallet||0)+'</div><div style="font-size:0.78rem;color:var(--text-muted)">الرصيد الحالي</div></div>'+
-    '<form onsubmit="Admin.addBalance(event,\''+u.id+'\')" style="display:flex;gap:8px;margin-bottom:8px"><input class="form-input" type="number" id="bal_'+u.id+'" placeholder="المبلغ" min="1" required style="flex:1"><button type="submit" class="btn btn-sm btn-primary">+ إضافة</button></form>'+
-    '<form onsubmit="Admin.deductBalance(event,\''+u.id+'\')" style="display:flex;gap:8px"><input class="form-input" type="number" id="dbal_'+u.id+'" placeholder="المبلغ" min="1" required style="flex:1"><button type="submit" class="btn btn-sm btn-danger">- خصم</button></form>'+
-    '<div style="margin-top:12px"><button class="btn btn-sm btn-secondary btn-block" onclick="Admin.viewTransactions(\''+u.id+'\')">📋 سجل المعاملات</button></div></div>'}).join('')+
-    (users.length===0?'<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">💰</div><p>لا يوجد طلاب مقبولين بعد</p></div>':'')+'</div></div>';
+    '<div style="text-align:center;margin:16px 0"><div style="font-size:2rem;font-weight:900;color:var(--accent)">'+Utils.formatMoney(u.wallet||0)+'</div><div style="font-size:0.78rem;color:var(--text-muted)">'+T('adminCurrentBalance')+'</div></div>'+
+    '<form onsubmit="Admin.addBalance(event,\''+u.id+'\')" style="display:flex;gap:8px;margin-bottom:8px"><input class="form-input" type="number" id="bal_'+u.id+'" placeholder="'+T('adminAmountLabel')+'" min="1" required style="flex:1"><button type="submit" class="btn btn-sm btn-primary">+ '+T('adminAddBtn')+'</button></form>'+
+    '<form onsubmit="Admin.deductBalance(event,\''+u.id+'\')" style="display:flex;gap:8px"><input class="form-input" type="number" id="dbal_'+u.id+'" placeholder="'+T('adminAmountLabel')+'" min="1" required style="flex:1"><button type="submit" class="btn btn-sm btn-danger">- '+T('adminDeductBtn')+'</button></form>'+
+    '<div style="margin-top:12px"><button class="btn btn-sm btn-secondary btn-block" onclick="Admin.viewTransactions(\''+u.id+'\')">📋 '+T('adminTxHistory')+'</button></div></div>'}).join('')+
+    (users.length===0?'<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">💰</div><p>'+T('adminNoApproved')+'</p></div>':'')+'</div></div>';
   },
   addBalance:function(e,userId){
     e.preventDefault();
@@ -1415,8 +1971,8 @@ const Admin={
     var amount=parseInt(input.value)||0;if(amount<=0)return;
     var user=DB.getUserById(userId);
     DB.updateUser(userId,{wallet:(user.wallet||0)+amount});
-    var txns=DB.transactions();txns.push({id:Utils.uid(),userId:userId,amount:amount,type:'credit',note:'إيداع من الإدارة',date:Date.now()});DB.saveTransactions(txns);
-    showToast('تم إضافة '+Utils.formatMoney(amount)+' لمحفظة '+user.name);
+    var txns=DB.transactions();txns.push({id:Utils.uid(),userId:userId,amount:amount,type:'credit',note:Lang.t('adminTransactionNoteDeposit'),date:Date.now()});DB.saveTransactions(txns);
+    showToast(Lang.t('toastAdded')+' '+Utils.formatMoney(amount)+' '+((Lang.get()==='ar'?'لمحفوظة ':' to wallet of ')+user.name));
     this.switchSection('wallet');
   },
   deductBalance:function(e,userId){
@@ -1424,31 +1980,32 @@ const Admin={
     var input=document.getElementById('dbal_'+userId);
     var amount=parseInt(input.value)||0;if(amount<=0)return;
     var user=DB.getUserById(userId);
-    if((user.wallet||0)<amount){showToast('الرصيد غير كافي! الرصيد الحالي: '+Utils.formatMoney(user.wallet||0),'error');return}
+    if((user.wallet||0)<amount){showToast(Lang.t('adminInsufficient')+Utils.formatMoney(user.wallet||0),'error');return}
     DB.updateUser(userId,{wallet:(user.wallet||0)-amount});
-    var txns=DB.transactions();txns.push({id:Utils.uid(),userId:userId,amount:amount,type:'debit',note:'خصم من الإدارة',date:Date.now()});DB.saveTransactions(txns);
-    showToast('تم خصم '+Utils.formatMoney(amount)+' من محفظة '+user.name,'error');
+    var txns=DB.transactions();txns.push({id:Utils.uid(),userId:userId,amount:amount,type:'debit',note:Lang.t('adminDeduction'),date:Date.now()});DB.saveTransactions(txns);
+    showToast(Lang.t('toastDeducted')+' '+Utils.formatMoney(amount)+' '+((Lang.get()==='ar'?'من محفظة ':' from wallet of ')+user.name),'error');
     this.switchSection('wallet');
   },
   viewTransactions:function(userId){
     var user=DB.getUserById(userId);
     var txns=DB.transactions().filter(function(t){return t.userId===userId}).reverse();
     var html='<div class="modal-overlay" id="txModal" onclick="if(event.target===this)this.remove()"><div class="modal"><button class="modal-close" onclick="document.getElementById(\'txModal\').remove()">✕</button>'+
-    '<h3 class="modal-title">سجل المعاملات - '+Utils.escHtml(user.name)+'</h3>'+
-    (txns.length===0?'<div class="empty-state"><p>لا توجد معاملات بعد</p></div>':'')+
+    '<h3 class="modal-title">'+Lang.t('adminTxHistory')+' - '+Utils.escHtml(user.name)+'</h3>'+
+    (txns.length===0?'<div class="empty-state"><p>'+Lang.t('walletEmpty')+'</p></div>':'')+
     txns.map(function(t){return '<div class="transaction-item"><div class="transaction-icon" style="background:'+(t.type==='credit'?'rgba(0,245,212,0.15)':'rgba(255,71,87,0.15)')+'">'+(t.type==='credit'?'📥':'📤')+'</div><div class="transaction-info"><div class="transaction-title">'+Utils.escHtml(t.note)+'</div><div class="transaction-date">'+Utils.formatDate(t.date)+'</div></div><div class="transaction-amount '+t.type+'">'+(t.type==='credit'?'+':'')+Utils.formatMoney(t.amount)+'</div></div>'}).join('')+
     '</div></div>';
     document.body.insertAdjacentHTML('beforeend',html);
   },
   examsMgmt:function(){
+    var T=Lang.t.bind(Lang);var isAr=Lang.get()==='ar';
     var exams=DB.exams();
-    return '<div class="fade-in"><div class="card-header"><div><h1 class="page-title">إدارة الامتحانات</h1><p class="page-subtitle">'+exams.length+' امتحان</p></div>'+
-    '<button class="btn btn-primary" onclick="Admin.showAddExamModal()">+ إنشاء امتحان جديد</button></div>'+
+    return '<div class="fade-in"><div class="card-header"><div><h1 class="page-title">'+T('adminExamsPageTitle')+'</h1><p class="page-subtitle">'+exams.length+' '+T('adminExamsCount')+'</p></div>'+
+    '<button class="btn btn-primary" onclick="Admin.showAddExamModal()">+ '+T('adminCreateExam')+'</button></div>'+
     '<div class="content-grid">'+
-    exams.map(function(ex){return '<div class="card fade-in"><div class="card-header"><h3 class="card-title">'+Utils.escHtml(ex.title)+'</h3><span class="badge badge-info">'+ex.questions.length+' سؤال</span></div>'+
-    '<div style="font-size:0.88rem;color:var(--text-secondary);line-height:2"><div>📚 المادة: '+Utils.escHtml(ex.subject||'-')+'</div><div>📖 الصف: '+Utils.escHtml(ex.grade)+'</div><div>⏱️ المدة: '+ex.timeLimit+' دقيقة</div><div>🎯 درجة النجاح: '+ex.passPercent+'%</div></div>'+
-    '<div style="display:flex;gap:6px;margin-top:14px"><button class="btn btn-sm btn-secondary" onclick="Admin.viewExamResults(\''+ex.id+'\')">📊 النتائج</button><button class="btn btn-sm btn-danger" onclick="Admin.deleteExam(\''+ex.id+'\')">🗑️</button></div></div>'}).join('')+
-    (exams.length===0?'<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">📝</div><p>لا توجد امتحانات بعد</p></div>':'')+'</div></div>';
+    exams.map(function(ex){return '<div class="card fade-in"><div class="card-header"><h3 class="card-title">'+Utils.escHtml(ex.title)+'</h3><span class="badge badge-info">'+ex.questions.length+' '+T('examQuestion')+'</span></div>'+
+    '<div style="font-size:0.88rem;color:var(--text-secondary);line-height:2"><div>📚 '+T('examSubject')+': '+Utils.escHtml(ex.subject||'-')+'</div><div>📖 '+T('signupGradeLabel')+': '+Utils.escHtml(ex.grade)+'</div><div>⏱️ '+T('examDuration')+': '+ex.timeLimit+' '+T('examMinutes')+'</div><div>🎯 '+T('examPassGrade')+': '+ex.passPercent+'%</div></div>'+
+    '<div style="display:flex;gap:6px;margin-top:14px"><button class="btn btn-sm btn-secondary" onclick="Admin.viewExamResults(\''+ex.id+'\')">📊 '+T('adminViewResults')+'</button><button class="btn btn-sm btn-danger" onclick="Admin.deleteExam(\''+ex.id+'\')">🗑️</button></div></div>'}).join('')+
+    (exams.length===0?'<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">📝</div><p>'+T('adminNoExams')+'</p></div>':'')+'</div></div>';
   },
   _qCount:0,
   showAddExamModal:function(){
@@ -1456,15 +2013,15 @@ const Admin={
     var gOpts=GRADES.map(function(g){return '<option value="'+g+'">'+g+'</option>'}).join('');
     var sOpts=SUBJECTS.map(function(s){return '<option value="'+s+'">'+s+'</option>'}).join('');
     var html='<div class="modal-overlay" id="examModal" onclick="if(event.target===this)this.remove()"><div class="modal" style="max-width:700px"><button class="modal-close" onclick="document.getElementById(\'examModal\').remove()">✕</button>'+
-    '<h3 class="modal-title">إنشاء امتحان جديد</h3><form onsubmit="Admin.saveExam(event)">'+
-    '<div class="form-group"><label class="form-label">عنوان الامتحان</label><input class="form-input" id="exTitle" required placeholder="مثال: امتحان الفصل الأول"></div>'+
-    '<div class="form-row"><div class="form-group"><label class="form-label">المادة</label><select class="form-select" id="exSubject" required><option value="">اختر المادة</option>'+sOpts+'</select></div>'+
-    '<div class="form-group"><label class="form-label">الصف</label><select class="form-select" id="exGrade" required><option value="">اختر الصف</option>'+gOpts+'</select></div></div>'+
-    '<div class="form-row"><div class="form-group"><label class="form-label">المدة (دقيقة)</label><input class="form-input" type="number" id="exTime" required min="1" value="30"></div>'+
-    '<div class="form-group"><label class="form-label">درجة النجاح (%)</label><input class="form-input" type="number" id="exPass" required min="1" max="100" value="50"></div></div>'+
+    '<h3 class="modal-title">'+T('adminCreateExam')+'</h3><form onsubmit="Admin.saveExam(event)">'+
+    '<div class="form-group"><label class="form-label">'+T('adminExamTitleLabel')+'</label><input class="form-input" id="exTitle" required placeholder="'+T('adminExamTitlePlaceholder')+'"></div>'+
+    '<div class="form-row"><div class="form-group"><label class="form-label">'+T('adminLessonSubjectLabel')+'</label><select class="form-select" id="exSubject" required><option value="">'+T('adminChooseSubject')+'</option>'+sOpts+'</select></div>'+
+    '<div class="form-group"><label class="form-label">'+T('adminLessonGradeLabel')+'</label><select class="form-select" id="exGrade" required><option value="">'+T('adminChooseGrade')+'</option>'+gOpts+'</select></div></div>'+
+    '<div class="form-row"><div class="form-group"><label class="form-label">'+T('adminExamDurationLabel')+'</label><input class="form-input" type="number" id="exTime" required min="1" value="30"></div>'+
+    '<div class="form-group"><label class="form-label">'+T('adminExamPassLabel')+'</label><input class="form-input" type="number" id="exPass" required min="1" max="100" value="50"></div></div>'+
     '<div id="exQuestions"></div>'+
-    '<button type="button" class="btn btn-secondary btn-block" onclick="Admin.addQuestionField()" style="margin:12px 0">+ إضافة سؤال</button>'+
-    '<button type="submit" class="btn btn-primary btn-block">إنشاء الامتحان</button></form></div></div>';
+    '<button type="button" class="btn btn-secondary btn-block" onclick="Admin.addQuestionField()" style="margin:12px 0">+ '+T('adminAddQuestion')+'</button>'+
+    '<button type="submit" class="btn btn-primary btn-block">'+T('adminExamCreateBtn')+'</button></form></div></div>';
     document.body.insertAdjacentHTML('beforeend',html);
     this.addQuestionField();this.addQuestionField();this.addQuestionField();
   },
@@ -1472,19 +2029,19 @@ const Admin={
     this._qCount++;var n=this._qCount;
     var container=document.getElementById('exQuestions');
     container.insertAdjacentHTML('beforeend',
-    '<div class="card" style="margin-bottom:12px;padding:16px" id="q_'+n+'"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><strong style="color:var(--accent)">السؤال '+n+'</strong>'+
-    '<select class="form-select" id="qType_'+n+'" style="width:150px" onchange="Admin.toggleQuestionType('+n+')"><option value="mcq">اختيار من متعدد</option><option value="tf">صح / خطأ</option><option value="short">إجابة قصيرة</option></select></div>'+
-    '<input class="form-input" id="qText_'+n+'" placeholder="نص السؤال" required style="margin-bottom:10px">'+
-    '<div id="qOptions_'+n+'"><input class="form-input" id="qO1_'+n+'" placeholder="الخيار 1" required style="margin-bottom:6px"><input class="form-input" id="qO2_'+n+'" placeholder="الخيار 2" required style="margin-bottom:6px"><input class="form-input" id="qO3_'+n+'" placeholder="الخيار 3" style="margin-bottom:6px"><input class="form-input" id="qO4_'+n+'" placeholder="الخيار 4" style="margin-bottom:6px"></div>'+
-    '<div class="form-group" style="margin-bottom:0"><label class="form-label">الإجابة الصحيحة</label><input class="form-input" id="qAns_'+n+'" placeholder="رقم الخيار (1-4) أو الإجابة" required></div></div>');
+    '<div class="card" style="margin-bottom:12px;padding:16px" id="q_'+n+'"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><strong style="color:var(--accent)">'+Lang.t('examQuestion')+' '+n+'</strong>'+
+    '<select class="form-select" id="qType_'+n+'" style="width:150px" onchange="Admin.toggleQuestionType('+n+')"><option value="mcq">'+Lang.t('adminQuestionTypeMcq')+'</option><option value="tf">'+Lang.t('adminQuestionTypeTf')+'</option><option value="short">'+Lang.t('adminQuestionTypeShort')+'</option></select></div>'+
+    '<input class="form-input" id="qText_'+n+'" placeholder="'+Lang.t('adminQuestionText')+'" required style="margin-bottom:10px">'+
+    '<div id="qOptions_'+n+'"><input class="form-input" id="qO1_'+n+'" placeholder="'+Lang.t('adminOptionLabel')+' 1" required style="margin-bottom:6px"><input class="form-input" id="qO2_'+n+'" placeholder="'+Lang.t('adminOptionLabel')+' 2" required style="margin-bottom:6px"><input class="form-input" id="qO3_'+n+'" placeholder="'+Lang.t('adminOptionLabel')+' 3" style="margin-bottom:6px"><input class="form-input" id="qO4_'+n+'" placeholder="'+Lang.t('adminOptionLabel')+' 4" style="margin-bottom:6px"></div>'+
+    '<div class="form-group" style="margin-bottom:0"><label class="form-label">'+Lang.t('adminCorrectAnswerLabel')+'</label><input class="form-input" id="qAns_'+n+'" placeholder="'+Lang.t('adminCorrectAnswerPlaceholder')+'" required></div></div>');
   },
   toggleQuestionType:function(n){
     var type=document.getElementById('qType_'+n).value;
     var optDiv=document.getElementById('qOptions_'+n);
     var ansInput=document.getElementById('qAns_'+n);
-    if(type==='tf'){optDiv.innerHTML='<input class="form-input" id="qO1_'+n+'" value="صح" readonly style="margin-bottom:6px"><input class="form-input" id="qO2_'+n+'" value="خطأ" readonly style="margin-bottom:6px">';ansInput.placeholder='1=صح, 2=خطأ'}
-    else if(type==='short'){optDiv.innerHTML='<p style="color:var(--text-muted);font-size:0.82rem">إجابة قصيرة - اكتب الإجابة الصحيحة في حقل الإجابة</p>';ansInput.placeholder='اكتب الإجابة الصحيحة'}
-    else{optDiv.innerHTML='<input class="form-input" id="qO1_'+n+'" placeholder="الخيار 1" required style="margin-bottom:6px"><input class="form-input" id="qO2_'+n+'" placeholder="الخيار 2" required style="margin-bottom:6px"><input class="form-input" id="qO3_'+n+'" placeholder="الخيار 3" style="margin-bottom:6px"><input class="form-input" id="qO4_'+n+'" placeholder="الخيار 4" style="margin-bottom:6px">';ansInput.placeholder='رقم الخيار الصحيح (1-4)'}
+    if(type==='tf'){optDiv.innerHTML='<input class="form-input" id="qO1_'+n+'" value="'+(Lang.get()==='ar'?'صح':'True')+'" readonly style="margin-bottom:6px"><input class="form-input" id="qO2_'+n+'" value="'+(Lang.get()==='ar'?'خطأ':'False')+'" readonly style="margin-bottom:6px">';ansInput.placeholder='1='+(Lang.get()==='ar'?'صح':'True')+', 2='+(Lang.get()==='ar'?'خطأ':'False')}
+    else if(type==='short'){optDiv.innerHTML='<p style="color:var(--text-muted);font-size:0.82rem">'+(Lang.get()==='ar'?'إجابة قصيرة - اكتب الإجابة الصحيحة في حقل الإجابة':'Short answer - write the correct answer')+'</p>';ansInput.placeholder=Lang.get()==='ar'?'اكتب الإجابة الصحيحة':'Type correct answer'}
+    else{optDiv.innerHTML='<input class="form-input" id="qO1_'+n+'" placeholder="'+(Lang.get()==='ar'?'الخيار':'Option')+' 1" required style="margin-bottom:6px"><input class="form-input" id="qO2_'+n+'" placeholder="'+(Lang.get()==='ar'?'الخيار':'Option')+' 2" required style="margin-bottom:6px"><input class="form-input" id="qO3_'+n+'" placeholder="'+(Lang.get()==='ar'?'الخيار':'Option')+' 3" style="margin-bottom:6px"><input class="form-input" id="qO4_'+n+'" placeholder="'+(Lang.get()==='ar'?'الخيار':'Option')+' 4" style="margin-bottom:6px">';ansInput.placeholder=Lang.get()==='ar'?'رقم الخيار الصحيح (1-4)':'Correct option (1-4)'}
   },
   saveExam:function(e){
     e.preventDefault();var questions=[];
@@ -1497,80 +2054,82 @@ const Admin={
       if(type==='mcq'){for(var i=1;i<=4;i++){var o=document.getElementById('qO'+i+'_'+n);if(o&&o.value.trim())options.push(o.value.trim())}}
       if(text.trim())questions.push({id:Utils.uid(),type:type,text:text.trim(),options:options,answer:ans.trim()});
     });
-    if(questions.length===0){showToast('أضف سؤالاً واحداً على الأقل','error');return}
+    if(questions.length===0){showToast(Lang.t('adminAddAtLeast'),'error');return}
     var exam={id:Utils.uid(),title:document.getElementById('exTitle').value.trim(),subject:document.getElementById('exSubject').value,grade:document.getElementById('exGrade').value,timeLimit:parseInt(document.getElementById('exTime').value)||30,passPercent:parseInt(document.getElementById('exPass').value)||50,questions:questions,createdAt:Date.now()};
     var exams=DB.exams();exams.push(exam);DB.saveExams(exams);
     this._qCount=0;document.getElementById('examModal').remove();
-    showToast('تم إنشاء الامتحان بنجاح!');
+    showToast(Lang.t('toastExamCreated'));
     Notify.add('exam','امتحان جديد: '+exam.title,'امتحان في '+exam.grade+' - '+exam.questions.length+' سؤال - مدة '+exam.timeLimit+' دقيقة');
     this.switchSection('exams');
   },
-  deleteExam:function(id){if(!confirm('هل أنت متأكد من حذف هذا الامتحان؟'))return;DB.saveExams(DB.exams().filter(function(e){return e.id!==id}));showToast('تم حذف الامتحان','error');this.switchSection('exams')},
+  deleteExam:function(id){if(!confirm(Lang.t('confirmDeleteExam')))return;DB.saveExams(DB.exams().filter(function(e){return e.id!==id}));showToast(Lang.t('toastExamDeleted'),'error');this.switchSection('exams')},
   viewExamResults:function(examId){
     var exam=DB.exams().find(function(e){return e.id===examId});
     var results=DB.examResults().filter(function(r){return r.examId===examId});
     var html='<div class="modal-overlay" id="resultModal" onclick="if(event.target===this)this.remove()"><div class="modal" style="max-width:700px"><button class="modal-close" onclick="document.getElementById(\'resultModal\').remove()">✕</button>'+
     '<h3 class="modal-title">نتائج: '+Utils.escHtml(exam.title)+'</h3>'+
-    (results.length===0?'<div class="empty-state"><p>لم يلُد أحد هذا الامتحان بعد</p></div>':'')+
-    results.map(function(r){var user=DB.getUserById(r.studentId);return '<div class="transaction-item"><div class="transaction-icon" style="background:rgba(0,245,212,0.15)">📝</div><div class="transaction-info"><div class="transaction-title">'+(user?Utils.escHtml(user.name):'غير معروف')+'</div><div class="transaction-date">'+Utils.formatDate(r.date)+'</div></div><div class="transaction-amount '+(r.score>=exam.passPercent?'credit':'debit')+'">'+r.score+'%</div></div>'}).join('')+
+    (results.length===0?'<div class="empty-state"><p>'+Lang.t('adminNoOneTried')+'</p></div>':'')+
+    results.map(function(r){var user=DB.getUserById(r.studentId);return '<div class="transaction-item"><div class="transaction-icon" style="background:rgba(0,245,212,0.15)">📝</div><div class="transaction-info"><div class="transaction-title">'+(user?Utils.escHtml(user.name):Lang.t('adminUnknown'))+'</div><div class="transaction-date">'+Utils.formatDate(r.date)+'</div></div><div class="transaction-amount '+(r.score>=exam.passPercent?'credit':'debit')+'">'+r.score+'%</div></div>'}).join('')+
     '</div></div>';
     document.body.insertAdjacentHTML('beforeend',html);
   },
   reportsMgmt:function(){
+    var T=Lang.t.bind(Lang);
     var users=DB.users().filter(function(u){return u.role==='student'&&u.status==='approved'});
     var reports=DB.reports();
-    return '<div class="fade-in"><div class="card-header"><div><h1 class="page-title">التقييمات والتقارير</h1><p class="page-subtitle">إرسال تقييمات وسجلات أداء للطلاب</p></div>'+
-    '<button class="btn btn-primary" onclick="Admin.showAddReportModal()">+ إرسال تقرير جديد</button></div>'+
+    return '<div class="fade-in"><div class="card-header"><div><h1 class="page-title">'+T('adminReportsPageTitle')+'</h1><p class="page-subtitle">'+T('adminReportsSub')+'</p></div>'+
+    '<button class="btn btn-primary" onclick="Admin.showAddReportModal()">+ '+T('adminSendReport')+'</button></div>'+
     '<div class="content-grid">'+
     users.map(function(u){var uReports=reports.filter(function(r){return r.studentId===u.id}).slice(-1);var last=uReports[0];
       return '<div class="card fade-in"><div class="card-header"><h3 class="card-title">'+Utils.escHtml(u.name)+'</h3><span class="badge badge-info">'+Utils.escHtml(u.grade)+'</span></div>'+
-      (last?'<div style="font-size:0.88rem;color:var(--text-secondary);line-height:2"><div>📊 الدرجات: '+Utils.formatDate(last.date)+'</div><div>📝 التقييم: '+Utils.escHtml(last.remarks||'')+'</div></div>':'<p style="color:var(--text-muted);font-size:0.85rem">لم يتم إرسال تقارير بعد</p>')+'</div>'}).join('')+
-    (users.length===0?'<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">📋</div><p>لا يوجد طلاب مقبولين بعد</p></div>':'')+'</div></div>';
+      (last?'<div style="font-size:0.88rem;color:var(--text-secondary);line-height:2"><div>📊 '+Lang.t('adminGradesLabel')+': '+Utils.formatDate(last.date)+'</div><div>📝 '+Lang.t('adminEvalLabel')+': '+Utils.escHtml(last.remarks||'')+'</div></div>':'<p style="color:var(--text-muted);font-size:0.85rem">'+Lang.t('adminNoReportsYet')+'</p>')+'</div>'}).join('')+
+    (users.length===0?'<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">📋</div><p>'+Lang.t('adminNoApproved')+'</p></div>':'')+'</div></div>';
   },
   showAddReportModal:function(){
     var users=DB.users().filter(function(u){return u.role==='student'&&u.status==='approved'});
     var html='<div class="modal-overlay" id="reportModal" onclick="if(event.target===this)this.remove()"><div class="modal"><button class="modal-close" onclick="document.getElementById(\'reportModal\').remove()">✕</button>'+
-    '<h3 class="modal-title">إرسال تقرير تقييم</h3><form onsubmit="Admin.saveReport(event)">'+
-    '<div class="form-group"><label class="form-label">الطالب</label><select class="form-select" id="rStudent" required><option value="">اختر الطالب</option>'+users.map(function(u){return '<option value="'+u.id+'">'+Utils.escHtml(u.name)+' - '+u.grade+'</option>'}).join('')+'</select></div>'+
-    '<div class="form-group"><label class="form-label">الشهر</label><input class="form-input" id="rMonth" required placeholder="مثال: يناير 2027"></div>'+
-    '<div class="form-group"><label class="form-label">الحضور (%)</label><input class="form-input" type="number" id="rAttendance" min="0" max="100" value="90"></div>'+
-    '<div class="form-group"><label class="form-label">ملاحظات وتقييم الدكتور</label><textarea class="form-textarea" id="rRemarks" placeholder="ملاحظاتك على أداء الطالب..."></textarea></div>'+
-    '<div class="form-group"><label class="form-label">درجات المواد (JSON)</label><textarea class="form-textarea" id="rGrades" placeholder=\'{"فيزياء": 85, "علوم": 90}\'></textarea></div>'+
-    '<button type="submit" class="btn btn-primary btn-block">إرسال التقرير</button></form></div></div>';
+    '<h3 class="modal-title">'+Lang.t('adminReportModal')+'</h3><form onsubmit="Admin.saveReport(event)">'+
+    '<div class="form-group"><label class="form-label">'+(Lang.get()==='ar'?'الطالب':'Student')+'</label><select class="form-select" id="rStudent" required><option value="">'+Lang.t('adminChooseStudent')+'</option>'+users.map(function(u){return '<option value="'+u.id+'">'+Utils.escHtml(u.name)+' - '+u.grade+'</option>'}).join('')+'</select></div>'+
+    '<div class="form-group"><label class="form-label">'+Lang.t('adminMonthLabel')+'</label><input class="form-input" id="rMonth" required placeholder="'+Lang.t('adminMonthPlaceholder')+'"></div>'+
+    '<div class="form-group"><label class="form-label">'+Lang.t('adminAttendanceLabel')+'</label><input class="form-input" type="number" id="rAttendance" min="0" max="100" value="90"></div>'+
+    '<div class="form-group"><label class="form-label">'+Lang.t('adminRemarksLabel')+'</label><textarea class="form-textarea" id="rRemarks" placeholder="'+Lang.t('adminRemarksPlaceholder')+'"></textarea></div>'+
+    '<div class="form-group"><label class="form-label">'+Lang.t('adminSubjectGrades')+'</label><textarea class="form-textarea" id="rGrades" placeholder=\'{"فيزياء": 85, "علوم": 90}\'></textarea></div>'+
+    '<button type="submit" class="btn btn-primary btn-block">'+Lang.t('adminSendReportBtn')+'</button></form></div></div>';
     document.body.insertAdjacentHTML('beforeend',html);
   },
   saveReport:function(e){
     e.preventDefault();var grades={};try{grades=JSON.parse(document.getElementById('rGrades').value||'{}')}catch(ex){grades={}}
     var report={id:Utils.uid(),studentId:document.getElementById('rStudent').value,month:document.getElementById('rMonth').value.trim(),attendance:parseInt(document.getElementById('rAttendance').value)||0,remarks:document.getElementById('rRemarks').value.trim(),grades:grades,date:Date.now()};
     var reports=DB.reports();reports.push(report);DB.saveReports(reports);
-    document.getElementById('reportModal').remove();showToast('تم إرسال التقرير بنجاح!');
+    document.getElementById('reportModal').remove();showToast(Lang.t('toastReportSent'));
     this.switchSection('reports');
   },
   broadcastMgmt:function(){
+    var T=Lang.t.bind(Lang);
     var notifs=DB.notifications();
-    return '<div class="fade-in"><div class="card-header"><div><h1 class="page-title">الإشعارات العامة</h1><p class="page-subtitle">إرسال تنبيهات لجميع الطلاب</p></div>'+
-    '<button class="btn btn-primary" onclick="Admin.showBroadcastModal()">+ إرسال إشعار جديد</button></div>'+
+    return '<div class="fade-in"><div class="card-header"><div><h1 class="page-title">'+T('adminBroadcastPageTitle')+'</h1><p class="page-subtitle">'+T('adminBroadcastSub')+'</p></div>'+
+    '<button class="btn btn-primary" onclick="Admin.showBroadcastModal()">+ '+T('adminSendNotif')+'</button></div>'+
     '<div class="card">'+
-    (notifs.length===0?'<div class="empty-state"><div class="empty-icon">📢</div><p>لا توجد إشعارات بعد</p></div>':'')+
+    (notifs.length===0?'<div class="empty-state"><div class="empty-icon">📢</div><p>'+T('adminNoNotifs')+'</p></div>':'')+
     notifs.slice().reverse().map(function(n){return '<div class="transaction-item"><div class="transaction-icon" style="background:rgba(255,165,2,0.15)">📢</div><div class="transaction-info"><div class="transaction-title">'+Utils.escHtml(n.title)+'</div><div class="transaction-date">'+Utils.formatDate(n.date)+' - '+Utils.escHtml(n.message)+'</div></div><button class="btn btn-sm btn-danger" onclick="Admin.deleteNotification(\''+n.id+'\')">🗑️</button></div>'}).join('')+
     '</div></div>';
   },
   showBroadcastModal:function(){
     var html='<div class="modal-overlay" id="broadcastModal" onclick="if(event.target===this)this.remove()"><div class="modal"><button class="modal-close" onclick="document.getElementById(\'broadcastModal\').remove()">✕</button>'+
-    '<h3 class="modal-title">إرسال إشعار عام</h3><form onsubmit="Admin.saveBroadcast(event)">'+
-    '<div class="form-group"><label class="form-label">عنوان الإشعار</label><input class="form-input" id="bTitle" required placeholder="مثال: إشعار هام"></div>'+
-    '<div class="form-group"><label class="form-label">الرسالة</label><textarea class="form-textarea" id="bMsg" required placeholder="اكتب رسالتك هنا..."></textarea></div>'+
-    '<button type="submit" class="btn btn-primary btn-block">إرسال للجميع</button></form></div></div>';
+    '<h3 class="modal-title">'+Lang.t('adminNotifModal')+'</h3><form onsubmit="Admin.saveBroadcast(event)">'+
+    '<div class="form-group"><label class="form-label">'+Lang.t('adminNotifTitleLabel')+'</label><input class="form-input" id="bTitle" required placeholder="'+Lang.t('adminNotifTitlePlaceholder')+'"></div>'+
+    '<div class="form-group"><label class="form-label">'+Lang.t('adminNotifMessageLabel')+'</label><textarea class="form-textarea" id="bMsg" required placeholder="'+Lang.t('adminNotifMsgPlaceholder')+'"></textarea></div>'+
+    '<button type="submit" class="btn btn-primary btn-block">'+Lang.t('adminSendAll')+'</button></form></div></div>';
     document.body.insertAdjacentHTML('beforeend',html);
   },
   saveBroadcast:function(e){
     e.preventDefault();var notifs=DB.notifications();
     notifs.push({id:Utils.uid(),title:document.getElementById('bTitle').value.trim(),message:document.getElementById('bMsg').value.trim(),date:Date.now()});
     DB.saveNotifications(notifs);document.getElementById('broadcastModal').remove();
-    showToast('تم إرسال الإشعار لجميع الطلاب!');
+    showToast(Lang.t('toastNotifSent'));
     this.switchSection('broadcast');
   },
-  deleteNotification:function(id){DB.saveNotifications(DB.notifications().filter(function(n){return n.id!==id}));showToast('تم حذف الإشعار','error');this.switchSection('broadcast')},
+  deleteNotification:function(id){DB.saveNotifications(DB.notifications().filter(function(n){return n.id!==id}));showToast(Lang.t('toastNotifDeleted'),'error');this.switchSection('broadcast')},
   showAddHw:function(){
     var isAr=Lang.get()==='ar';
     var hws=DB.homeworks();
@@ -1802,7 +2361,7 @@ const Admin={
     '<div class="form-group"><label class="form-label">'+Lang.t('loginEmail')+'</label><input class="form-input" type="email" id="adminNewEmail" value="'+Utils.escHtml(App.user.email)+'" dir="ltr"></div>'+
     '<div class="form-group"><label class="form-label">'+Lang.t('settingsNewPass')+'</label><input class="form-input" type="password" id="adminNewPass" dir="ltr" minlength="6"></div>'+
     '<div class="form-group"><label class="form-label">'+Lang.t('settingsConfirmPass')+'</label><input class="form-input" type="password" id="adminConfPass" dir="ltr"></div>'+
-    '<div class="form-group"><label class="form-label">'+Lang.get()==='ar'?'كلمة المرور الحالية':'Current Password'+'</label><input class="form-input" type="password" id="adminCurPass" required dir="ltr"></div>'+
+    '<div class="form-group"><label class="form-label">'+Lang.t('adminCurrentPassLabel')+'</label><input class="form-input" type="password" id="adminCurPass" required dir="ltr"></div>'+
     '<button type="submit" class="btn btn-primary btn-block">'+Lang.t('settingsSave')+'</button></form></div></div>';
   },
   changeAdminPass:function(e){
@@ -1811,16 +2370,16 @@ const Admin={
     var newEmail=document.getElementById('adminNewEmail').value.trim();
     var newPass=document.getElementById('adminNewPass').value;
     var confPass=document.getElementById('adminConfPass').value;
-    if(App.user.password!==curPass){showToast(Lang.get()==='ar'?'كلمة المرور الحالية خاطئة':'Wrong current password','error');return}
-    if(newPass&&newPass!==confPass){showToast(Lang.get()==='ar'?'كلمتا المرور غير متطابقتين':'Passwords do not match','error');return}
+    if(App.user.password!==curPass){showToast(Lang.t('adminPassWrong'),'error');return}
+    if(newPass&&newPass!==confPass){showToast(Lang.t('adminPassMismatch'),'error');return}
     var updates={};
     if(newPass&&newPass.length>=6)updates.password=newPass;
     if(newEmail&&newEmail!==App.user.email)updates.email=newEmail;
-    if(Object.keys(updates).length===0){showToast(Lang.get()==='ar'?'لا توجد تغييرات':'No changes','error');return}
+    if(Object.keys(updates).length===0){showToast(Lang.t('adminNoChanges'),'error');return}
     DB.updateUser(App.user.id,updates);
     if(updates.email)DB.saveSession({userId:App.user.id,email:updates.email});
     App.user=DB.getUserById(App.user.id);
-    showToast(Lang.get()==='ar'?'تم تحديث الحساب بنجاح!':'Account updated!');
+    showToast(Lang.t('adminUpdated'));
     this.switchSection('settings');
   }
 };
@@ -1828,8 +2387,8 @@ const Student={
   render:function(){return '<div class="dashboard">'+this.renderSidebar()+'<div class="main-content" id="studentContent">'+this.renderSection()+'</div></div>'},
   renderSidebar:function(){
     var s=App.currentSubView;
-    var links=[{id:'overview',icon:'🏠',label:'الرئيسية'},{id:'lessons',icon:'🎬',label:'الدروس'},{id:'wallet',icon:'💰',label:'محفظتي'},{id:'exams',icon:'📝',label:'الامتحانات'},{id:'homework',icon:'📚',label:Lang.t('hwTitle')},{id:'files',icon:'📁',label:'الملفات والمراجعات'},{id:'reports',icon:'📊',label:'تقاريري'},{id:'badges',icon:'🏆',label:'الإنجازات'},{id:'profile',icon:'👤',label:'معلوماتي الشخصية'},{id:'parent',icon:'👨‍👩‍👦',label:'بيانات ولي الأمر'},{id:'aibot',icon:'🤖',label:'المساعد الذكي'},{id:'game',icon:'🎮',label:'لعبة اليوم'}];
-    return '<div class="sidebar" id="studentSidebar"><button class="mobile-sidebar-close" onclick="App.toggleSidebar()">✕</button><div class="mobile-sidebar-header"><div class="sidebar-avatar">'+Utils.escHtml(App.user?App.user.name.charAt(0):'🎓')+'</div><div class="sidebar-name">'+Utils.escHtml(App.user?App.user.name:'Student')+'</div><div class="sidebar-role">'+Utils.escHtml((App.user?App.user.grade:'')+' — '+(App.user?App.user.track:''))+'</div></div><div class="sidebar-section">لوحتي</div>'+
+    var links=[{id:'overview',icon:'🏠',label:Lang.t('navHome')},{id:'lessons',icon:'🎬',label:Lang.t('adminLessons')},{id:'wallet',icon:'💰',label:Lang.t('walletPageTitle')},{id:'exams',icon:'📝',label:Lang.t('examTitle')},{id:'homework',icon:'📚',label:Lang.t('hwTitle')},{id:'files',icon:'📁',label:Lang.t('filesTitle')},{id:'reports',icon:'📊',label:Lang.t('reportsTitle')},{id:'badges',icon:'🏆',label:Lang.t('badgesTitle')},{id:'profile',icon:'👤',label:Lang.t('profilePageTitle')},{id:'parent',icon:'👨‍👩‍👦',label:Lang.t('parentTitle')},{id:'aibot',icon:'🤖',label:Lang.t('aiTitle')},{id:'game',icon:'🎮',label:Lang.t('gameTitle')}];
+    return '<div class="sidebar" id="studentSidebar"><button class="mobile-sidebar-close" onclick="App.toggleSidebar()">✕</button><div class="mobile-sidebar-header"><div class="sidebar-avatar">'+Utils.escHtml(App.user?App.user.name.charAt(0):'🎓')+'</div><div class="sidebar-name">'+Utils.escHtml(App.user?App.user.name:'Student')+'</div><div class="sidebar-role">'+Utils.escHtml((App.user?App.user.grade:'')+' — '+(App.user?App.user.track:''))+'</div></div><div class="sidebar-section">'+Lang.t('sidebarLouhati')+'</div>'+
     links.map(function(l){return '<button class="sidebar-link '+(s===l.id||(!s&&l.id==='overview')?'active':'')+'" onclick="Student.switchSection(\''+l.id+'\')"><span class="link-icon">'+l.icon+'</span><span>'+l.label+'</span></button>'}).join('')+'</div>';
   },
   switchSection:function(sub){App.currentSubView=sub;App.currentView='student';var content=document.getElementById('studentContent');if(content){content.innerHTML=Student.renderSection();Student.init();Utils.loadVideos()}document.querySelectorAll('#studentSidebar .sidebar-link').forEach(function(b){b.classList.remove('active')});var idx=['overview','lessons','wallet','exams','homework','files','reports','badges','profile','parent','aibot','game'].indexOf(sub);var btns=document.querySelectorAll('#studentSidebar .sidebar-link');if(idx>=0&&btns[idx])btns[idx].classList.add('active')},
@@ -1842,33 +2401,39 @@ const Student={
     var u=App.user;var lessons=DB.lessons();
     var notifs=DB.notifications().slice(-5).reverse();var results=DB.examResults().filter(function(r){return r.studentId===u.id});
     var userUnlocks=(DB._get('unlocks_'+u.id))||[];
-    return '<div class="fade-in"><div class="page-header"><h1 class="page-title">مرحباً، '+Utils.escHtml(u.name)+' 👋</h1><p class="page-subtitle">'+Utils.escHtml(u.grade)+' — '+Utils.escHtml(u.track)+'</p></div>'+
+    return '<div class="fade-in"><div class="page-header"><h1 class="page-title">'+Lang.t('welcome')+' '+Utils.escHtml(u.name)+' 👋</h1><p class="page-subtitle">'+Utils.escHtml(u.grade)+' — '+Utils.escHtml(u.track)+'</p></div>'+
     '<div class="stats-grid">'+
-    '<div class="card stat-card"><div class="stat-icon">🎬</div><div class="stat-number">'+lessons.length+'</div><div class="stat-label">درس متاح</div></div>'+
-    '<div class="card stat-card"><div class="stat-icon">💰</div><div class="stat-number">'+Utils.formatMoney(u.wallet||0)+'</div><div class="stat-label">رصيد محفظتي</div></div>'+
-    '<div class="card stat-card"><div class="stat-icon">📝</div><div class="stat-number">'+results.length+'</div><div class="stat-label">امتكام مكتمل</div></div>'+
-    '<div class="card stat-card"><div class="stat-icon">🏆</div><div class="stat-number">'+(u.badges||[]).length+'</div><div class="stat-label">إنجاز</div></div></div>'+
-    (notifs.length>0?'<div class="card" style="margin-bottom:20px"><h3 class="card-title" style="margin-bottom:14px">📢 آخر الإشعارات</h3>'+
+    '<div class="card stat-card"><div class="stat-icon">🎬</div><div class="stat-number">'+lessons.length+'</div><div class="stat-label">'+Lang.t('lessonsAvailable')+'</div></div>'+
+    '<div class="card stat-card"><div class="stat-icon">💰</div><div class="stat-number">'+Utils.formatMoney(u.wallet||0)+'</div><div class="stat-label">'+Lang.t('walletBalance')+'</div></div>'+
+    '<div class="card stat-card"><div class="stat-icon">📝</div><div class="stat-number">'+results.length+'</div><div class="stat-label">'+Lang.t('examsCompleted')+'</div></div>'+
+    '<div class="card stat-card"><div class="stat-icon">🏆</div><div class="stat-number">'+(u.badges||[]).length+'</div><div class="stat-label">'+Lang.t('badgesCount')+'</div></div></div>'+
+    (notifs.length>0?'<div class="card" style="margin-bottom:20px"><h3 class="card-title" style="margin-bottom:14px">📢 '+Lang.t('notificationsTitle')+'</h3>'+
     notifs.map(function(n){return '<div style="padding:10px 0;border-bottom:1px solid var(--glass-border)"><div style="font-weight:700;font-size:0.9rem">'+Utils.escHtml(n.title)+'</div><div style="color:var(--text-secondary);font-size:0.85rem">'+Utils.escHtml(n.message)+'</div><div style="color:var(--text-muted);font-size:0.72rem;margin-top:4px">'+Utils.timeAgo(n.date)+'</div></div>'}).join('')+'</div>':'')+
-    (lessons.length>0?'<h3 class="card-title" style="margin-bottom:14px">🎬 دروس متاحة</h3><div class="content-grid">'+
+    (lessons.length>0?'<h3 class="card-title" style="margin-bottom:14px">🎬 '+Lang.t('availableLessons')+'</h3><div class="content-grid">'+
     lessons.slice(0,4).map(function(l){var unlocked=userUnlocks.includes(l.id);
-      return '<div class="card lesson-card fade-in"><div class="lesson-thumb">'+(unlocked&&l.videoEmbed?'<span>🎬</span><div class="lesson-thumb-overlay"><button class="btn btn-sm btn-primary" onclick="Student.showLessonEmbed(\''+l.id+'\')">▶️ مشاهدة</button></div>':unlocked&&(l._hasVideo||l.videoData)?'<div class="video-placeholder" data-lesson-id="'+l.id+'" style="width:100%;height:100%;background:#000;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:1.5rem">🎬</div>':'<span>🎬</span><div class="lesson-thumb-overlay">'+(unlocked?'<a href="'+Utils.escHtml(l.videoUrl||'#')+'" target="_blank" class="btn btn-sm btn-primary">▶️ مشاهدة</a>':'<span class="badge badge-warning">🔒 مقفل</span>')+'</div>')+'</div>'+
+      return '<div class="card lesson-card fade-in"><div class="lesson-thumb">'+(unlocked&&l.videoEmbed?'<span>🎬</span><div class="lesson-thumb-overlay"><button class="btn btn-sm btn-primary" onclick="Student.showLessonEmbed(\''+l.id+'\')">▶️ '+Lang.t('watchBtn')+'</button></div>':unlocked&&(l._hasVideo||l.videoData)?'<div class="video-placeholder" data-lesson-id="'+l.id+'" style="width:100%;height:100%;background:#000;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:1.5rem">🎬</div>':'<span>🎬</span><div class="lesson-thumb-overlay">'+(unlocked?'<a href="'+Utils.escHtml(l.videoUrl||'#')+'" target="_blank" class="btn btn-sm btn-primary">▶️ '+Lang.t('watchBtn')+'</a>':'<span class="badge badge-warning">🔒 '+Lang.t('locked')+'</span>')+'</div>')+'</div>'+
       '<div class="lesson-body"><div class="lesson-meta"><span class="badge badge-warning">'+Utils.escHtml(l.subject||'عام')+'</span></div><h3 class="lesson-title">'+Utils.escHtml(l.title)+'</h3>'+
-      '<div class="lesson-footer"><span class="lesson-price">'+Utils.formatMoney(l.price)+'</span>'+(unlocked?'<span class="badge badge-accent">✅ مفتوح</span>':'<button class="btn btn-sm btn-primary" onclick="Student.unlockLesson(\''+l.id+'\')">🔓 فتح الدرس</button>')+'</div></div></div>'}).join('')+'</div>':'')+'</div>';
+      '<div class="lesson-footer"><span class="lesson-price">'+Utils.formatMoney(l.price)+'</span>'+(unlocked?'<span class="badge badge-accent">✅ '+Lang.t('opened')+'</span>':
+      '<div style="display:flex;flex-direction:column;gap:6px;width:100%"><div style="display:flex;gap:6px"><button class="btn btn-sm btn-primary" onclick="Student.unlockLesson(\''+l.id+'\')" style="flex:1">🔓 '+Utils.formatMoney(l.price)+'</button>'+
+      ((l.codes&&l.codes.length>0)?'<div style="display:flex;gap:4px;flex:1"><input class="form-input" id="oc_'+l.id+'" placeholder="الكود" style="font-size:0.7rem;padding:5px 6px;flex:1" dir="ltr"><button class="btn btn-sm btn-accent" onclick="Student.unlockByCodeOC(\''+l.id+'\')" style="font-size:0.7rem;padding:5px 8px">🔑</button></div>':'')+
+      '</div>')+ '</div></div></div>'}).join('')+'</div>':'')+'</div>';
   },
   lessonsView:function(){
     var u=App.user;var lessons=DB.lessons();
     var userUnlocks=(DB._get('unlocks_'+u.id))||[];
-    return '<div class="fade-in"><div class="page-header"><h1 class="page-title">الدروس المتاحة</h1><p class="page-subtitle">'+lessons.length+' درس لمادتك ومسارك</p></div>'+
+    return '<div class="fade-in"><div class="page-header"><h1 class="page-title">'+Lang.t('lessonsTitle')+'</h1><p class="page-subtitle">'+lessons.length+' '+Lang.t('lessonsSub')+'</p></div>'+
     '<div class="content-grid">'+
-    (lessons.length===0?'<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">🎬</div><p>لا توجد دروس متاحة لمسارك وصفك حالياً</p></div>':'')+
+    (lessons.length===0?'<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">🎬</div><p>'+Lang.t('noLessons')+'</p></div>':'')+
     lessons.map(function(l){var unlocked=userUnlocks.includes(l.id);
-      return '<div class="card lesson-card fade-in"><div class="lesson-thumb">'+(unlocked&&l.videoEmbed?'<span>🎬</span><div class="lesson-thumb-overlay"><button class="btn btn-sm btn-primary" onclick="Student.showLessonEmbed(\''+l.id+'\')">▶️ مشاهدة</button></div>':unlocked&&(l._hasVideo||l.videoData)?'<div class="video-placeholder" data-lesson-id="'+l.id+'" style="width:100%;height:100%;background:#000;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:1.5rem">🎬</div>':'<span>🎬</span><div class="lesson-thumb-overlay">'+(unlocked?'<a href="'+Utils.escHtml(l.videoUrl||'#')+'" target="_blank" class="btn btn-sm btn-primary">▶️ مشاهدة</a>':'<span class="badge badge-warning">🔒 مقفل</span>')+'</div>')+'</div>'+
+      return '<div class="card lesson-card fade-in"><div class="lesson-thumb">'+(unlocked&&l.videoEmbed?'<span>🎬</span><div class="lesson-thumb-overlay"><button class="btn btn-sm btn-primary" onclick="Student.showLessonEmbed(\''+l.id+'\')">▶️ '+Lang.t('watchBtn')+'</button></div>':unlocked&&(l._hasVideo||l.videoData)?'<div class="video-placeholder" data-lesson-id="'+l.id+'" style="width:100%;height:100%;background:#000;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:1.5rem">🎬</div>':'<span>🎬</span><div class="lesson-thumb-overlay">'+(unlocked?'<a href="'+Utils.escHtml(l.videoUrl||'#')+'" target="_blank" class="btn btn-sm btn-primary">▶️ '+Lang.t('watchBtn')+'</a>':'<span class="badge badge-warning">🔒 '+Lang.t('locked')+'</span>')+'</div>')+'</div>'+
       '<div class="lesson-body"><div class="lesson-meta"><span class="badge badge-info">'+Utils.escHtml(l.grade)+'</span><span class="badge badge-accent">'+Utils.escHtml(l.track)+'</span><span class="badge badge-warning">'+Utils.escHtml(l.subject||'عام')+'</span></div>'+
       '<h3 class="lesson-title">'+Utils.escHtml(l.title)+'</h3><p class="lesson-desc">'+Utils.escHtml(l.description||'')+'</p>'+
       '<div class="lesson-footer"><span class="lesson-price">'+Utils.formatMoney(l.price)+'</span>'+
-      (unlocked?'<span class="badge badge-accent">✅ مفتوح</span>':'<button class="btn btn-sm btn-primary" onclick="Student.unlockLesson(\''+l.id+'\')">🔓 فتح بـ '+Utils.formatMoney(l.price)+'</button>')+'</div>'+
-      (unlocked&&l.videoUrlAlt?'<div style="margin-top:10px"><a href="'+Utils.escHtml(l.videoUrlAlt)+'" target="_blank" class="btn btn-sm btn-secondary" style="width:100%">🔗 رابط بديل</a></div>':'')+'</div></div>'}).join('')+'</div></div>';
+      (unlocked?'<span class="badge badge-accent">✅ '+Lang.t('opened')+'</span>':
+      '<div style="display:flex;flex-direction:column;gap:6px;width:100%"><div style="display:flex;gap:6px"><button class="btn btn-sm btn-primary" onclick="Student.unlockLesson(\''+l.id+'\')" style="flex:1">🔓 '+Utils.formatMoney(l.price)+'</button>'+
+      ((l.codes&&l.codes.length>0)?'<div style="display:flex;gap:4px;flex:1"><input class="form-input" id="code_'+l.id+'" placeholder="أدخل الكود" style="font-size:0.75rem;padding:6px 8px;flex:1" dir="ltr"><button class="btn btn-sm btn-accent" onclick="Student.unlockByCode(\''+l.id+'\')" style="font-size:0.7rem;padding:6px 10px">🔑</button></div>':'')+
+      '</div>')+'</div>'+
+      (unlocked&&l.videoUrlAlt?'<div style="margin-top:10px"><a href="'+Utils.escHtml(l.videoUrlAlt)+'" target="_blank" class="btn btn-sm btn-secondary" style="width:100%">🔗 '+Lang.t('altLink')+'</a></div>':'')+'</div></div>'}).join('')+'</div></div>';
   },
   unlockLesson:function(lessonId){
     var lesson=DB.lessons().find(function(l){return l.id===lessonId});if(!lesson)return;
@@ -1881,8 +2446,61 @@ const Student={
     App.user=DB.getUserById(u.id);
     showToast('تم فتح الدرس بنجاح! 🎉');this.switchSection('lessons');
   },
+  unlockByCodeOC:function(lessonId){
+    var input=document.getElementById('oc_'+lessonId);
+    if(!input)return;
+    var code=input.value.trim();
+    if(!code){showToast('اكتب الكود أولاً','error');return}
+    var lessons=DB.lessons();
+    var lIdx=lessons.findIndex(function(x){return x.id===lessonId});
+    if(lIdx<0)return;
+    var lesson=lessons[lIdx];
+    var codes=lesson.codes||[];
+    var codeIdx=-1;
+    for(var i=0;i<codes.length;i++){if(codes[i].code===code&&!codes[i].usedBy){codeIdx=i;break}}
+    if(codeIdx<0){showToast('الكود غير صحيح أو مستخدم بالفعل!','error');return}
+    codes[codeIdx].usedBy=App.user.id;
+    codes[codeIdx].usedByName=App.user.name;
+    codes[codeIdx].usedAt=Date.now();
+    lessons[lIdx].codes=codes;
+    DB.saveLessons(lessons);
+    var u=DB.getUserById(App.user.id);
+    var unlocks=(DB._get('unlocks_'+u.id))||[];
+    unlocks.push(lessonId);
+    DB._set('unlocks_'+u.id,unlocks);
+    App.user=DB.getUserById(u.id);
+    showToast('تم فتح الدرس بالكود بنجاح! 🎉');
+    this.switchSection('overview');
+  },
+  unlockByCode:function(lessonId){
+    var input=document.getElementById('code_'+lessonId);
+    if(!input)return;
+    var code=input.value.trim();
+    if(!code){showToast('اكتب الكود أولاً','error');return}
+    var lessons=DB.lessons();
+    var lIdx=lessons.findIndex(function(x){return x.id===lessonId});
+    if(lIdx<0)return;
+    var lesson=lessons[lIdx];
+    var codes=lesson.codes||[];
+    var codeIdx=-1;
+    for(var i=0;i<codes.length;i++){if(codes[i].code===code&&!codes[i].usedBy){codeIdx=i;break}}
+    if(codeIdx<0){showToast('الكود غير صحيح أو مستخدم بالفعل!','error');return}
+    codes[codeIdx].usedBy=App.user.id;
+    codes[codeIdx].usedByName=App.user.name;
+    codes[codeIdx].usedAt=Date.now();
+    lessons[lIdx].codes=codes;
+    DB.saveLessons(lessons);
+    var u=DB.getUserById(App.user.id);
+    var unlocks=(DB._get('unlocks_'+u.id))||[];
+    unlocks.push(lessonId);
+    DB._set('unlocks_'+u.id,unlocks);
+    App.user=DB.getUserById(u.id);
+    showToast('تم فتح الدرس بالكود بنجاح! 🎉');
+    this.switchSection('lessons');
+  },
   showLessonEmbed:function(lessonId){
     var l=DB.lessons().find(function(x){return x.id===lessonId});if(!l||!l.videoEmbed)return;
+    if(App.user&&App.user.role!=='admin')DB.logVideoView(lessonId,App.user.id,App.user.name);
     var div=document.createElement('div');
     div.id='embedModal';
     div.style.cssText='position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:9999;background:rgba(0,0,0,0.8)';
