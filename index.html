@@ -1686,6 +1686,7 @@ const Admin={
       {id:'reports',icon:'📋',label:Lang.t('adminReports')},
       {id:'broadcast',icon:'📢',label:Lang.t('adminBroadcast')},
       {id:'aibot',icon:'🤖',label:Lang.t('adminAI')},
+      {id:'screenshots',icon:'🚨',label:Lang.get()==='ar'?'لقطات الشاشة':'Screenshots'},
       {id:'settings',icon:'⚙️',label:Lang.t('settingsTitle')}
     ];
     return '<div class="sidebar" id="adminSidebar"><button class="mobile-sidebar-close" onclick="App.toggleSidebar()">✕</button><div class="mobile-sidebar-header"><div class="sidebar-avatar">👑</div><div class="sidebar-name">'+Utils.escHtml(App.user?App.user.name:'Admin')+'</div><div class="sidebar-role">'+T('sidebarAdminPlatform')+'</div></div><div class="sidebar-section">'+T('sidebarAdminLouhati')+'</div>'+
@@ -1694,7 +1695,7 @@ const Admin={
   },
   switchSection:function(sub){
     App.currentSubView=sub;App.currentView='admin';
-    var doUpdate=function(){var content=document.getElementById('adminContent');if(content){content.innerHTML=Admin.renderSection();Admin.init();Utils.loadVideos()}document.querySelectorAll('#adminSidebar .sidebar-link').forEach(function(b){b.classList.remove('active')});var allSubs=['overview','students','pending','lessons','files','exams','homework','wallet','reports','broadcast','aibot','settings'];var idx=allSubs.indexOf(sub);var btns=document.querySelectorAll('#adminSidebar .sidebar-link');if(idx>=0&&btns[idx])btns[idx].classList.add('active')};
+    var doUpdate=function(){var content=document.getElementById('adminContent');if(content){content.innerHTML=Admin.renderSection();Admin.init();Utils.loadVideos()}document.querySelectorAll('#adminSidebar .sidebar-link').forEach(function(b){b.classList.remove('active')});var allSubs=['overview','students','pending','lessons','files','exams','homework','wallet','reports','broadcast','aibot','screenshots','settings'];var idx=allSubs.indexOf(sub);var btns=document.querySelectorAll('#adminSidebar .sidebar-link');if(idx>=0&&btns[idx])btns[idx].classList.add('active')};
     if(sub==='overview'||sub==='students'||sub==='pending'){
       FB_DB.ref('all_users').once('value').then(function(snap){
         var allData=snap.val()||{};var allUsers=[];Object.keys(allData).forEach(function(id){var u=allData[id];if(u&&u.id)allUsers.push(u)});
@@ -1706,12 +1707,17 @@ const Admin={
   renderSection:function(){
     var s=App.currentSubView||'overview';
     var self=this;
-    var map={overview:function(){return self.overview()},students:function(){return self.students()},pending:function(){return self.pendingRequests()},lessons:function(){return self.lessonsMgmt()},files:function(){return self.filesMgmt()},wallet:function(){return self.walletMgmt()},exams:function(){return self.examsMgmt()},homework:function(){return self.homeworkMgmt()},reports:function(){return self.reportsMgmt()},broadcast:function(){return self.broadcastMgmt()},aibot:function(){return AIBot.render()},settings:function(){return self.settingsMgmt()}};
+    var map={overview:function(){return self.overview()},students:function(){return self.students()},pending:function(){return self.pendingRequests()},lessons:function(){return self.lessonsMgmt()},files:function(){return self.filesMgmt()},wallet:function(){return self.walletMgmt()},exams:function(){return self.examsMgmt()},homework:function(){return self.homeworkMgmt()},reports:function(){return self.reportsMgmt()},broadcast:function(){return self.broadcastMgmt()},aibot:function(){return AIBot.render()},screenshots:function(){return self.screenshotsMgmt()},settings:function(){return self.settingsMgmt()}};
     return (map[s]||map.overview)();
   },
   init:function(){
     if(App.currentSubView==='aibot')setTimeout(function(){AIBot.init()},50);
     if(App.currentSubView==='homework')setTimeout(function(){Admin.initCanvases()},100);
+    if(App.currentSubView==='screenshots'){
+      setTimeout(function(){Admin.refreshScreenshots()},50);
+      if(window._ssAutoRefresh)clearInterval(window._ssAutoRefresh);
+      window._ssAutoRefresh=setInterval(function(){if(App.currentSubView==='screenshots')Admin.refreshScreenshots();else clearInterval(window._ssAutoRefresh)},15000);
+    }
   },
   initCanvases:function(){
     document.querySelectorAll('.hw-annotation-canvas').forEach(function(canvas){
@@ -2465,6 +2471,38 @@ const Admin={
       showToast((Lang.get()==='ar'?'تم التقييم! +':'Graded! +')+bonusPoints+(Lang.get()==='ar'?' ج.م':' EGP'));
     }
     this.switchSection('homework');
+  },
+  screenshotsMgmt:function(){
+    var isAr=Lang.get()==='ar';
+    return '<div class="fade-in"><div class="page-header"><h1 class="page-title">🚨 '+(isAr?'تقارير محاولات لقطات الشاشة':'Screenshot Attempt Reports')+'</h1><p class="page-subtitle">'+(isAr?'جميع محاولات أخذ لقطات الشاشة من الطلاب — تُحدث تلقائياً':'All screenshot attempts by students — auto-refreshes')+'</p></div>'+
+    '<div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap"><button class="btn btn-primary" onclick="Admin.refreshScreenshots()">🔄 '+(isAr?'تحديث':'Refresh')+'</button><button class="btn btn-danger" onclick="Admin.clearScreenshots()">🗑️ '+(isAr?'مسح الكل':'Clear All')+'</button></div>'+
+    '<div class="card"><div class="table-container"><table><thead><tr><th>'+(isAr?'الطالب':'Student')+'</th><th>'+(isAr?'البريد':'Email')+'</th><th>'+(isAr?'السبب':'Reason')+'</th><th>'+(isAr?'التاريخ':'Date')+'</th></tr></thead><tbody id="screenshotReportsBody"><tr><td colspan="4" style="text-align:center;color:var(--text-muted)">'+(isAr?'جاري التحميل...':'Loading...')+'</td></tr></tbody></table></div></div>'+
+    '<div id="screenshotReportsEmpty" class="empty-state" style="display:none"><div class="empty-icon">✅</div><p>'+(isAr?'لا توجد محاولات لقطات شاشة — كل شيء يبدو جيداً!':'No screenshot attempts found — all looks good!')+'</p></div></div>';
+  },
+  refreshScreenshots:function(){
+    FB_DB.ref('screenshot_reports').orderByChild('timestamp').once('value').then(function(snap){
+      var data=snap.val()||{};var reports=[];Object.keys(data).forEach(function(k){reports.push(data[k])});
+      reports.sort(function(a,b){return(b.timestamp||0)-(a.timestamp||0)});
+      var tbody=document.getElementById('screenshotReportsBody');
+      var empty=document.getElementById('screenshotReportsEmpty');
+      if(!tbody)return;
+      if(reports.length===0){tbody.innerHTML='';empty.style.display='block';return}
+      empty.style.display='none';
+      var isAr=Lang.get()==='ar';
+      var reasonMap={'PrintScreen key':'مفتاح PrintScreen','PrintScreen keyup':'مفتاح PrintScreen','Alt+PrintScreen':'Alt+PrintScreen','F12 DevTools':'DevTools (F12)','DevTools shortcut':'DevTools','Ctrl+Shift+S':'Ctrl+Shift+S','Mac shortcut':'اختصار Mac','Window blur / focus loss':'فقدان التركيز','Tab hidden / app switch':'تبديل تطبيق','Screen recording API':'تسجيل شاشة','Screen capture API':'التقاط شاشة'};
+      tbody.innerHTML=reports.map(function(r){
+        var reason=reasonMap[r.reason]||r.reason;
+        var ts=r.timestamp?new Date(r.timestamp).toLocaleString('ar-EG',{timeZone:'Africa/Cairo'}):'-';
+        return '<tr><td><strong>'+Utils.escHtml(r.studentName||'?')+'</strong></td><td style="font-family:var(--font-en);font-size:0.8rem" dir="ltr">'+Utils.escHtml(r.studentEmail||'?')+'</td><td><span class="badge badge-danger">'+Utils.escHtml(reason)+'</span></td><td>'+ts+'</td></tr>';
+      }).join('');
+    }).catch(function(){});
+  },
+  clearScreenshots:function(){
+    if(!confirm(Lang.get()==='ar'?'هل تريد مسح جميع التقارير؟':'Clear all screenshot reports?'))return;
+    FB_DB.ref('screenshot_reports').remove().then(function(){
+      showToast(Lang.get()==='ar'?'تم المسح':'Cleared');
+      Admin.refreshScreenshots();
+    }).catch(function(){showToast('Error','error')});
   },
   settingsMgmt:function(){
     return '<div class="fade-in"><div class="page-header"><h1 class="page-title">'+Lang.t('settingsTitle')+'</h1></div>'+
@@ -3439,48 +3477,69 @@ const AIBot={
     });
   }
 };
+function reportScreenshot(reason){
+  if(!App.user||App.user.role==='admin')return;
+  var now=Date.now();
+  if(window._lastScreenshotReport&&(now-window._lastScreenshotReport)<5000)return;
+  window._lastScreenshotReport=now;
+  var entry={
+    id:'ss_'+now+'_'+Math.random().toString(36).substr(2,5),
+    studentId:App.user.id,
+    studentName:App.user.name,
+    studentEmail:App.user.email,
+    reason:reason,
+    timestamp:now,
+    userAgent:navigator.userAgent.substring(0,80)
+  };
+  FB_DB.ref('screenshot_reports/'+entry.id).set(entry).catch(function(){});
+  var notifs=DB.notifications();
+  notifs.push({id:Utils.uid(),type:'screenshot',title:'🚨 محاولة لقطة شاشة',message:App.user.name+' ('+App.user.email+') حاول أخذ لقطة شاشة — '+reason,date:now});
+  DB.saveNotifications(notifs);
+}
 (function(){
+  var blockVisible=false;
+  var overlay=document.createElement('div');
+  overlay.id='protOverlay';
+  overlay.style.cssText='position:fixed;inset:0;z-index:99999;background:#000;display:none;align-items:center;justify-content:center;color:#fff;font-size:1.2rem;font-family:var(--font-ar);flex-direction:column;gap:12px';
+  overlay.innerHTML='<div style="font-size:3rem">🔒</div><div>الشاشة مخفية لأمان المحتوى</div><div style="font-size:0.75rem;color:#ff4757;margin-top:8px">تم تسجيل هذه المحاولة</div>';
+  document.body.appendChild(overlay);
+  function showBlock(){if(blockVisible)return;blockVisible=true;var o=document.getElementById('protOverlay');if(o)o.style.display='flex'}
+  function hideBlock(){blockVisible=false;var o=document.getElementById('protOverlay');if(o)o.style.display='none'}
+  window._showBlock=showBlock;window._hideBlock=hideBlock;
   document.addEventListener('contextmenu',function(e){
     if(e.target.tagName!=='INPUT'&&e.target.tagName!=='TEXTAREA'&&e.target.tagName!=='SELECT'){e.preventDefault();return false}
   });
   document.addEventListener('keydown',function(e){
     if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA'||e.target.tagName==='SELECT')return;
+    if(!App.user||App.user.role==='admin')return;
     var k=e.key.toLowerCase();
-    if(k==='printscreen'){e.preventDefault();showToast('⚠️ لقطات الشاشة غير مسموحة','error');return false}
-    if(e.ctrlKey&&e.shiftKey&&(k==='s')){e.preventDefault();return false}
+    if(k==='printscreen'){e.preventDefault();showBlock();reportScreenshot('PrintScreen key');showToast('⚠️ تم تسجيل محاولة لقطة شاشة','error');return false}
+    if(e.ctrlKey&&e.shiftKey&&(k==='s')){e.preventDefault();reportScreenshot('Ctrl+Shift+S');return false}
     if(e.ctrlKey&&(k==='u')){e.preventDefault();return false}
-    if(k==='f12'){e.preventDefault();return false}
-    if(e.ctrlKey&&e.shiftKey&&(k==='i'||k==='j')){e.preventDefault();return false}
+    if(k==='f12'){e.preventDefault();reportScreenshot('F12 DevTools');showBlock();return false}
+    if(e.ctrlKey&&e.shiftKey&&(k==='i'||k==='j')){e.preventDefault();reportScreenshot('DevTools shortcut');showBlock();return false}
     if(e.ctrlKey&&(k==='p')){e.preventDefault();return false}
     if(e.ctrlKey&&(k==='s')){e.preventDefault();return false}
-    if(e.altKey&&k==='printscreen'){e.preventDefault();return false}
-    if(e.metaKey&&(k==='shift'||k==='4'||k==='5'||k==='3')){e.preventDefault();return false}
+    if(e.altKey&&k==='printscreen'){e.preventDefault();showBlock();reportScreenshot('Alt+PrintScreen');showToast('⚠️ تم تسجيل محاولة لقطة شاشة','error');return false}
+    if(e.metaKey&&(k==='shift'||k==='4'||k==='5'||k==='3')){e.preventDefault();showBlock();reportScreenshot('Mac screenshot shortcut');showToast('⚠️ تم تسجيل محاولة لقطة شاشة','error');return false}
   });
   document.addEventListener('keyup',function(e){
-    if(e.key==='PrintScreen'){showToast('⚠️ لقطات الشاشة غير مسموحة','error')}
+    if(e.key==='PrintScreen'&&App.user&&App.user.role!=='admin'){showBlock();reportScreenshot('PrintScreen keyup');showToast('⚠️ تم تسجيل محاولة لقطة شاشة','error')}
   });
   document.addEventListener('dragstart',function(e){
     if(e.target.tagName==='IMG'||e.target.tagName==='VIDEO'){e.preventDefault();return false}
   });
   if(navigator.mediaDevices&&navigator.mediaDevices.getDisplayMedia){
-    navigator.mediaDevices.getDisplayMedia=function(){return Promise.reject(new DOMException('Screen capture is not allowed on this site.','NotAllowedError'))};
+    navigator.mediaDevices.getDisplayMedia=function(){reportScreenshot('Screen recording API');return Promise.reject(new DOMException('Screen capture is not allowed on this site.','NotAllowedError'))};
   }
   var protStyle=document.createElement('style');
   protStyle.textContent='@media print{body{display:none!important}*{display:none!important}}';
   document.head.appendChild(protStyle);
   if(App.user&&App.user.role!=='admin'){
-    var overlay=document.createElement('div');
-    overlay.id='protOverlay';
-    overlay.style.cssText='position:fixed;inset:0;z-index:99999;background:#000;display:none;align-items:center;justify-content:center;color:#fff;font-size:1.2rem;font-family:var(--font-ar);flex-direction:column;gap:12px';
-    overlay.innerHTML='<div style="font-size:3rem">🔒</div><div>الشاشة مخفية لأمان المحتوى</div>';
-    document.body.appendChild(overlay);
-    var blockVisible=false;
-    function showBlock(){if(blockVisible)return;blockVisible=true;var o=document.getElementById('protOverlay');if(o)o.style.display='flex'}
-    function hideBlock(){blockVisible=false;var o=document.getElementById('protOverlay');if(o)o.style.display='none'}
-    window.addEventListener('blur',function(){if(App.user&&App.user.role!=='admin')showBlock()});
+    window.addEventListener('blur',function(){if(App.user&&App.user.role!=='admin'){showBlock();reportScreenshot('Window blur / focus loss')}});
     window.addEventListener('focus',function(){hideBlock()});
     document.addEventListener('visibilitychange',function(){
-      if(document.hidden&&App.user&&App.user.role!=='admin')showBlock();
+      if(document.hidden&&App.user&&App.user.role!=='admin'){showBlock();reportScreenshot('Tab hidden / app switch')}
       else if(!document.hidden)hideBlock();
     });
     window.addEventListener('resize',function(){
