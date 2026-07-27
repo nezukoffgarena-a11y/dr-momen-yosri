@@ -1195,22 +1195,43 @@ function applyWatermark(){
   if(!App.user||App.user.role==='admin')return;
   var name=App.user.name||'';
   var email=App.user.email||'';
-  var label=name+' | '+email;
   var container=document.createElement('div');
   container.id='siteWatermark';
-  container.style.cssText='position:fixed;inset:0;z-index:1;pointer-events:none;overflow:hidden;opacity:0.07';
-  var rows=12;var cols=4;
+  container.style.cssText='position:fixed;inset:0;z-index:1;pointer-events:none;overflow:hidden;opacity:0.08';
+  if(!document.getElementById('wmKeyframes')){
+    var kf=document.createElement('style');kf.id='wmKeyframes';
+    kf.textContent='@keyframes wmMove1{0%{transform:rotate(-35deg) translate(0,0)}25%{transform:rotate(-35deg) translate(40px,20px)}50%{transform:rotate(-35deg) translate(0,40px)}75%{transform:rotate(-35deg) translate(-40px,20px)}100%{transform:rotate(-35deg) translate(0,0)}}@keyframes wmMove2{0%{transform:rotate(-35deg) translate(0,0)}25%{transform:rotate(-35deg) translate(-30px,-15px)}50%{transform:rotate(-35deg) translate(10px,-35px)}75%{transform:rotate(-35deg) translate(-20px,10px)}100%{transform:rotate(-35deg) translate(0,0)}}';
+    document.head.appendChild(kf);
+  }
+  var rows=14;var cols=4;
   for(var r=0;r<rows;r++){
     for(var c=0;c<cols;c++){
       var sp=document.createElement('div');
-      sp.textContent=label;
-      sp.style.cssText='position:absolute;font-size:14px;font-weight:700;color:#000;white-space:nowrap;transform:rotate(-35deg);font-family:var(--font-ar);letter-spacing:1px';
+      sp.className='wm-text';
+      sp.setAttribute('data-name',name);
+      sp.setAttribute('data-email',email);
+      sp.textContent=name+' | '+email;
+      var animName=(r+c)%2===0?'wmMove1':'wmMove2';
+      var dur=8+Math.random()*6;
+      var delay=-Math.random()*dur;
+      sp.style.cssText='position:absolute;font-size:13px;font-weight:700;color:#000;white-space:nowrap;font-family:var(--font-ar);letter-spacing:1px;animation:'+animName+' '+dur.toFixed(1)+'s ease-in-out '+delay.toFixed(1)+'s infinite';
       sp.style.top=(r*(100/rows))+'%';
       sp.style.left=(c*(100/cols)-10)+'%';
       container.appendChild(sp);
     }
   }
   document.body.appendChild(container);
+  if(!window._wmTimer){
+    window._wmTimer=setInterval(function(){
+      var now=new Date();
+      var ts=now.getFullYear()+'/'+String(now.getMonth()+1).padStart(2,'0')+'/'+String(now.getDate()).padStart(2,'0')+' '+String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
+      document.querySelectorAll('.wm-text').forEach(function(el){
+        var n=el.getAttribute('data-name')||'';
+        var e=el.getAttribute('data-email')||'';
+        el.textContent=n+' | '+e+' | '+ts;
+      });
+    },10000);
+  }
 }
 function removeWatermark(){var old=document.getElementById('siteWatermark');if(old)old.remove()}
 const Notify={
