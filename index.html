@@ -525,7 +525,7 @@ const I18N={
 };
 var Lang={
   get(){return DB._get('lang')||'ar'},
-  set(l){DB._set('lang',l);document.documentElement.lang=l;document.documentElement.dir=l==='ar'?'rtl':'ltr';document.body.style.fontFamily=l==='ar'?'var(--font-ar)':'var(--font-en)'},
+  set(l){DB._set('lang',l);document.documentElement.lang=l;document.documentElement.dir='rtl';document.body.style.fontFamily='var(--font-ar)'},
   t(key){var l=this.get();return(I18N[l]&&I18N[l][key])||I18N.ar[key]||key}
 };
 var Theme={
