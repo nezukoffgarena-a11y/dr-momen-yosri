@@ -3424,28 +3424,51 @@ const AIBot={
   });
   document.addEventListener('keydown',function(e){
     if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA'||e.target.tagName==='SELECT')return;
-    if(e.key==='PrintScreen'){e.preventDefault();showToast('⚠️ لقطات الشاشة غير مسموحة','error');return false}
-    if(e.ctrlKey&&e.shiftKey&&(e.key==='S'||e.key==='s')){e.preventDefault();return false}
-    if(e.ctrlKey&&(e.key==='u'||e.key==='U')){e.preventDefault();return false}
-    if(e.key==='F12'){e.preventDefault();return false}
-    if(e.ctrlKey&&e.shiftKey&&(e.key==='I'||e.key==='i'||e.key==='J'||e.key==='j')){e.preventDefault();return false}
+    var k=e.key.toLowerCase();
+    if(k==='printscreen'){e.preventDefault();showToast('⚠️ لقطات الشاشة غير مسموحة','error');return false}
+    if(e.ctrlKey&&e.shiftKey&&(k==='s')){e.preventDefault();return false}
+    if(e.ctrlKey&&(k==='u')){e.preventDefault();return false}
+    if(k==='f12'){e.preventDefault();return false}
+    if(e.ctrlKey&&e.shiftKey&&(k==='i'||k==='j')){e.preventDefault();return false}
+    if(e.ctrlKey&&(k==='p')){e.preventDefault();return false}
+    if(e.ctrlKey&&(k==='s')){e.preventDefault();return false}
+    if(e.altKey&&k==='printscreen'){e.preventDefault();return false}
+    if(e.metaKey&&(k==='shift'||k==='4'||k==='5'||k==='3')){e.preventDefault();return false}
+  });
+  document.addEventListener('keyup',function(e){
+    if(e.key==='PrintScreen'){showToast('⚠️ لقطات الشاشة غير مسموحة','error')}
   });
   document.addEventListener('dragstart',function(e){
     if(e.target.tagName==='IMG'||e.target.tagName==='VIDEO'){e.preventDefault();return false}
   });
-  document.addEventListener('copy',function(e){
-    if(window.getSelection&&window.getSelection().toString().length>0){/* allow text copy */}
-  });
-  document.addEventListener('selectstart',function(e){
-    if(e.target.tagName!=='INPUT'&&e.target.tagName!=='TEXTAREA'&&e.target.tagName!=='SELECT'&&e.target.contentEditable!=='true'){/* allow for readability */}
-  });
   if(navigator.mediaDevices&&navigator.mediaDevices.getDisplayMedia){
-    var orig= navigator.mediaDevices.getDisplayMedia.bind(navigator.mediaDevices);
     navigator.mediaDevices.getDisplayMedia=function(){return Promise.reject(new DOMException('Screen capture is not allowed on this site.','NotAllowedError'))};
   }
-  var style=document.createElement('style');
-  style.textContent='@media print{body{display:none!important}}';
-  document.head.appendChild(style);
+  var protStyle=document.createElement('style');
+  protStyle.textContent='@media print{body{display:none!important}*{display:none!important}}';
+  document.head.appendChild(protStyle);
+  if(App.user&&App.user.role!=='admin'){
+    var overlay=document.createElement('div');
+    overlay.id='protOverlay';
+    overlay.style.cssText='position:fixed;inset:0;z-index:99999;background:#000;display:none;align-items:center;justify-content:center;color:#fff;font-size:1.2rem;font-family:var(--font-ar);flex-direction:column;gap:12px';
+    overlay.innerHTML='<div style="font-size:3rem">🔒</div><div>الشاشة مخفية لأمان المحتوى</div>';
+    document.body.appendChild(overlay);
+    var blockVisible=false;
+    function showBlock(){if(blockVisible)return;blockVisible=true;var o=document.getElementById('protOverlay');if(o)o.style.display='flex'}
+    function hideBlock(){blockVisible=false;var o=document.getElementById('protOverlay');if(o)o.style.display='none'}
+    window.addEventListener('blur',function(){if(App.user&&App.user.role!=='admin')showBlock()});
+    window.addEventListener('focus',function(){hideBlock()});
+    document.addEventListener('visibilitychange',function(){
+      if(document.hidden&&App.user&&App.user.role!=='admin')showBlock();
+      else if(!document.hidden)hideBlock();
+    });
+    window.addEventListener('resize',function(){
+      var isFS=!!(document.fullscreenElement||document.webkitFullscreenElement||document.mozFullScreenElement||document.msFullscreenElement);
+      if(!isFS&&App.user&&App.user.role!=='admin'){
+        try{var el=document.documentElement;var r=el.requestFullscreen||el.webkitRequestFullscreen||el.mozRequestFullScreen||el.msRequestFullscreen;if(r)r.call(el)}catch(x){}
+      }
+    });
+  }
 })();
 document.addEventListener('DOMContentLoaded',function(){App.init()});
 window.addEventListener('error',function(e){
