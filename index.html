@@ -1826,14 +1826,15 @@ const Student={
   render:function(){return '<div class="dashboard">'+this.renderSidebar()+'<div class="main-content" id="studentContent">'+this.renderSection()+'</div></div>'},
   renderSidebar:function(){
     var s=App.currentSubView;
-    var links=[{id:'overview',icon:'🏠',label:'الرئيسية'},{id:'lessons',icon:'🎬',label:'الدروس'},{id:'wallet',icon:'💰',label:'محفظتي'},{id:'exams',icon:'📝',label:'الامتحانات'},{id:'homework',icon:'📚',label:Lang.t('hwTitle')},{id:'files',icon:'📁',label:'الملفات والمراجعات'},{id:'reports',icon:'📊',label:'تقاريري'},{id:'badges',icon:'🏆',label:'الإنجازات'},{id:'profile',icon:'👤',label:'معلوماتي الشخصية'},{id:'parent',icon:'👨‍👩‍👦',label:'بيانات ولي الأمر'},{id:'aibot',icon:'🤖',label:'المساعد الذكي'}];
+    var links=[{id:'overview',icon:'🏠',label:'الرئيسية'},{id:'lessons',icon:'🎬',label:'الدروس'},{id:'wallet',icon:'💰',label:'محفظتي'},{id:'exams',icon:'📝',label:'الامتحانات'},{id:'homework',icon:'📚',label:Lang.t('hwTitle')},{id:'files',icon:'📁',label:'الملفات والمراجعات'},{id:'reports',icon:'📊',label:'تقاريري'},{id:'badges',icon:'🏆',label:'الإنجازات'},{id:'profile',icon:'👤',label:'معلوماتي الشخصية'},{id:'parent',icon:'👨‍👩‍👦',label:'بيانات ولي الأمر'},{id:'aibot',icon:'🤖',label:'المساعد الذكي'},{id:'game',icon:'🎮',label:'لعبة اليوم'}];
     return '<div class="sidebar" id="studentSidebar"><button class="mobile-sidebar-close" onclick="App.toggleSidebar()">✕</button><div class="mobile-sidebar-header"><div class="sidebar-avatar">'+Utils.escHtml(App.user?App.user.name.charAt(0):'🎓')+'</div><div class="sidebar-name">'+Utils.escHtml(App.user?App.user.name:'Student')+'</div><div class="sidebar-role">'+Utils.escHtml((App.user?App.user.grade:'')+' — '+(App.user?App.user.track:''))+'</div></div><div class="sidebar-section">لوحتي</div>'+
     links.map(function(l){return '<button class="sidebar-link '+(s===l.id||(!s&&l.id==='overview')?'active':'')+'" onclick="Student.switchSection(\''+l.id+'\')"><span class="link-icon">'+l.icon+'</span><span>'+l.label+'</span></button>'}).join('')+'</div>';
   },
-  switchSection:function(sub){App.currentSubView=sub;App.currentView='student';var content=document.getElementById('studentContent');if(content){content.innerHTML=Student.renderSection();Student.init();Utils.loadVideos()}document.querySelectorAll('#studentSidebar .sidebar-link').forEach(function(b){b.classList.remove('active')});var idx=['overview','lessons','wallet','exams','homework','files','reports','badges','profile','parent','aibot'].indexOf(sub);var btns=document.querySelectorAll('#studentSidebar .sidebar-link');if(idx>=0&&btns[idx])btns[idx].classList.add('active')},
-  renderSection:function(){var s=App.currentSubView||'overview';App.user=DB.getUserById(App.user.id);var self=this;var map={overview:function(){return self.overview()},lessons:function(){return self.lessonsView()},wallet:function(){return self.walletView()},exams:function(){return self.examsView()},homework:function(){return self.homeworkView()},files:function(){return self.filesView()},reports:function(){return self.reportsView()},badges:function(){return self.badgesView()},profile:function(){return self.profileView()},parent:function(){return self.parentView()},aibot:function(){return AIBot.render()}};return (map[s]||map.overview)()},
+  switchSection:function(sub){App.currentSubView=sub;App.currentView='student';var content=document.getElementById('studentContent');if(content){content.innerHTML=Student.renderSection();Student.init();Utils.loadVideos()}document.querySelectorAll('#studentSidebar .sidebar-link').forEach(function(b){b.classList.remove('active')});var idx=['overview','lessons','wallet','exams','homework','files','reports','badges','profile','parent','aibot','game'].indexOf(sub);var btns=document.querySelectorAll('#studentSidebar .sidebar-link');if(idx>=0&&btns[idx])btns[idx].classList.add('active')},
+  renderSection:function(){var s=App.currentSubView||'overview';App.user=DB.getUserById(App.user.id);var self=this;var map={overview:function(){return self.overview()},lessons:function(){return self.lessonsView()},wallet:function(){return self.walletView()},exams:function(){return self.examsView()},homework:function(){return self.homeworkView()},files:function(){return self.filesView()},reports:function(){return self.reportsView()},badges:function(){return self.badgesView()},profile:function(){return self.profileView()},parent:function(){return self.parentView()},aibot:function(){return AIBot.render()},game:function(){return Game.render()}};return (map[s]||map.overview)()},
   init:function(){
     if(App.currentSubView==='aibot')setTimeout(function(){AIBot.init()},50);
+    if(App.currentSubView==='game')setTimeout(function(){Game.init()},50);
   },
   overview:function(){
     var u=App.user;var lessons=DB.lessons();
@@ -2344,6 +2345,218 @@ const Tournament={
       '<div style="text-align:center;min-width:70px"><div style="font-weight:700">'+r.ex.passed+'/'+r.ex.total+'</div><div style="font-size:0.7rem;color:var(--text-muted)">'+Lang.t('examTitle')+'</div></div>'+
       '</div></div>';
     }).join('')+'</div>';
+  }
+};
+const Game={
+  questions:[],
+  currentQ:0,
+  score:0,
+  answered:0,
+  gameType:'',
+  todayKey:'',
+  _storageKey:function(){return 'game_'+(App.user?App.user.id:'guest')},
+  _getResultKey:function(){return this._storageKey()+'_'+this.todayKey},
+  _getStreakKey:function(){return this._storageKey()+'_streak'},
+  _getToday:function(){var d=new Date();return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate()},
+  _getGameType:function(){var types=['quiz','riddle','truefalse','fillblank','order'];var d=new Date();return types[d.getDate()%types.length]},
+  _getGameTypeLabel:function(t){var labels={quiz:'اختبار متعدد الخيارات',riddle:'فوازير علمية',truefalse:'صح وخطأ',fillblank:'أكمل الفراغ',order:'رتب العناصر'};return labels[t]||'اختبار'},
+  _getGameTypeIcon:function(t){var icons={quiz:'❓',riddle:'🧩',truefalse:'⚖️',fillblank:'✏️',order:'🔢'};return icons[t]||'🎮'},
+  _getStreak:function(){try{return JSON.parse(localStorage.getItem(this._getStreakKey()))||{count:0,lastDate:''}}catch(e){return{count:0,lastDate:''}}},
+  _saveStreak:function(correct){
+    var streak=this._getStreak();
+    var today=this._getToday();
+    if(correct){
+      if(streak.lastDate===today){}else{streak.count++;streak.lastDate=today}
+    }else{streak.count=0;streak.lastDate=today}
+    try{localStorage.setItem(this._getStreakKey(),JSON.stringify(streak))}catch(e){}
+  },
+  _isCompleted:function(){try{return!!localStorage.getItem(this._getResultKey())}catch(e){return false}},
+  _saveResult:function(){try{localStorage.setItem(this._getResultKey(),JSON.stringify({score:this.score,answered:this.answered,time:Date.now()}))}catch(e){}},
+  render:function(){
+    this.todayKey=this._getToday();
+    this.gameType=this._getGameType();
+    var streak=this._getStreak();
+    var completed=this._isCompleted();
+    var icon=this._getGameTypeIcon(this.gameType);
+    var label=this._getGameTypeLabel(this.gameType);
+    return '<div class="fade-in" style="max-width:800px;margin:0 auto;padding:88px 20px 40px">'+
+    '<div class="page-header"><h1 class="page-title">'+icon+' لعبة اليوم</h1>'+
+    '<p class="page-subtitle">'+label+' — '+this._getToday()+'</p></div>'+
+    '<div class="stats-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:20px">'+
+    '<div class="card stat-card"><div class="stat-icon">🔥</div><div class="stat-number">'+streak.count+'</div><div class="stat-label">سلسلة أيام</div></div>'+
+    '<div class="card stat-card"><div class="stat-icon">⭐</div><div class="stat-number" id="gameScore">0</div><div class="stat-label">النقاط</div></div>'+
+    '<div class="card stat-card"><div class="stat-icon">📊</div><div class="stat-number" id="gameProgress">0/0</div><div class="stat-label">التقدم</div></div>'+
+    '</div>'+
+    (completed?'<div class="card" style="text-align:center;padding:40px"><div style="font-size:3rem;margin-bottom:16px">🎉</div><h2 style="color:var(--accent);margin-bottom:8px">لقد أكملت لعبة اليوم!</h2><p style="color:var(--text-muted);margin-bottom:20px">عد غداً للعبة جديدة</p>'+
+    '<button class="btn btn-primary" onclick="Game.resetGame()">🔄 أعد المحاولة</button></div>':
+    '<div id="gameArea"><div class="card" style="text-align:center;padding:40px"><div style="font-size:2rem;margin-bottom:16px">⏳</div><p>جاري تحضير الأسئلة...</p></div></div>')+
+    '</div>';
+  },
+  init:function(){
+    if(this._isCompleted())return;
+    this.questions=[];this.currentQ=0;this.score=0;this.answered=0;
+    this.fetchQuestions();
+  },
+  fetchQuestions:function(){
+    var self=this;
+    var area=document.getElementById('gameArea');
+    var u=App.user;
+    fetch('/api/game',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({grade:u?u.grade:'الصف الرابع الابتدائي',track:u?u.track:'عام',gameType:this.gameType})
+    }).then(function(r){return r.json()}).then(function(data){
+      if(data.questions&&data.questions.length>0){
+        self.questions=data.questions;
+        self.renderQuestion();
+      }else{
+        area.innerHTML='<div class="card" style="text-align:center;padding:40px"><p>❌ تعذر تحميل الأسئلة. حاول مرة أخرى.</p><br><button class="btn btn-primary" onclick="Game.fetchQuestions()">🔄 إعادة المحاولة</button></div>';
+      }
+    }).catch(function(e){
+      area.innerHTML='<div class="card" style="text-align:center;padding:40px"><p>❌ خطأ في الاتصال: '+e.message+'</p><br><button class="btn btn-primary" onclick="Game.fetchQuestions()">🔄 إعادة المحاولة</button></div>';
+    });
+  },
+  renderQuestion:function(){
+    var area=document.getElementById('gameArea');
+    if(!area||this.currentQ>=this.questions.length){this.finishGame();return}
+    var q=this.questions[this.currentQ];
+    var total=this.questions.length;
+    var progress=document.getElementById('gameProgress');
+    if(progress)progress.textContent=(this.currentQ+1)+'/'+total;
+    var html='<div class="card fade-in"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">'+
+    '<span class="badge badge-accent">السؤال '+(this.currentQ+1)+' / '+total+'</span>'+
+    '<span class="badge badge-info">'+this._getGameTypeLabel(this.gameType)+'</span></div>'+
+    '<h3 style="margin-bottom:20px;line-height:1.6;font-size:1.05rem">'+Utils.escHtml(q.q)+'</h3>'+
+    '<div id="gameOptions">';
+    if(this.gameType==='quiz'){
+      (q.options||[]).forEach(function(opt,i){
+        html+='<button class="btn btn-secondary" style="display:block;width:100%;text-align:right;margin-bottom:8px;padding:14px;font-size:0.95rem;border:2px solid var(--glass-border);transition:all 0.3s" onclick="Game.answerQuiz('+i+')" data-idx="'+i+'">'+Utils.escHtml(opt)+'</button>';
+      });
+    }else if(this.gameType==='riddle'){
+      html+='<button class="btn btn-primary" style="margin-bottom:12px" onclick="Game.showRiddleAnswer()">💡 أظهر الإجابة</button>'+
+      '<div id="riddleAnswer" style="display:none;padding:16px;background:rgba(0,245,216,0.1);border-radius:var(--radius-sm);border:1px solid var(--accent)">'+
+      '<p style="font-weight:bold;color:var(--accent);margin-bottom:4px">الإجابة: '+Utils.escHtml(q.answer||'')+'</p>'+
+      '<p style="color:var(--text-muted);font-size:0.85rem">'+Utils.escHtml(q.explain||'')+'</p></div>'+
+      '<div style="display:flex;gap:8px;margin-top:12px"><button class="btn btn-primary" onclick="Game.nextQuestion(true)">✅ صح</button><button class="btn btn-secondary" onclick="Game.nextQuestion(false)">❌ خطأ</button></div>';
+    }else if(this.gameType==='truefalse'){
+      html+='<div style="display:flex;gap:12px;margin-top:8px"><button class="btn btn-primary" style="flex:1;padding:16px;font-size:1.1rem" onclick="Game.answerTF(true)">✅ صح</button><button class="btn btn-secondary" style="flex:1;padding:16px;font-size:1.1rem" onclick="Game.answerTF(false)">❌ خطأ</button></div>';
+    }else if(this.gameType==='fillblank'){
+      html+='<input class="form-input" id="fillInput" placeholder="اكتب الإجابة هنا..." style="margin-bottom:12px;font-size:1rem" onkeypress="if(event.key===\'Enter\')Game.answerFill()">'+
+      '<button class="btn btn-primary" onclick="Game.answerFill()" style="width:100%">📝 تأكيد</button>';
+    }else if(this.gameType==='order'){
+      var items=q.items||[];
+      var shuffled=items.map(function(v,i){return{val:v,idx:i}});for(var i=shuffled.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var tmp=shuffled[i];shuffled[i]=shuffled[j];shuffled[j]=tmp}
+      html+='<div id="orderList">';
+      shuffled.forEach(function(item,idx){
+        html+='<div draggable="true" data-orig="'+item.idx+'" data-pos="'+idx+'" style="padding:12px;margin-bottom:8px;background:var(--glass-bg);border:2px solid var(--glass-border);border-radius:var(--radius-sm);cursor:grab;font-size:0.95rem;transition:all 0.2s" ondragstart="Game.dragStart(event)" ondragover="Game.dragOver(event)" ondrop="Game.drop(event)">'+Utils.escHtml(item.val)+'</div>';
+      });
+      html+='</div><button class="btn btn-primary" onclick="Game.answerOrder()" style="width:100%;margin-top:12px">✅ تأكيد الترتيب</button>';
+    }
+    html+='</div><div id="gameFeedback" style="margin-top:16px"></div></div>';
+    area.innerHTML=html;
+  },
+  answerQuiz:function(idx){
+    var q=this.questions[this.currentQ];
+    var btns=document.querySelectorAll('#gameOptions button');
+    var correct=parseInt(q.correct)===idx;
+    btns.forEach(function(b,i){
+      b.disabled=true;
+      if(i===parseInt(q.correct))b.style.background='rgba(0,245,216,0.3)';b.style.borderColor='var(--accent)';
+      if(i===idx&&!correct){b.style.background='rgba(255,107,107,0.3)';b.style.borderColor='#FF6B6B'}
+    });
+    if(correct)this.score++;
+    this.answered++;
+    var scoreEl=document.getElementById('gameScore');if(scoreEl)scoreEl.textContent=this.score;
+    this.showFeedback(correct,q.explain);
+  },
+  answerTF:function(ans){
+    var q=this.questions[this.currentQ];
+    var correct=q.correct===ans;
+    var btns=document.querySelectorAll('#gameOptions button');
+    btns.forEach(function(b){b.disabled=true;b.style.opacity='0.6'});
+    if(correct)this.score++;
+    this.answered++;
+    var scoreEl=document.getElementById('gameScore');if(scoreEl)scoreEl.textContent=this.score;
+    this.showFeedback(correct,q.explain);
+  },
+  answerFill:function(){
+    var input=document.getElementById('fillInput');
+    if(!input)return;
+    var ans=input.value.trim();
+    var q=this.questions[this.currentQ];
+    var correct=ans&&(q.answer||'').includes(ans);
+    input.disabled=true;
+    if(correct)this.score++;
+    this.answered++;
+    var scoreEl=document.getElementById('gameScore');if(scoreEl)scoreEl.textContent=this.score;
+    this.showFeedback(correct,(q.explain||'')+(correct?'':'\nالإجابة الصحيحة: '+(q.answer||'')));
+  },
+  showRiddleAnswer:function(){
+    var el=document.getElementById('riddleAnswer');if(el)el.style.display='block';
+  },
+  answerOrder:function(){
+    var items=document.querySelectorAll('#orderList > div');
+    var q=this.questions[this.currentQ];
+    var correct=q.correctOrder||[];
+    var userOrder=[];
+    items.forEach(function(item){userOrder.push(parseInt(item.dataset.orig))});
+    var isCorrect=JSON.stringify(userOrder)===JSON.stringify(correct);
+    items.forEach(function(item,i){
+      item.draggable=false;
+      if(parseInt(item.dataset.orig)===correct[i]){item.style.borderColor='var(--accent)';item.style.background='rgba(0,245,216,0.2)'}
+      else{item.style.borderColor='#FF6B6B';item.style.background='rgba(255,107,107,0.2)'}
+    });
+    if(isCorrect)this.score++;
+    this.answered++;
+    var scoreEl=document.getElementById('gameScore');if(scoreEl)scoreEl.textContent=this.score;
+    this.showFeedback(isCorrect,q.explain);
+  },
+  showFeedback:function(correct,explain){
+    var fb=document.getElementById('gameFeedback');if(!fb)return;
+    fb.innerHTML='<div style="padding:16px;border-radius:var(--radius-sm);margin-bottom:12px;background:'+(correct?'rgba(0,245,216,0.1)':'rgba(255,107,107,0.1)')+';border:1px solid '+(correct?'var(--accent)':'#FF6B6B')+'">'+
+    '<p style="font-weight:bold;color:'+(correct?'var(--accent)':'#FF6B6B')+';margin-bottom:4px">'+(correct?'✅ أحسنت!':'❌ خطأ')+'</p>'+
+    (explain?'<p style="color:var(--text-muted);font-size:0.85rem">'+Utils.escHtml(explain)+'</p>':'')+'</div>'+
+    '<button class="btn btn-primary" onclick="Game.nextQuestion()" style="width:100%">➡️ السؤال التالي</button>';
+  },
+  nextQuestion:function(knowledgeCheck){
+    this.currentQ++;
+    this.renderQuestion();
+  },
+  finishGame:function(){
+    this._saveResult();
+    this._saveStreak(this.score>=(this.questions.length*0.5));
+    var percentage=Math.round(this.score/this.questions.length*100);
+    var emoji=percentage>=80?'🏆':percentage>=50?'⭐':'💪';
+    var msg=percentage>=80?'ممتاز! أنت عبقري!':percentage>=50?'جيد جداً! واصل التقدم!':'حاول مرة أخرى غداً!';
+    var pointsEarned=this.score*10;
+    var area=document.getElementById('gameArea');
+    if(area)area.innerHTML='<div class="card fade-in" style="text-align:center;padding:40px">'+
+      '<div style="font-size:4rem;margin-bottom:16px">'+emoji+'</div>'+
+      '<h2 style="color:var(--accent);margin-bottom:8px">'+msg+'</h2>'+
+      '<p style="font-size:1.2rem;margin-bottom:4px">النتيجة: '+this.score+' / '+this.questions.length+' ('+percentage+'%)</p>'+
+      '<p style="color:var(--text-muted);margin-bottom:20px">+ '+pointsEarned+' نقطة</p>'+
+      '<button class="btn btn-primary" onclick="Game.resetGame()">🔄 أعد المحاولة</button></div>';
+  },
+  resetGame:function(){
+    try{localStorage.removeItem(this._getResultKey())}catch(e){}
+    this.questions=[];this.currentQ=0;this.score=0;this.answered=0;
+    this.fetchQuestions();
+  },
+  dragStart:function(e){e.dataTransfer.setData('text/plain',e.target.dataset.pos);e.target.style.opacity='0.5'},
+  dragOver:function(e){e.preventDefault()},
+  drop:function(e){
+    e.preventDefault();
+    var fromPos=e.dataTransfer.getData('text/plain');
+    var toEl=e.target.closest('[data-pos]');
+    if(!toEl)return;
+    var toPos=toEl.dataset.pos;
+    if(fromPos===toPos)return;
+    var list=document.getElementById('orderList');
+    var items=Array.from(list.children);
+    var fromEl=items.find(function(x){return x.dataset.pos===fromPos});
+    if(!fromEl)return;
+    var fromIdx=items.indexOf(fromEl);var toIdx=items.indexOf(toEl);
+    if(fromIdx<toIdx){list.insertBefore(fromEl,toEl.nextSibling)}else{list.insertBefore(fromEl,toEl)}
+    fromEl.style.opacity='1';
+    var newPos=0;Array.from(list.children).forEach(function(c){c.dataset.pos=newPos++});
   }
 };
 const AIBot={
