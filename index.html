@@ -549,7 +549,7 @@ const BADGES_LIST=[
 ];
 const DB={
   _get(k){try{return JSON.parse(localStorage.getItem('dm_'+k))}catch{return null}},
-  _set(k,v){localStorage.setItem('dm_'+k,JSON.stringify(v))},
+  _set(k,v){try{localStorage.setItem('dm_'+k,JSON.stringify(v))}catch(e){console.error('Storage write failed:',k,e);throw e}},
   users(){return this._get('users')||[]},
   saveUsers(u){this._set('users',u);this._push()},
   lessons(){return this._get('lessons')||[]},
@@ -1296,22 +1296,25 @@ const Admin={
     e.preventDefault();
     var fileInput=document.getElementById('lVideoFile');
     var file=fileInput&&fileInput.files[0];
+    var submitBtn=document.querySelector('#lessonModal form button[type="submit"]');
     var doSave=function(videoData){
       var data={title:document.getElementById('lTitle').value.trim(),description:document.getElementById('lDesc').value.trim(),subject:document.getElementById('lSubject').value,price:parseInt(document.getElementById('lPrice').value)||0,grade:document.getElementById('lGrade').value,track:document.getElementById('lTrack').value,videoUrl:document.getElementById('lVideo').value.trim(),videoUrlAlt:document.getElementById('lVideoAlt').value.trim(),videoEmbed:document.getElementById('lVideoEmbed').value.trim()};
       if(videoData)data.videoData=videoData;
       var lessons=DB.lessons();
       if(editId){var idx=lessons.findIndex(function(l){return l.id===editId});if(idx>=0)lessons[idx]=Object.assign({},lessons[idx],data)}
       else{data.id=Utils.uid();data.createdAt=Date.now();data.files=[];lessons.push(data)}
-      DB.saveLessons(lessons);
+      try{DB.saveLessons(lessons)}catch(err){showToast('الذاكرة ممتلئة. جرب حذف بعض الدروس أو استخدم رابط فيديو بدل الرفع المباشر.','error');if(submitBtn){submitBtn.disabled=false;submitBtn.textContent=editId?'حفظ التعديلات':'إضافة الدرس'}return}
       document.getElementById('lessonModal').remove();
       showToast(editId?'تم تعديل الدرس بنجاح!':'تم إضافة الدرس بنجاح!');
       if(!editId)Notify.add('lesson','درس جديد: '+data.title,'تم إضافة درس جديد في '+data.grade+' - '+data.track);
       Admin.switchSection('lessons');
     };
     if(file){
-      if(file.size>50*1024*1024){showToast(Lang.get()==='ar'?'حجم الفيديو أكبر من 50MB. استخدم رابط YouTube أو embed بدلها.':'Video too large. Use YouTube link or embed instead.','error');if(btn){btn.disabled=false;btn.textContent=editId?'حفظ التعديلات':'إضافة الدرس'};return}
+      if(file.size>50*1024*1024){showToast(Lang.get()==='ar'?'حجم الفيديو أكبر من 50MB. استخدم رابط YouTube أو embed بدلها.':'Video too large. Use YouTube link or embed instead.','error');return}
+      if(submitBtn){submitBtn.disabled=true;submitBtn.textContent='⏳ جاري رفع الفيديو...'}
       var reader=new FileReader();
-      reader.onload=function(){doSave(reader.result)};
+      reader.onload=function(){try{doSave(reader.result)}catch(err){showToast('الذاكرة ممتلئة. جرب حجم فيديو أصغر أو استخدم رابط YouTube.','error');if(submitBtn){submitBtn.disabled=false;submitBtn.textContent=editId?'حفظ التعديلات':'إضافة الدرس'}}};
+      reader.onerror=function(){showToast('حدث خطأ أثناء قراءة الملف','error');if(submitBtn){submitBtn.disabled=false;submitBtn.textContent=editId?'حفظ التعديلات':'إضافة الدرس'}};
       reader.readAsDataURL(file);
     }else{doSave(null)}
   },
@@ -2449,7 +2452,6 @@ const AIBot={
 document.addEventListener('DOMContentLoaded',function(){App.init()});
 window.addEventListener('error',function(e){
   console.error('Global error:',e);
-  setTimeout(function(){location.reload()},2000);
 });
 window.addEventListener('unhandledrejection',function(e){
   console.error('Unhandled promise rejection:',e);
