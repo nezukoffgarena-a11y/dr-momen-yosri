@@ -1067,8 +1067,12 @@ const DB={
   saveVideoViews(v){this._set('videoViews',v);this._push()},
   logVideoView:function(lessonId,studentId,studentName){
     var views=this.videoViews();
-    var exists=views.find(function(v){return v.lessonId===lessonId&&v.studentId===studentId});
-    if(!exists){views.push({id:Utils.uid(),lessonId:lessonId,studentId:studentId,studentName:studentName,viewedAt:Date.now()});this.saveVideoViews(views)}
+    views.push({id:Utils.uid(),lessonId:lessonId,studentId:studentId,studentName:studentName,viewedAt:Date.now()});
+    this.saveVideoViews(views);
+  },
+  countViews:function(lessonId,studentId){
+    var views=this.videoViews();
+    return views.filter(function(v){return v.lessonId===lessonId&&v.studentId===studentId}).length;
   },
   session(){return this._get('session')},
   saveSession(s){this._set('session',s)},
@@ -1100,7 +1104,8 @@ const DB={
       community:DB.community(),
       users:DB.users(),
       homeworks:DB.homeworks(),
-      hwSubmissions:DB.hwSubmissions()
+      hwSubmissions:DB.hwSubmissions(),
+      videoViews:DB.videoViews()
     };
     FB_DB.ref('shared/data').set(shared).catch(function(e){console.log('Firebase shared push error:',e)});
     var personal={
@@ -1126,7 +1131,7 @@ const DB={
     if(!session||!session.email){if(callback)callback();return}
     FB_DB.ref('shared/data').once('value').then(function(snap){
       var res=snap.val()||{};
-      var sharedKeys=['lessons','files','exams','notifications','community','users','homeworks','hwSubmissions'];
+      var sharedKeys=['lessons','files','exams','notifications','community','users','homeworks','hwSubmissions','videoViews'];
       sharedKeys.forEach(function(k){
         var data=res[k]||[];
         if(k==='lessons'&&Array.isArray(data)){data=data.map(function(les){var c=Object.assign({},les);if(c.videoData){var vidData=c.videoData;var lid=c.id;delete c.videoData;c._hasVideo=true;VideoStore.save(lid,vidData,function(ok){if(!ok){console.error('syncFromServer: video save failed for',lid);var ls=DB._get('lessons')||[];var idx=ls.findIndex(function(x){return x.id===lid});if(idx>=0){ls[idx]._hasVideo=false;try{DB._set('lessons',ls)}catch(e){}}}})}else if(!c._hasVideo){delete c._hasVideo}return c})}
@@ -1179,7 +1184,7 @@ const Utils={
   timeAgo(d){const s=Math.floor((Date.now()-d)/1000);if(s<60)return'الآن';if(s<3600)return Math.floor(s/60)+' دقيقة';if(s<86400)return Math.floor(s/3600)+' ساعة';return Math.floor(s/86400)+' يوم'},
   escHtml(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML},
   searchMatch(text,q){return !q||text.toLowerCase().includes(q.toLowerCase())},
-  loadVideos(){setTimeout(function(){document.querySelectorAll('.video-placeholder[data-lesson-id]').forEach(function(el){var lid=el.getAttribute('data-lesson-id');if(!lid||el.dataset.loaded)return;el.dataset.loaded='1';VideoStore.get(lid,function(data){if(data){var v=document.createElement('video');v.controls=true;v.style.cssText='width:100%;height:100%;object-fit:contain;background:#000;border-radius:0';v.src=data;v.onplay=function(){DB.logVideoView(lid,App.user?App.user.id:'admin',App.user?App.user.name:'Admin')};el.parentNode.replaceChild(v,el)}else{var ls=DB.lessons();var lx=ls.find(function(x){return x.id===lid});if(lx&&lx.videoUrl){var a=document.createElement('a');a.href=lx.videoUrl;a.target='_blank';a.style.cssText='width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.2rem;text-decoration:none;background:#000;position:absolute;inset:0;flex-direction:column;gap:6px';a.innerHTML='▶️ <span style="font-size:0.7rem;opacity:0.7">شاهد من الرابط</span>';a.onclick=function(e){e.stopPropagation();DB.logVideoView(lid,App.user?App.user.id:'admin',App.user?App.user.name:'Admin')};el.style.position='relative';el.appendChild(a)}else if(lx&&lx._hasVideo){el.innerHTML='<span style="color:var(--warning);font-size:0.75rem;text-align:center;padding:8px">⚠️ الفيديو محفوظ على جهاز آخر<br>استخدم رابط YouTube بديل</span>';el.style.cursor='default'}else{el.innerHTML='<span style="color:var(--text-muted);font-size:0.8rem">🎬 لا يوجد فيديو</span>';el.style.cursor='default'}}})})},100)}
+  loadVideos(){setTimeout(function(){document.querySelectorAll('.video-placeholder[data-lesson-id]').forEach(function(el){var lid=el.getAttribute('data-lesson-id');if(!lid||el.dataset.loaded)return;el.dataset.loaded='1';VideoStore.get(lid,function(data){if(data){var v=document.createElement('video');v.controls=true;v.style.cssText='width:100%;height:100%;object-fit:contain;background:#000;border-radius:0';v.src=data;v.onplay=function(){var lesson=DB.lessons().find(function(x){return x.id===lid});var mxViews=lesson?lesson.maxViews||0:0;var uid=App.user?App.user.id:'admin';if(mxViews>0&&uid!=='admin'&&App.user&&App.user.role!=='admin'){var cnt=DB.countViews(lid,uid);if(cnt>=mxViews){v.pause();v.remove();el.innerHTML='<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;height:100%;background:#000;color:#ff4757;font-size:0.9rem;text-align:center;padding:16px"><div style="font-size:2rem;margin-bottom:8px">🚫</div><div>لقد وصلت للحد الأقصى للمشاهدات</div><div style="font-size:0.75rem;color:var(--text-muted);margin-top:4px">'+cnt+'/'+mxViews+' مشاهدة مستخدمة</div></div>';el.dataset.loaded='';return}}DB.logVideoView(lid,uid,App.user?App.user.name:'')};el.parentNode.replaceChild(v,el)}else{var ls=DB.lessons();var lx=ls.find(function(x){return x.id===lid});if(lx&&lx.videoUrl){var a=document.createElement('a');a.href=lx.videoUrl;a.target='_blank';a.style.cssText='width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.2rem;text-decoration:none;background:#000;position:absolute;inset:0;flex-direction:column;gap:6px';a.innerHTML='▶️ <span style="font-size:0.7rem;opacity:0.7">شاهد من الرابط</span>';a.onclick=function(e){e.stopPropagation();var lesson=DB.lessons().find(function(x){return x.id===lid});var mxViews=lesson?lesson.maxViews||0:0;var uid=App.user?App.user.id:'admin';if(mxViews>0&&uid!=='admin'&&App.user&&App.user.role!=='admin'){var cnt=DB.countViews(lid,uid);if(cnt>=mxViews){e.preventDefault();showToast('🚫 وصلت للحد الأقصى من المشاهدات ('+cnt+'/'+mxViews+')','error');return}}DB.logVideoView(lid,uid,App.user?App.user.name:'')};el.style.position='relative';el.appendChild(a)}else if(lx&&lx._hasVideo){el.innerHTML='<span style="color:var(--warning);font-size:0.75rem;text-align:center;padding:8px">⚠️ الفيديو محفوظ على جهاز آخر<br>استخدم رابط YouTube بديل</span>';el.style.cursor='default'}else{el.innerHTML='<span style="color:var(--text-muted);font-size:0.8rem">🎬 لا يوجد فيديو</span>';el.style.cursor='default'}}})})},100)}
 };
 function showToast(msg,type){
   type=type||'success';
@@ -1859,7 +1864,7 @@ const Admin={
       return '<div class="card lesson-card fade-in"><div class="lesson-thumb">'+(l.videoEmbed?'<span>🎬</span><div class="lesson-thumb-overlay"><button class="btn btn-sm btn-primary" onclick="Student.showLessonEmbed(\''+l.id+'\')">▶️ مشاهدة</button></div>':(l._hasVideo||l.videoData)?'<div class="video-placeholder" data-lesson-id="'+l.id+'" style="width:100%;height:100%;background:#000;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:1.5rem">🎬</div>':'<span>🎬</span><div class="lesson-thumb-overlay"><a href="'+Utils.escHtml(l.videoUrl||'#')+'" target="_blank" class="btn btn-sm btn-primary" onclick="DB.logVideoView(\''+l.id+'\',App.user?App.user.id:\'admin\',App.user?App.user.name:\'Admin\')">▶️ مشاهدة</a></div>')+'</div>'+
     '<div class="lesson-body"><div class="lesson-meta"><span class="badge badge-info">'+Utils.escHtml(l.grade)+'</span><span class="badge badge-accent">'+Utils.escHtml(l.track)+'</span><span class="badge badge-warning">'+Utils.escHtml(l.subject||'عام')+'</span></div>'+
     '<h3 class="lesson-title">'+Utils.escHtml(l.title)+'</h3><p class="lesson-desc">'+Utils.escHtml(l.description||'')+'</p>'+
-    '<div style="display:flex;gap:6px;flex-wrap:wrap;margin:8px 0"><span class="badge badge-info" style="font-size:0.72rem">👁️ '+viewCount+' مشاهدة</span><span class="badge badge-accent" style="font-size:0.72rem">🔑 '+usedCodes+'/'+codeCount+' كود</span></div>'+
+    '<div style="display:flex;gap:6px;flex-wrap:wrap;margin:8px 0"><span class="badge badge-info" style="font-size:0.72rem">👁️ '+viewCount+' مشاهدة</span>'+(l.maxViews>0?'<span class="badge badge-danger" style="font-size:0.72rem">🔢 '+l.maxViews+' حد مشاهدات</span>':'')+'<span class="badge badge-accent" style="font-size:0.72rem">🔑 '+usedCodes+'/'+codeCount+' كود</span></div>'+
     '<div class="lesson-footer"><span class="lesson-price">'+Utils.formatMoney(l.price)+'</span><div style="display:flex;gap:4px;flex-wrap:wrap"><button class="btn btn-sm btn-secondary" onclick="Admin.showLessonCodes(\''+l.id+'\')" title="إدارة الأكواد">🔑</button><button class="btn btn-sm btn-secondary" onclick="Admin.showUnlockForStudent(\''+l.id+'\')" title="فتح لطالب">🔓</button><button class="btn btn-sm btn-secondary" onclick="Admin.viewLessonViews(\''+l.id+'\')" title="المشاهدين">👁️</button><button class="btn btn-sm btn-secondary" onclick="Admin.editLesson(\''+l.id+'\')">✏️</button><button class="btn btn-sm btn-danger" onclick="Admin.deleteLesson(\''+l.id+'\')">🗑️</button></div></div></div></div>'}).join('')+
     '</div></div>';
   },
@@ -1874,7 +1879,8 @@ const Admin={
     '<div class="form-group"><label class="form-label">'+T('adminLessonTitleLabel')+'</label><input class="form-input" id="lTitle" required value="'+(isEdit?Utils.escHtml(lesson.title):'')+'"></div>'+
     '<div class="form-group"><label class="form-label">'+T('adminLessonDescLabel')+'</label><textarea class="form-textarea" id="lDesc">'+(isEdit?Utils.escHtml(lesson.description):'')+'</textarea></div>'+
     '<div class="form-row"><div class="form-group"><label class="form-label">'+T('adminLessonSubjectLabel')+'</label><select class="form-select" id="lSubject"><option value="">'+T('adminChooseSubject')+'</option>'+sOpts+'</select></div>'+
-    '<div class="form-group"><label class="form-label">'+T('adminLessonPriceLabel')+'</label><input class="form-input" type="number" id="lPrice" required min="0" value="'+(isEdit?lesson.price:0)+'"></div></div>'+
+    '<div class="form-row"><div class="form-group"><label class="form-label">'+T('adminLessonPriceLabel')+'</label><input class="form-input" type="number" id="lPrice" required min="0" value="'+(isEdit?lesson.price:0)+'"></div>'+
+    '<div class="form-group"><label class="form-label">حد المشاهدات لكل طالب (0=بلا حد)</label><input class="form-input" type="number" id="lMaxViews" min="0" value="'+(isEdit?(lesson.maxViews||0):0)+'" placeholder="0 = غير محدود"></div></div>'+
     '<div class="form-row"><div class="form-group"><label class="form-label">'+T('adminLessonGradeLabel')+'</label><select class="form-select" id="lGrade" required><option value="">'+T('adminChooseGrade')+'</option>'+gOpts+'</select></div>'+
     '<div class="form-group"><label class="form-label">'+T('adminLessonTrackLabel')+'</label><select class="form-select" id="lTrack" required><option value="">'+T('adminChooseTrack')+'</option>'+tOpts+'</select></div></div>'+
     '<div class="form-group"><label class="form-label">'+T('adminVideoUrl')+'</label><input class="form-input" id="lVideo" dir="ltr" placeholder="https://..." value="'+(isEdit?Utils.escHtml(lesson.videoUrl||''):'')+'"></div>'+
@@ -1908,7 +1914,7 @@ const Admin={
     var file=fileInput&&fileInput.files[0];
     var submitBtn=document.querySelector('#lessonModal form button[type="submit"]');
     var doSave=function(videoData){
-      var data={title:document.getElementById('lTitle').value.trim(),description:document.getElementById('lDesc').value.trim(),subject:document.getElementById('lSubject').value,price:parseInt(document.getElementById('lPrice').value)||0,grade:document.getElementById('lGrade').value,track:document.getElementById('lTrack').value,videoUrl:document.getElementById('lVideo').value.trim(),videoUrlAlt:document.getElementById('lVideoAlt').value.trim(),videoEmbed:document.getElementById('lVideoEmbed').value.trim()};
+      var data={title:document.getElementById('lTitle').value.trim(),description:document.getElementById('lDesc').value.trim(),subject:document.getElementById('lSubject').value,price:parseInt(document.getElementById('lPrice').value)||0,maxViews:parseInt(document.getElementById('lMaxViews').value)||0,grade:document.getElementById('lGrade').value,track:document.getElementById('lTrack').value,videoUrl:document.getElementById('lVideo').value.trim(),videoUrlAlt:document.getElementById('lVideoAlt').value.trim(),videoEmbed:document.getElementById('lVideoEmbed').value.trim()};
       if(videoData)data.videoData=videoData;
       var codesEl=document.getElementById('lCodes');
       if(codesEl){
@@ -2018,14 +2024,19 @@ const Admin={
   },
   viewLessonViews:function(lessonId){
     var l=DB.lessons().find(function(x){return x.id===lessonId});if(!l)return;
-    var views=DB.videoViews().filter(function(v){return v.lessonId===lessonId});
+    var allViews=DB.videoViews().filter(function(v){return v.lessonId===lessonId});
+    var byStudent={};allViews.forEach(function(v){if(!byStudent[v.studentId])byStudent[v.studentId]={name:v.studentName,id:v.studentId,count:0,lastView:0};byStudent[v.studentId].count++;if(v.viewedAt>byStudent[v.studentId].lastView)byStudent[v.studentId].lastView=v.viewedAt});
+    var students=Object.values(byStudent).sort(function(a,b){return b.lastView-a.lastView});
+    var mxViews=l.maxViews||0;
     var html='<div class="modal-overlay" id="viewsModal" onclick="if(event.target===this)this.remove()"><div class="modal" style="max-width:500px"><button class="modal-close" onclick="document.getElementById(\'viewsModal\').remove()">✕</button>'+
     '<h3 class="modal-title">👁️ المشاهدين: '+Utils.escHtml(l.title)+'</h3>'+
-    '<p style="color:var(--text-muted);font-size:0.85rem;margin-bottom:16px">'+views.length+' مشاهدة فريدة</p>'+
-    (views.length>0?'<div style="max-height:400px;overflow-y:auto">'+views.map(function(v){
+    '<p style="color:var(--text-muted);font-size:0.85rem;margin-bottom:16px">'+allViews.length+' مشاهدة إجمالية — '+students.length+' طالب'+(mxViews>0?' — الحد: '+mxViews+' لكل طالب':'')+'</p>'+
+    (students.length>0?'<div style="max-height:400px;overflow-y:auto">'+students.map(function(s){
+      var atLimit=mxViews>0&&s.count>=mxViews;
       return '<div style="display:flex;align-items:center;gap:12px;padding:10px 12px;border-bottom:1px solid var(--glass-border)">'+
-      '<div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:0.8rem;color:var(--bg-primary);font-weight:800;flex-shrink:0">'+Utils.escHtml((v.studentName||'?').charAt(0))+'</div>'+
-      '<div style="flex:1"><div style="font-weight:600;font-size:0.88rem">'+Utils.escHtml(v.studentName||'غير معروف')+'</div><div style="font-size:0.72rem;color:var(--text-muted)">'+Utils.timeAgo(v.viewedAt)+'</div></div></div>'}).join('')+'</div>':
+      '<div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,'+(atLimit?'#ff4757':'var(--accent)')+','+(atLimit?'#ff6b81':'var(--accent2)')+');display:flex;align-items:center;justify-content:center;font-size:0.8rem;color:var(--bg-primary);font-weight:800;flex-shrink:0">'+Utils.escHtml((s.name||'?').charAt(0))+'</div>'+
+      '<div style="flex:1"><div style="font-weight:600;font-size:0.88rem">'+Utils.escHtml(s.name||'غير معروف')+'</div><div style="font-size:0.72rem;color:var(--text-muted)">'+Utils.timeAgo(s.lastView)+'</div></div>'+
+      '<div style="font-size:0.8rem;font-weight:700;color:'+(atLimit?'#ff4757':'var(--accent)')+'">'+s.count+(mxViews>0?'/'+mxViews:'')+(atLimit?' 🚫':'')+'</div></div>'}).join('')+'</div>':
     '<p style="text-align:center;color:var(--text-muted);padding:30px">لم يشاهد أحد هذا الدرس بعد</p>')+
     '</div></div>';
     document.body.insertAdjacentHTML('beforeend',html);
@@ -2560,10 +2571,11 @@ const Student={
     (notifs.length>0?'<div class="card" style="margin-bottom:20px"><h3 class="card-title" style="margin-bottom:14px">📢 '+Lang.t('notificationsTitle')+'</h3>'+
     notifs.map(function(n){return '<div style="padding:10px 0;border-bottom:1px solid var(--glass-border)"><div style="font-weight:700;font-size:0.9rem">'+Utils.escHtml(n.title)+'</div><div style="color:var(--text-secondary);font-size:0.85rem">'+Utils.escHtml(n.message)+'</div><div style="color:var(--text-muted);font-size:0.72rem;margin-top:4px">'+Utils.timeAgo(n.date)+'</div></div>'}).join('')+'</div>':'')+
     (lessons.length>0?'<h3 class="card-title" style="margin-bottom:14px">🎬 '+Lang.t('availableLessons')+'</h3><div class="content-grid">'+
-    lessons.slice(0,4).map(function(l){var unlocked=userUnlocks.includes(l.id);
-      return '<div class="card lesson-card fade-in"><div class="lesson-thumb">'+(unlocked&&l.videoEmbed?'<span>🎬</span><div class="lesson-thumb-overlay"><button class="btn btn-sm btn-primary" onclick="Student.showLessonEmbed(\''+l.id+'\')">▶️ '+Lang.t('watchBtn')+'</button></div>':unlocked&&(l._hasVideo||l.videoData)?'<div class="video-placeholder" data-lesson-id="'+l.id+'" style="width:100%;height:100%;background:#000;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:1.5rem">🎬</div>':'<span>🎬</span><div class="lesson-thumb-overlay">'+(unlocked?'<a href="'+Utils.escHtml(l.videoUrl||'#')+'" target="_blank" class="btn btn-sm btn-primary" onclick="DB.logVideoView(\''+l.id+'\',App.user?App.user.id:\'\',App.user?App.user.name:\'\')">▶️ '+Lang.t('watchBtn')+'</a>':'<span class="badge badge-warning">🔒 '+Lang.t('locked')+'</span>')+'</div>')+'</div>'+
+    lessons.slice(0,4).map(function(l){var unlocked=userUnlocks.includes(l.id);var viewCnt=l.maxViews>0?DB.countViews(l.id,u.id):0;var viewsLeft=l.maxViews>0?Math.max(0,l.maxViews-viewCnt):0;var noViewsLeft=l.maxViews>0&&viewsLeft<=0;
+      return '<div class="card lesson-card fade-in"><div class="lesson-thumb">'+(unlocked&&l.videoEmbed?'<span>🎬</span><div class="lesson-thumb-overlay">'+(noViewsLeft?'<span style="color:#ff4757;font-size:0.8rem">🚫 انتهت المشاهدات</span>':'<button class="btn btn-sm btn-primary" onclick="Student.showLessonEmbed(\''+l.id+'\')">▶️ '+Lang.t('watchBtn')+'</button>')+'</div>':unlocked&&(l._hasVideo||l.videoData)?'<div class="video-placeholder" data-lesson-id="'+l.id+'" style="width:100%;height:100%;background:#000;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:1.5rem">🎬</div>':'<span>🎬</span><div class="lesson-thumb-overlay">'+(unlocked?(noViewsLeft?'<span style="color:#ff4757;font-size:0.8rem">🚫 انتهت المشاهدات</span>':'<a href="'+Utils.escHtml(l.videoUrl||'#')+'" target="_blank" class="btn btn-sm btn-primary" onclick="DB.logVideoView(\''+l.id+'\',App.user?App.user.id:\'\',App.user?App.user.name:\'\')">▶️ '+Lang.t('watchBtn')+'</a>'):'<span class="badge badge-warning">🔒 '+Lang.t('locked')+'</span>')+'</div>')+'</div>'+
       '<div class="lesson-body"><div class="lesson-meta"><span class="badge badge-warning">'+Utils.escHtml(l.subject||'عام')+'</span></div><h3 class="lesson-title">'+Utils.escHtml(l.title)+'</h3>'+
-      '<div class="lesson-footer"><span class="lesson-price">'+Utils.formatMoney(l.price)+'</span>'+(unlocked?'<span class="badge badge-accent">✅ '+Lang.t('opened')+'</span>':
+      (l.maxViews>0?'<div style="font-size:0.78rem;color:'+(noViewsLeft?'#ff4757':'var(--text-muted)')+';margin:4px 0">👁️ '+viewCnt+'/'+l.maxViews+' مشاهدة'+(noViewsLeft?' — انتهت المشاهدات!':' — متبقي '+viewsLeft)+'</div>':'')+
+      '<div class="lesson-footer"><span class="lesson-price">'+Utils.formatMoney(l.price)+'</span>'+(unlocked?(noViewsLeft?'<span class="badge badge-danger">🚫 انتهت المشاهدات</span>':'<span class="badge badge-accent">✅ '+Lang.t('opened')+'</span>'):
       '<div style="display:flex;flex-direction:column;gap:6px;width:100%"><div style="display:flex;gap:6px"><button class="btn btn-sm btn-primary" onclick="Student.unlockLesson(\''+l.id+'\')" style="flex:1">🔓 '+Utils.formatMoney(l.price)+'</button>'+
       ((l.codes&&l.codes.length>0)?'<div style="display:flex;gap:4px;flex:1"><input class="form-input" id="oc_'+l.id+'" placeholder="الكود" style="font-size:0.7rem;padding:5px 6px;flex:1" dir="ltr"><button class="btn btn-sm btn-accent" onclick="Student.unlockByCodeOC(\''+l.id+'\')" style="font-size:0.7rem;padding:5px 8px">🔑</button></div>':'')+
       '</div>')+ '</div></div></div>'}).join('')+'</div>':'')+'</div>';
@@ -2574,12 +2586,13 @@ const Student={
     return '<div class="fade-in"><div class="page-header"><h1 class="page-title">'+Lang.t('lessonsTitle')+'</h1><p class="page-subtitle">'+lessons.length+' '+Lang.t('lessonsSub')+'</p></div>'+
     '<div class="content-grid">'+
     (lessons.length===0?'<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">🎬</div><p>'+Lang.t('noLessons')+'</p></div>':'')+
-    lessons.map(function(l){var unlocked=userUnlocks.includes(l.id);
-      return '<div class="card lesson-card fade-in"><div class="lesson-thumb">'+(unlocked&&l.videoEmbed?'<span>🎬</span><div class="lesson-thumb-overlay"><button class="btn btn-sm btn-primary" onclick="Student.showLessonEmbed(\''+l.id+'\')">▶️ '+Lang.t('watchBtn')+'</button></div>':unlocked&&(l._hasVideo||l.videoData)?'<div class="video-placeholder" data-lesson-id="'+l.id+'" style="width:100%;height:100%;background:#000;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:1.5rem">🎬</div>':'<span>🎬</span><div class="lesson-thumb-overlay">'+(unlocked?'<a href="'+Utils.escHtml(l.videoUrl||'#')+'" target="_blank" class="btn btn-sm btn-primary" onclick="DB.logVideoView(\''+l.id+'\',App.user?App.user.id:\'\',App.user?App.user.name:\'\')">▶️ '+Lang.t('watchBtn')+'</a>':'<span class="badge badge-warning">🔒 '+Lang.t('locked')+'</span>')+'</div>')+'</div>'+
+    lessons.map(function(l){var unlocked=userUnlocks.includes(l.id);var viewCnt=l.maxViews>0?DB.countViews(l.id,u.id):0;var viewsLeft=l.maxViews>0?Math.max(0,l.maxViews-viewCnt):0;var noViewsLeft=l.maxViews>0&&viewsLeft<=0;
+      return '<div class="card lesson-card fade-in"><div class="lesson-thumb">'+(unlocked&&l.videoEmbed?'<span>🎬</span><div class="lesson-thumb-overlay">'+(noViewsLeft?'<span style="color:#ff4757;font-size:0.8rem">🚫 انتهت المشاهدات</span>':'<button class="btn btn-sm btn-primary" onclick="Student.showLessonEmbed(\''+l.id+'\')">▶️ '+Lang.t('watchBtn')+'</button>')+'</div>':unlocked&&(l._hasVideo||l.videoData)?'<div class="video-placeholder" data-lesson-id="'+l.id+'" style="width:100%;height:100%;background:#000;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:1.5rem">🎬</div>':'<span>🎬</span><div class="lesson-thumb-overlay">'+(unlocked?(noViewsLeft?'<span style="color:#ff4757;font-size:0.8rem">🚫 انتهت المشاهدات</span>':'<a href="'+Utils.escHtml(l.videoUrl||'#')+'" target="_blank" class="btn btn-sm btn-primary" onclick="DB.logVideoView(\''+l.id+'\',App.user?App.user.id:\'\',App.user?App.user.name:\'\')">▶️ '+Lang.t('watchBtn')+'</a>'):'<span class="badge badge-warning">🔒 '+Lang.t('locked')+'</span>')+'</div>')+'</div>'+
       '<div class="lesson-body"><div class="lesson-meta"><span class="badge badge-info">'+Utils.escHtml(l.grade)+'</span><span class="badge badge-accent">'+Utils.escHtml(l.track)+'</span><span class="badge badge-warning">'+Utils.escHtml(l.subject||'عام')+'</span></div>'+
       '<h3 class="lesson-title">'+Utils.escHtml(l.title)+'</h3><p class="lesson-desc">'+Utils.escHtml(l.description||'')+'</p>'+
+      (l.maxViews>0?'<div style="font-size:0.78rem;color:'+(noViewsLeft?'#ff4757':'var(--text-muted)')+';margin:4px 0">👁️ '+viewCnt+'/'+l.maxViews+' مشاهدة'+(noViewsLeft?' — انتهت المشاهدات!':' — متبقي '+viewsLeft)+'</div>':'')+
       '<div class="lesson-footer"><span class="lesson-price">'+Utils.formatMoney(l.price)+'</span>'+
-      (unlocked?'<span class="badge badge-accent">✅ '+Lang.t('opened')+'</span>':
+      (unlocked?(noViewsLeft?'<span class="badge badge-danger">🚫 انتهت المشاهدات</span>':'<span class="badge badge-accent">✅ '+Lang.t('opened')+'</span>'):
       '<div style="display:flex;flex-direction:column;gap:6px;width:100%"><div style="display:flex;gap:6px"><button class="btn btn-sm btn-primary" onclick="Student.unlockLesson(\''+l.id+'\')" style="flex:1">🔓 '+Utils.formatMoney(l.price)+'</button>'+
       ((l.codes&&l.codes.length>0)?'<div style="display:flex;gap:4px;flex:1"><input class="form-input" id="code_'+l.id+'" placeholder="أدخل الكود" style="font-size:0.75rem;padding:6px 8px;flex:1" dir="ltr"><button class="btn btn-sm btn-accent" onclick="Student.unlockByCode(\''+l.id+'\')" style="font-size:0.7rem;padding:6px 10px">🔑</button></div>':'')+
       '</div>')+'</div>'+
@@ -2650,7 +2663,11 @@ const Student={
   },
   showLessonEmbed:function(lessonId){
     var l=DB.lessons().find(function(x){return x.id===lessonId});if(!l||!l.videoEmbed)return;
-    if(App.user&&App.user.role!=='admin')DB.logVideoView(lessonId,App.user.id,App.user.name);
+    if(App.user&&App.user.role!=='admin'){
+      var mxViews=l.maxViews||0;
+      if(mxViews>0){var cnt=DB.countViews(lessonId,App.user.id);if(cnt>=mxViews){showToast('🚫 وصلت للحد الأقصى من المشاهدات ('+cnt+'/'+mxViews+')','error');return}}
+      DB.logVideoView(lessonId,App.user.id,App.user.name);
+    }
     var div=document.createElement('div');
     div.id='embedModal';
     div.style.cssText='position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:9999;background:rgba(0,0,0,0.8)';
