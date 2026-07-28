@@ -1487,7 +1487,7 @@ const Landing={
     '<h2 class="section-title">'+T('aboutTitle')+' <span style="color:var(--accent)">'+T('aboutName')+'</span></h2>'+
     '<div style="display:flex;align-items:center;gap:40px;flex-wrap:wrap;margin-top:32px;padding:32px;border-radius:var(--radius);background:var(--glass);backdrop-filter:blur(20px);border:1px solid var(--glass-border);box-shadow:var(--shadow);transition:var(--transition)" onmouseover="this.style.borderColor=\'rgba(0,245,212,0.3)\';this.style.boxShadow=\'var(--shadow-lg), 0 0 40px rgba(0,245,212,0.1)\'" onmouseout="this.style.borderColor=\'var(--glass-border)\';this.style.boxShadow=\'var(--shadow)\'">'+
     '<div style="width:160px;height:160px;border-radius:50%;border:3px solid var(--accent);overflow:hidden;flex-shrink:0;box-shadow:0 0 40px rgba(0,245,212,0.2);position:relative">'+
-    '<img src="Meet.jpeg" alt="'+T('aboutName')+'" style="width:100%;height:100%;object-fit:cover" />'+
+    '<img src="https://i.ibb.co/cX1T5Bgy/Whats-App-Image-2026-07-28-at-16-31-52.jpg" alt="'+T('aboutName')+'" style="width:100%;height:100%;object-fit:cover" />'+
     '<div style="position:absolute;bottom:0;left:0;right:0;height:4px;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:2px"></div>'+
     '</div>'+
     '<div style="flex:1;min-width:220px;text-align:right">'+
@@ -1540,7 +1540,7 @@ const Auth={
       '</div>'}).join('')+'</div>';
     }
     return '<div class="auth-page"><div class="auth-container fade-in"><div class="card auth-card">'+
-    '<div class="auth-logo"><div class="auth-logo-icon"><img src="logo.jpeg" alt="Logo"></div><h2 class="auth-title">'+T('loginTitle')+'</h2><p class="auth-subtitle">'+T('loginWelcome')+'</p></div>'+
+    '<div class="auth-logo"><div class="auth-logo-icon"><img src="https://i.ibb.co/qMbk8PJT/Whats-App-Image-2026-07-28-at-16-32-06.jpg" alt="Logo"></div><h2 class="auth-title">'+T('loginTitle')+'</h2><p class="auth-subtitle">'+T('loginWelcome')+'</p></div>'+
     accountsHtml+
     '<form onsubmit="Auth.handleLogin(event)">'+
     '<div class="form-group"><label class="form-label">'+T('loginEmail')+'</label><input class="form-input" type="email" id="loginEmail" required placeholder="example@email.com" dir="ltr" value="'+Utils.escHtml(last.email)+'"></div>'+
@@ -1561,7 +1561,7 @@ const Auth={
     var gOpts=GRADES.map(function(g){return '<option value="'+g+'">'+g+'</option>'}).join('');
     var tOpts=TRACKS.map(function(t){return '<option value="'+t+'">'+t+'</option>'}).join('');
     return '<div class="auth-page"><div class="auth-container fade-in" style="max-width:640px"><div class="card auth-card">'+
-    '<div class="auth-logo"><div class="auth-logo-icon"><img src="logo.jpeg" alt="Logo"></div><h2 class="auth-title">'+T('signupTitle')+'</h2><p class="auth-subtitle">'+T('signupWelcome')+'</p></div>'+
+    '<div class="auth-logo"><div class="auth-logo-icon"><img src="https://i.ibb.co/qMbk8PJT/Whats-App-Image-2026-07-28-at-16-32-06.jpg" alt="Logo"></div><h2 class="auth-title">'+T('signupTitle')+'</h2><p class="auth-subtitle">'+T('signupWelcome')+'</p></div>'+
     '<form id="signupForm" onsubmit="Auth.handleSignup(event)">'+
     '<h3 style="font-size:0.92rem;color:var(--accent);margin-bottom:14px;border-bottom:1px solid var(--glass-border);padding-bottom:8px">'+T('signupStudentData')+'</h3>'+
     '<div class="form-group"><label class="form-label">'+T('signupFullName')+'</label><input class="form-input" type="text" id="sName" required placeholder="'+T('signupNamePlaceholder')+'"></div>'+
@@ -1696,7 +1696,7 @@ const Admin={
       {id:'aibot',icon:'🤖',label:Lang.t('adminAI')},
       {id:'settings',icon:'⚙️',label:Lang.t('settingsTitle')}
     ];
-    return '<div class="sidebar" id="adminSidebar"><button class="mobile-sidebar-close" onclick="App.toggleSidebar()">✕</button><div class="mobile-sidebar-header"><div class="sidebar-avatar" style="overflow:hidden"><img src="logo.jpeg" alt="Logo" style="width:100%;height:100%;object-fit:cover"></div><div class="sidebar-name">'+Utils.escHtml(App.user?App.user.name:'Admin')+'</div><div class="sidebar-role">'+T('sidebarAdminPlatform')+'</div></div><div class="sidebar-section">'+T('sidebarAdminLouhati')+'</div>'+
+    return '<div class="sidebar" id="adminSidebar"><button class="mobile-sidebar-close" onclick="App.toggleSidebar()">✕</button><div class="mobile-sidebar-header"><div class="sidebar-avatar" style="overflow:hidden"><img src="https://i.ibb.co/qMbk8PJT/Whats-App-Image-2026-07-28-at-16-32-06.jpg" alt="Logo" style="width:100%;height:100%;object-fit:cover"></div><div class="sidebar-name">'+Utils.escHtml(App.user?App.user.name:'Admin')+'</div><div class="sidebar-role">'+T('sidebarAdminPlatform')+'</div></div><div class="sidebar-section">'+T('sidebarAdminLouhati')+'</div>'+
     links.map(function(l){return '<button class="sidebar-link '+(s===l.id||(!s&&l.id==='overview')?'active':'')+'" onclick="Admin.switchSection(\''+l.id+'\')"><span class="link-icon">'+l.icon+'</span><span>'+l.label+'</span></button>'}).join('')+
     '</div>';
   },
@@ -2514,7 +2514,7 @@ const Student={
   renderSidebar:function(){
     var s=App.currentSubView;
     var links=[{id:'overview',icon:'🏠',label:Lang.t('navHome')},{id:'lessons',icon:'🎬',label:Lang.t('adminLessons')},{id:'wallet',icon:'💰',label:Lang.t('walletPageTitle')},{id:'exams',icon:'📝',label:Lang.t('examTitle')},{id:'homework',icon:'📚',label:Lang.t('hwTitle')},{id:'files',icon:'📁',label:Lang.t('filesTitle')},{id:'reports',icon:'📊',label:Lang.t('reportsTitle')},{id:'badges',icon:'🏆',label:Lang.t('badgesTitle')},{id:'profile',icon:'👤',label:Lang.t('profilePageTitle')},{id:'parent',icon:'👨‍👩‍👦',label:Lang.t('parentTitle')},{id:'aibot',icon:'🤖',label:Lang.t('aiTitle')},{id:'game',icon:'🎮',label:Lang.t('gameTitle')}];
-    return '<div class="sidebar" id="studentSidebar"><button class="mobile-sidebar-close" onclick="App.toggleSidebar()">✕</button><div class="mobile-sidebar-header"><div class="sidebar-avatar" style="overflow:hidden"><img src="logo.jpeg" alt="Logo" style="width:100%;height:100%;object-fit:cover"></div><div class="sidebar-name">'+Utils.escHtml(App.user?App.user.name:'Student')+'</div><div class="sidebar-role">'+Utils.escHtml((App.user?App.user.grade:'')+' — '+(App.user?App.user.track:''))+'</div></div><div class="sidebar-section">'+Lang.t('sidebarLouhati')+'</div>'+
+    return '<div class="sidebar" id="studentSidebar"><button class="mobile-sidebar-close" onclick="App.toggleSidebar()">✕</button><div class="mobile-sidebar-header"><div class="sidebar-avatar" style="overflow:hidden"><img src="https://i.ibb.co/qMbk8PJT/Whats-App-Image-2026-07-28-at-16-32-06.jpg" alt="Logo" style="width:100%;height:100%;object-fit:cover"></div><div class="sidebar-name">'+Utils.escHtml(App.user?App.user.name:'Student')+'</div><div class="sidebar-role">'+Utils.escHtml((App.user?App.user.grade:'')+' — '+(App.user?App.user.track:''))+'</div></div><div class="sidebar-section">'+Lang.t('sidebarLouhati')+'</div>'+
     links.map(function(l){return '<button class="sidebar-link '+(s===l.id||(!s&&l.id==='overview')?'active':'')+'" onclick="Student.switchSection(\''+l.id+'\')"><span class="link-icon">'+l.icon+'</span><span>'+l.label+'</span></button>'}).join('')+'</div>';
   },
   switchSection:function(sub){App.currentSubView=sub;App.currentView='student';var content=document.getElementById('studentContent');if(content){content.innerHTML=Student.renderSection();Student.init();Utils.loadVideos()}document.querySelectorAll('#studentSidebar .sidebar-link').forEach(function(b){b.classList.remove('active')});var idx=['overview','lessons','wallet','exams','homework','files','reports','badges','profile','parent','aibot','game'].indexOf(sub);var btns=document.querySelectorAll('#studentSidebar .sidebar-link');if(idx>=0&&btns[idx])btns[idx].classList.add('active')},
