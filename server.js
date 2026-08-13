@@ -20,6 +20,7 @@ app.use(express.json({ limit: '10mb' }));
 
 const OPENROUTER_KEY = process.env.OPENROUTER_API_KEY || '';
 const OPENROUTER_MODEL = process.env.OPENROUTER_MODEL || 'liquid/lfm-2.5-2.6b:free';
+const GAME_MODEL = process.env.OPENROUTER_GAME_MODEL || 'nvidia/nemotron-nano-9b-v2:free';
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
 const MODEL_FALLBACKS = (process.env.OPENROUTER_FALLBACKS || '').split(',').map(function(s){return s.trim()}).filter(Boolean);
 
@@ -50,7 +51,7 @@ function openRouterRequest(model, messages, opts) {
 
 // Try primary model with retries, then fallback models. Returns {data} or {status, error}.
 function callOpenRouter(messages, opts, callback) {
-  const models = [OPENROUTER_MODEL].concat(MODEL_FALLBACKS);
+  const models = [opts.primaryModel || OPENROUTER_MODEL].concat(MODEL_FALLBACKS);
   const retryStatus = [429, 408, 500, 502, 503, 504, 520, 529];
   const delays = [800, 2000, 5000];
   var attempt = 0;
@@ -173,7 +174,7 @@ For "order" type, each item: {"q":"Arrange these in order","items":["item1","ite
 
 Topics: biology, physics, chemistry, environmental science, earth science.
 Make questions educational and age-appropriate for ${grade}.`;
-  callOpenRouter([{ role: 'user', content: prompt }], { temperature: 0.8, maxTokens: 4096 }, function(data, err) {
+  callOpenRouter([{ role: 'user', content: prompt }], { primaryModel: GAME_MODEL, temperature: 0.8, maxTokens: 4096 }, function(data, err) {
     if (err) {
       res.status(err.status || 500).json({ error: err.error || { message: 'OpenRouter error' } });
       return;
