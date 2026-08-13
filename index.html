@@ -3545,7 +3545,8 @@ function reportScreenshot(reason){
   window._showBlock=showBlock;window._hideBlock=hideBlock;
 
   document.addEventListener('contextmenu',function(e){
-    if(e.target.tagName!=='INPUT'&&e.target.tagName!=='TEXTAREA'&&e.target.tagName!=='SELECT'){e.preventDefault();return false}
+    var t=e.target.tagName;
+    if(t==='IMG'||t==='VIDEO'||t==='CANVAS'){e.preventDefault();return false}
   });
   document.addEventListener('keydown',function(e){
     if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA'||e.target.tagName==='SELECT')return;
@@ -3560,28 +3561,12 @@ function reportScreenshot(reason){
     if(e.ctrlKey&&(k==='s')){e.preventDefault();return false}
     if(e.altKey&&k==='printscreen'){e.preventDefault();showBlock();reportScreenshot('Alt+PrintScreen');showToast('⚠️ تم تسجيل محاولة لقطة شاشة','error');return false}
     if(e.metaKey&&(k==='shift'||k==='4'||k==='5'||k==='3')){e.preventDefault();showBlock();reportScreenshot('Mac screenshot shortcut');showToast('⚠️ تم تسجيل محاولة لقطة شاشة','error');return false}
-    if(e.ctrlKey&&(k==='c'||k==='x')){e.preventDefault();reportScreenshot('Copy/Cut attempt');showToast('⚠️ النسخ غير مسموح','error');return false}
   });
   document.addEventListener('keyup',function(e){
     if(e.key==='PrintScreen'&&App.user&&App.user.role!=='admin'){showBlock();reportScreenshot('PrintScreen keyup');showToast('⚠️ تم تسجيل محاولة لقطة شاشة','error')}
   });
   document.addEventListener('copy',function(e){
-    if(!App.user||App.user.role==='admin')return;
-    e.preventDefault();reportScreenshot('Clipboard copy');showToast('⚠️ النسخ غير مسموح','error');return false;
-  });
-  document.addEventListener('cut',function(e){
-    if(!App.user||App.user.role==='admin')return;
-    e.preventDefault();reportScreenshot('Clipboard cut');showToast('⚠️ القص غير مسموح','error');return false;
-  });
-  document.addEventListener('paste',function(e){
-    if(!App.user||App.user.role==='admin')return;
-    e.preventDefault();return false;
-  });
-  document.addEventListener('selectstart',function(e){
-    if(!App.user||App.user.role==='admin')return;
-    if(e.target.tagName!=='INPUT'&&e.target.tagName!=='TEXTAREA'&&e.target.tagName!=='SELECT'){
-      e.preventDefault();return false;
-    }
+    if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA')return;
   });
   document.addEventListener('dragstart',function(e){
     if(e.target.tagName==='IMG'||e.target.tagName==='VIDEO'){e.preventDefault();return false}
@@ -3644,15 +3629,8 @@ function reportScreenshot(reason){
       }
     });
     if(navigator.clipboard&&navigator.clipboard.writeText){
-      var origWrite=navigator.clipboard.writeText.bind(navigator.clipboard);
-      window.__origClipboardWrite=origWrite;
-      navigator.clipboard.writeText=function(){reportScreenshot('Clipboard write attempt');return Promise.reject(new DOMException('Clipboard write blocked','NotAllowedError'))};
+      window.__origClipboardWrite=navigator.clipboard.writeText.bind(navigator.clipboard);
     }
-    var origExec=document.execCommand;
-    document.execCommand=function(cmd){
-      if(cmd==='copy'||cmd==='cut'){reportScreenshot('execCommand '+cmd);return false}
-      return origExec.apply(document,arguments);
-    };
   }
 })();
 document.addEventListener('DOMContentLoaded',function(){App.init()});
