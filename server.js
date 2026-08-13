@@ -31,6 +31,8 @@ function openRouterRequest(model, messages, opts) {
     max_tokens: opts.maxTokens || 2048,
     temperature: opts.temperature != null ? opts.temperature : 0.7
   };
+  const controller = new AbortController();
+  const timer = setTimeout(function(){ controller.abort(); }, 30000);
   return fetch(OPENROUTER_URL, {
     method: 'POST',
     headers: {
@@ -39,13 +41,18 @@ function openRouterRequest(model, messages, opts) {
       'HTTP-Referer': 'https://dr-momen-yosri.vercel.app',
       'X-Title': 'Dr. Momen Yosri Science Platform'
     },
-    body: JSON.stringify(body)
+    body: JSON.stringify(body),
+    signal: controller.signal
   }).then(function(r){
     return r.text().then(function(t){return {ok:r.ok,status:r.status,text:t}});
   }).then(function(result){
+    clearTimeout(timer);
     var err = null;
     try { err = JSON.parse(result.text).error; } catch (e) {}
     return { ok: result.ok, status: result.status, text: result.text, error: err };
+  }).catch(function(e){
+    clearTimeout(timer);
+    return { ok: false, status: 0, text: '', error: { message: 'request failed: ' + e.message } };
   });
 }
 
