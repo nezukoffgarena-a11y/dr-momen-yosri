@@ -227,6 +227,7 @@ tr:hover td{background:rgba(200,162,78,0.03)}
 .sidebar-link.active{color:var(--accent);background:linear-gradient(90deg,transparent,rgba(200,162,78,0.08));border-right:3px solid var(--accent)}
 .sidebar-link .link-icon{font-size:1.15rem;width:24px;text-align:center;transition:var(--transition)}
 .sidebar-link:hover .link-icon{transform:scale(1.15)}
+.admin-pending-badge{margin-inline-start:auto;background:var(--accent);color:#fff;font-size:0.7rem;font-weight:700;border-radius:10px;padding:1px 7px;min-width:20px;text-align:center}
 .sidebar-section{padding:8px 24px;font-size:0.7rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:2px;margin-top:16px;font-family:var(--font-mono)}
 .main-content{margin-right:260px;flex:1;padding:28px;min-height:calc(100vh - 68px);min-height:calc(100dvh - 68px)}
 .page-header{margin-bottom:28px;animation:slideUp 0.5s ease}
@@ -1084,6 +1085,14 @@ const DB={
   getUserById(id){return this.users().find(u=>u.id===id)},
   getUserByEmail(email){return this.users().find(u=>u.email===email)},
   addUser(user){const u=this.users();u.push(user);this.saveUsers(u)},
+  upsertUser(user){
+    if(!user||!user.id)return;
+    var idx=this.users().findIndex(function(x){return x.id===user.id||(user.email&&x.email===user.email)});
+    var u=this.users();
+    if(idx>=0)u[idx]=Object.assign({},u[idx],user);
+    else u.push(user);
+    this.saveUsers(u);
+  },
   updateUser(id,updates){
     this.saveUsers(this.users().map(function(u){return u.id===id?Object.assign({},u,updates):u}));
     var u=this.getUserById(id);if(u)FB_DB.ref('all_users/'+id).set(u).catch(function(){});
@@ -1099,6 +1108,7 @@ const DB={
     DB._pushing=true;
     var session=DB.session();
     if(!session||!session.email){DB._pushing=false;return}
+    var isAdmin=session.role==='admin';
     var emailKey=session.email.replace(/\./g,'_dot_');
     var shared={
       lessons:DB.lessons(),
@@ -1126,7 +1136,8 @@ const DB={
     var hasShared=Object.keys(shared).some(function(k){return Array.isArray(shared[k])&&shared[k].length>0});
     var hasPersonal=(personal.transactions.length||personal.examResults.length||personal.reports.length||Object.keys(unlocks).length||Object.keys(aiChats).length)>0;
     var writes=[];
-    if(hasShared)writes.push(FB_DB.ref('shared/data').set(shared));
+    if(hasShared&&isAdmin)writes.push(FB_DB.ref('shared/data').set(shared));
+    else if(hasShared)console.log('Firebase: skipped shared push (only admin writes shared data)');
     else console.log('Firebase: skipped empty shared push (protecting cloud data)');
     if(hasPersonal)writes.push(FB_DB.ref('users/'+emailKey).set(personal));
     Promise.all(writes).then(function(){DB._pushing=false}).catch(function(e){console.log('Firebase push error:',e);DB._pushing=false});
@@ -1157,14 +1168,26 @@ const DB={
         try{DB._set(k,data)}catch(e){console.error('sync write failed:',k,e)}
       });
       var emailKey=session.email.replace(/\./g,'_dot_');
-      return FB_DB.ref('all_users').once('value').then(function(allSnap){
-        var allData=allSnap.val()||{};
+      return Promise.all([
+        FB_DB.ref('all_users').once('value'),
+        FB_DB.ref('pending_users').once('value')
+      ]).then(function(alls){
+        var allData=alls[0].val()||{};
+        var penData=alls[1].val()||{};
         var merged=DB.users();
         var mById={};
         merged.forEach(function(u){if(u&&u.id)mById[u.id]=u});
         Object.keys(allData).forEach(function(id){
           var u=allData[id];
           if(u&&u.id)mById[u.id]=u;
+        });
+        Object.keys(penData).forEach(function(id){
+          var u=penData[id];
+          if(u&&u.id){
+            var lu=mById[u.id];
+            if(lu&&['approved','rejected','banned'].indexOf(lu.status)>=0)return;
+            mById[u.id]=u;
+          }
         });
         merged=Object.keys(mById).map(function(id){return mById[id]});
         try{DB._set('users',merged)}catch(e){}
@@ -1323,8 +1346,8 @@ const Notify={
   getReadIds:function(){try{return JSON.parse(localStorage.getItem(this._storageKey()))||[]}catch(e){return[]}},
   markRead:function(id){var ids=this.getReadIds();if(ids.indexOf(id)===-1){ids.push(id);localStorage.setItem(this._storageKey(),JSON.stringify(ids))}},
   markAllRead:function(){var notifs=DB.notifications();var ids=notifs.map(function(n){return n.id});localStorage.setItem(this._storageKey(),JSON.stringify(ids))},
-  unreadCount:function(){var ids=this.getReadIds();var u=App.user;var all=DB.notifications();var filtered=u&&u.role!=='admin'?all.filter(function(n){return !n.studentId||n.studentId===u.id}):all;return filtered.filter(function(n){return ids.indexOf(n.id)===-1}).length},
-  add:function(type,title,msg,studentId){var notifs=DB.notifications();var n={id:Utils.uid(),type:type,title:title,message:msg,date:Date.now()};if(studentId)n.studentId=studentId;notifs.push(n);DB.saveNotifications(notifs);if(navigator.vibrate)navigator.vibrate(200);this.renderBell()},
+  unreadCount:function(){var ids=this.getReadIds();var u=App.user;var all=DB.notifications();var filtered=u&&u.role!=='admin'?all.filter(function(n){return (!n.studentId||n.studentId===u.id)&&!n.adminOnly}):all;return filtered.filter(function(n){return ids.indexOf(n.id)===-1}).length},
+  add:function(type,title,msg,studentId,adminOnly,extra){var notifs=DB.notifications();var n={id:Utils.uid(),type:type,title:title,message:msg,date:Date.now()};if(studentId)n.studentId=studentId;if(adminOnly)n.adminOnly=true;if(extra)for(var k in extra){n[k]=extra[k]}notifs.push(n);DB.saveNotifications(notifs);if(navigator.vibrate)navigator.vibrate(200);this.renderBell()},
   renderBell:function(){
     var c=document.getElementById('notifBellContainer');if(!c)return;
     var count=this.unreadCount();
@@ -1342,13 +1365,25 @@ const Notify={
     var allNotifs=DB.notifications().slice().reverse();
     var ids=this.getReadIds();
     var u=App.user;
-    var notifs=u&&u.role!=='admin'?allNotifs.filter(function(n){return !n.studentId||n.studentId===u.id}):allNotifs;
+    var notifs=u&&u.role!=='admin'?allNotifs.filter(function(n){return (!n.studentId||n.studentId===u.id)&&!n.adminOnly}):allNotifs;
     var html='<div class="notif-dropdown-header"><h4>🔔 '+('الإشعارات')+'</h4>';
     html+='<button onclick="Notify.markAllRead();Notify.renderBell();Notify.renderPanel()" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:0.75rem">'+('تحديد الكل كمقروء')+'</button></div>';
     html+='<div class="notif-dropdown-body">';
     if(notifs.length===0){html+='<div class="notif-empty">لا توجد إشعارات بعد</div>'}
-    else{for(var i=0;i<notifs.length;i++){var n=notifs[i];var isUnread=ids.indexOf(n.id)===-1;var icon=n.type==='lesson'?'📚':n.type==='exam'?'📝':n.type==='homework'?'📋':n.type==='file'?'📁':'📢';var q="'";html+='<div class="notif-item'+(isUnread?' unread':'')+'" onclick="Notify.markRead('+q+n.id+q+');Notify.renderBell();Notify.renderPanel()"><div class="notif-item-icon">'+icon+'</div><div class="notif-item-body"><div class="notif-item-title">'+Utils.escHtml(n.title)+'</div><div class="notif-item-msg">'+Utils.escHtml(n.message)+'</div><div class="notif-item-time">'+Utils.timeAgo(n.date)+'</div></div></div>'}}
+    else{for(var i=0;i<notifs.length;i++){var n=notifs[i];var isUnread=ids.indexOf(n.id)===-1;var icon=n.needApproval?'📝':n.type==='lesson'?'📚':n.type==='exam'?'📝':n.type==='homework'?'📋':n.type==='file'?'📁':'📢';var q="'";html+='<div class="notif-item'+(isUnread?' unread':'')+'" onclick="Notify.markRead('+q+n.id+q+');Notify.renderBell();Notify.renderPanel()"><div class="notif-item-icon">'+icon+'</div><div class="notif-item-body"><div class="notif-item-title">'+Utils.escHtml(n.title)+'</div><div class="notif-item-msg">'+Utils.escHtml(n.message)+'</div>'+(n.needApproval?'<div style="display:flex;gap:6px;margin-top:8px"><button class="btn btn-sm btn-primary" onclick="event.stopPropagation();Notify.approvePending('+q+n.id+q+')">✅ قبول</button><button class="btn btn-sm btn-danger" onclick="event.stopPropagation();Notify.rejectPending('+q+n.id+q+')">❌ رفض</button></div>':'')+'<div class="notif-item-time">'+Utils.timeAgo(n.date)+'</div></div></div>'}}
     html+='</div>';p.innerHTML=html;
+  },
+  approvePending:function(notifId){
+    var n=DB.notifications().find(function(x){return x.id===notifId});
+    if(n&&n.studentId){Admin.approveStudent(n.studentId)}
+    DB.saveNotifications(DB.notifications().filter(function(x){return x.id!==notifId}));
+    this.renderBell();this.renderPanel();
+  },
+  rejectPending:function(notifId){
+    var n=DB.notifications().find(function(x){return x.id===notifId});
+    if(n&&n.studentId){Admin.rejectStudent(n.studentId)}
+    DB.saveNotifications(DB.notifications().filter(function(x){return x.id!==notifId}));
+    this.renderBell();this.renderPanel();
   }
 };
 document.addEventListener('click',function(){document.querySelectorAll('.notif-dropdown.show').forEach(function(el){el.classList.remove('show')})});
@@ -1361,8 +1396,7 @@ const App={
     if(sess){
       this.user=DB.getUserById(sess.userId);
       if(this.user){
-        if(!sess.email&&this.user.email){sess.email=this.user.email;DB.saveSession(sess)}
-        DB.syncFromServer(function(){
+        if(!sess.email||!sess.role){if(this.user.email)sess.email=this.user.email;if(this.user.role)sess.role=this.user.role;DB.saveSession(sess)}        DB.syncFromServer(function(){
           var fresh=DB.getUserById(sess.userId);
           if(fresh)App.user=fresh;
           if(fresh&&fresh.role==='admin'&&App.currentView!=='admin'){App.navigate('admin');return}
@@ -1423,7 +1457,7 @@ const App={
       case'signup':app.innerHTML=Auth.renderSignup();break;
       case'pending':app.innerHTML=PendingPage.render();break;
       case'banned':app.innerHTML='<div style="display:flex;align-items:center;justify-content:center;min-height:80vh;padding:40px"><div class="card" style="max-width:500px;text-align:center"><div style="font-size:4rem;margin-bottom:16px">🚫</div><h1 style="font-size:1.5rem;font-weight:900;margin-bottom:12px;color:var(--danger)">'+Lang.t('bannedTitle')+'</h1><p style="color:var(--text-secondary);line-height:1.8;margin-bottom:24px">'+Lang.t('bannedDesc')+'</p><button class="btn btn-primary" onclick="App.navigate(\'login\')">'+Lang.t('bannedBack')+'</button></div></div>';break;
-      case'admin':if(!this.requireAuth('admin'))return;app.innerHTML=Admin.render();Admin.init();Utils.loadVideos();removeWatermark();break;
+      case'admin':if(!this.requireAuth('admin'))return;app.innerHTML=Admin.render();Admin.init();Admin.startLiveSync();Utils.loadVideos();removeWatermark();break;
       case'student':if(!this.requireAuth('student'))return;app.innerHTML=Student.render();Student.init();Utils.loadVideos();applyWatermark();break;
       case'community':if(!this.requireAuth())return;app.innerHTML=CommunityPage.render();CommunityPage.init();break;
       case'tournament':if(!this.requireAuth())return;app.innerHTML=Tournament.render();break;
@@ -1445,17 +1479,17 @@ const App={
         var latest=null;
         snap.forEach(function(child){latest=child.val()});
         if(latest){
-          DB.addUser(latest);u=latest;
+          DB.upsertUser(latest);u=latest;
         }
         if(u.status==='pending'){callback({pending:true});return}
         if(u.status==='banned'){callback({banned:true});return}
-        DB.saveSession({userId:u.id,email:email});
+        DB.saveSession({userId:u.id,email:email,role:u.role});
         self.user=u;
         DB.syncFromServer(function(){var fresh=DB.getUserByEmail(email);if(fresh)self.user=fresh;callback({success:true,role:u.role})});
       }).catch(function(){
         if(u.status==='pending'){callback({pending:true});return}
         if(u.status==='banned'){callback({banned:true});return}
-        DB.saveSession({userId:u.id,email:email});
+        DB.saveSession({userId:u.id,email:email,role:u.role});
         self.user=u;
         callback({success:true,role:u.role});
       });
@@ -1468,13 +1502,13 @@ const App={
       if(found.password!==password){callback({error:Lang.t('loginWrongPass')});return}
       if(found.status==='pending'){callback({pending:true});return}
       if(found.status==='banned'){callback({banned:true});return}
-      DB.addUser(found);
-      DB.saveSession({userId:found.id,email:email});
+      DB.upsertUser(found);
+      DB.saveSession({userId:found.id,email:email,role:found.role});
       self.user=found;
       DB.syncFromServer(function(){var fresh=DB.getUserByEmail(email);if(fresh)self.user=fresh;callback({success:true,role:found.role})});
     }).catch(function(){callback({error:Lang.t('loginConnError')})});
   },
-  logout(){DB.clearSession();this.user=null;this.navigate('landing')},
+  logout(){if(typeof Admin!=='undefined'){try{Admin.stopLiveSync()}catch(e){}}DB.clearSession();this.user=null;this.navigate('landing')},
   toggleMobile(){document.getElementById('mobileMenu').classList.toggle('open')},
   toggleSidebar(){
     var sb=document.querySelector('.sidebar');
@@ -1715,7 +1749,8 @@ const Auth={
         FB_DB.ref('all_users').orderByChild('email').equalTo(email).once('value').then(function(snap2){
           if(snap2.exists()){if(btn){btn.disabled=false;btn.textContent=Lang.t('signupBtnText')};errEl.textContent=Lang.t('signupEmailExists');errEl.style.display='block';return}
           FB_DB.ref('all_users/'+user.id).set(user).then(function(){
-            DB.addUser(user);DB.saveSession({userId:user.id,email:email});App.user=user;
+            FB_DB.ref('pending_users/'+user.id).set(user).catch(function(){});
+            DB.addUser(user);DB.saveSession({userId:user.id,email:email,role:'student'});App.user=user;
             App.navigate('pending');
             if(btn){btn.disabled=false;btn.textContent=Lang.t('signupBtnText')}
             showToast(Lang.t('signupSuccess'),'info');
@@ -1724,9 +1759,19 @@ const Auth={
       }).catch(function(){
         var localCount=(DB.users()||[]).filter(function(u){return u.role==='student'}).length;
         if(localCount>=MAX_STUDENTS){if(btn){btn.disabled=false;btn.textContent=Lang.t('signupBtnText')};errEl.textContent=Lang.get()==='ar'?'الحد الأقصى '+MAX_STUDENTS+' طالب. تم اكتمال التسجيل.':'Maximum '+MAX_STUDENTS+' students reached.';errEl.style.display='block';return}
-        DB.addUser(user);DB.saveSession({userId:user.id,email:email});App.user=user;App.navigate('pending');
+        DB.addUser(user);DB.saveSession({userId:user.id,email:email,role:'student'});App.user=user;App.navigate('pending');
         if(btn){btn.disabled=false;btn.textContent=Lang.t('signupBtnText')}
         showToast(Lang.t('signupSuccessLocal'),'info');
+        var tries=0;
+        var retrySignup=function(){
+          FB_DB.ref('all_users/'+user.id).set(user).then(function(){
+            FB_DB.ref('pending_users/'+user.id).set(user).catch(function(){});
+          }).catch(function(e){
+            tries++;
+            if(tries<6)setTimeout(retrySignup,4000);
+          });
+        };
+        retrySignup();
       });
     };
     if(avatarInput.files&&avatarInput.files[0]){
@@ -1772,16 +1817,42 @@ const Admin={
       {id:'settings',icon:'⚙️',label:Lang.t('settingsTitle')}
     ];
     return '<div class="sidebar" id="adminSidebar"><button class="mobile-sidebar-close" onclick="App.toggleSidebar()">✕</button><div class="mobile-sidebar-header"><div class="sidebar-avatar" style="overflow:hidden"><img src="https://i.ibb.co/qMbk8PJT/Whats-App-Image-2026-07-28-at-16-32-06.jpg" alt="Logo" style="width:100%;height:100%;object-fit:cover"></div><div class="sidebar-name">'+Utils.escHtml(App.user?App.user.name:'Admin')+'</div><div class="sidebar-role">'+T('sidebarAdminPlatform')+'</div></div><div class="sidebar-section">'+T('sidebarAdminLouhati')+'</div>'+
-    links.map(function(l){return '<button class="sidebar-link '+(s===l.id||(!s&&l.id==='overview')?'active':'')+'" onclick="Admin.switchSection(\''+l.id+'\')"><span class="link-icon">'+l.icon+'</span><span>'+l.label+'</span></button>'}).join('')+
+    links.map(function(l){return '<button class="sidebar-link '+(s===l.id||(!s&&l.id==='overview')?'active':'')+'" onclick="Admin.switchSection(\''+l.id+'\')"><span class="link-icon">'+l.icon+'</span><span>'+l.label+'</span>'+Admin.pendingBadgeHtml(l.id)+'</button>'}).join('')+
     '</div>';
+  },
+  pendingBadgeHtml:function(id){
+    if(id!=='pending')return'';
+    var count=DB.users().filter(function(u){return u.role==='student'&&u.status==='pending'}).length;
+    return count>0?'<span class="admin-pending-badge" id="adminPendingBadge">'+count+'</span>':'';
+  },
+  updatePendingBadge:function(){
+    var badge=document.getElementById('adminPendingBadge');
+    var count=DB.users().filter(function(u){return u.role==='student'&&u.status==='pending'}).length;
+    if(badge){badge.style.display=count>0?'':'none';badge.textContent=count;}
   },
   switchSection:function(sub){
     App.currentSubView=sub;App.currentView='admin';
-    var doUpdate=function(){var content=document.getElementById('adminContent');if(content){content.innerHTML=Admin.renderSection();Admin.init();Utils.loadVideos()}document.querySelectorAll('#adminSidebar .sidebar-link').forEach(function(b){b.classList.remove('active')});    var allSubs=['overview','students','admins','pending','deletedStudents','lessons','files','exams','homework','wallet','reports','broadcast','aibot','settings'];var idx=allSubs.indexOf(sub);var btns=document.querySelectorAll('#adminSidebar .sidebar-link');if(idx>=0&&btns[idx])btns[idx].classList.add('active')};
+    var doUpdate=function(){var content=document.getElementById('adminContent');if(content){content.innerHTML=Admin.renderSection();Admin.init();Utils.loadVideos()}Admin.updatePendingBadge();document.querySelectorAll('#adminSidebar .sidebar-link').forEach(function(b){b.classList.remove('active')});    var allSubs=['overview','students','admins','pending','deletedStudents','lessons','files','exams','homework','wallet','reports','broadcast','aibot','settings'];var idx=allSubs.indexOf(sub);var btns=document.querySelectorAll('#adminSidebar .sidebar-link');if(idx>=0&&btns[idx])btns[idx].classList.add('active')};
     if(sub==='overview'||sub==='students'||sub==='pending'){
-      FB_DB.ref('all_users').once('value').then(function(snap){
-        var allData=snap.val()||{};var allUsers=[];Object.keys(allData).forEach(function(id){var u=allData[id];if(u&&u.id)allUsers.push(u)});
-        if(allUsers.length>0){var existing=DB.users();var merged=existing.slice();allUsers.forEach(function(fu){var idx=-1;for(var i=0;i<existing.length;i++){if(existing[i].email===fu.email){idx=i;break}}if(idx>=0){merged[idx]=fu}else{merged.push(fu)}});DB._set('users',merged)}
+      Promise.all([
+        FB_DB.ref('all_users').once('value'),
+        FB_DB.ref('pending_users').once('value')
+      ]).then(function(alls){
+        var allUsers=[];var penUsers=[];
+        var d0=alls[0].val()||{};Object.keys(d0).forEach(function(id){var u=d0[id];if(u&&u.id)allUsers.push(u)});
+        var d1=alls[1].val()||{};Object.keys(d1).forEach(function(id){var u=d1[id];if(u&&u.id)penUsers.push(u)});
+        var existing=DB.users();
+        var byId={};var emailToId={};
+        existing.forEach(function(x){if(x&&x.id){byId[x.id]=x;if(x.email)emailToId[x.email]=x.id}});
+        allUsers.forEach(function(fu){if(fu&&fu.id){byId[fu.id]=fu;if(fu.email)emailToId[fu.email]=fu.id}});
+        penUsers.forEach(function(fu){
+          if(!fu||!fu.id)return;
+          var cur=byId[fu.id]||(fu.email?byId[emailToId[fu.email]]:null);
+          if(cur&&['approved','rejected','banned'].indexOf(cur.status)>=0)return;
+          byId[fu.id]=fu;if(fu.email)emailToId[fu.email]=fu.id;
+        });
+        var merged=Object.keys(byId).map(function(id){return byId[id]});
+        DB._set('users',merged);
         doUpdate();
       }).catch(function(){doUpdate()});
     }else{doUpdate()}
@@ -1795,6 +1866,32 @@ const Admin={
   init:function(){
     if(App.currentSubView==='aibot')setTimeout(function(){AIBot.init()},50);
     if(App.currentSubView==='homework')setTimeout(function(){Admin.initCanvases()},100);
+    if(App.currentSubView==='pending'){
+      setTimeout(function(){
+        FB_DB.ref('pending_users').once('value').then(function(snap){
+          var d=snap.val()||{};
+          var penUsers=[];Object.keys(d).forEach(function(id){var u=d[id];if(u&&u.id)penUsers.push(u)});
+          if(!penUsers.length)return;
+          var existing=DB.users();var byId={};var emailToId={};
+          existing.forEach(function(x){if(x&&x.id){byId[x.id]=x;if(x.email)emailToId[x.email]=x.id}});
+          var changed=false;
+          penUsers.forEach(function(fu){
+            if(!fu||!fu.id)return;
+            var cur=byId[fu.id]||(fu.email?byId[emailToId[fu.email]]:null);
+            if(cur&&['approved','rejected','banned'].indexOf(cur.status)>=0)return;
+            if(cur&&cur.status==='pending'&&cur.id===fu.id)return;
+            byId[fu.id]=fu;if(fu.email)emailToId[fu.email]=fu.id;changed=true;
+          });
+          if(changed){
+            DB._set('users',Object.keys(byId).map(function(id){return byId[id]}));
+            var content=document.getElementById('adminContent');
+            if(content){content.innerHTML=Admin.renderSection()}
+            Admin.updatePendingBadge();
+          }
+        }).catch(function(){});
+      },600);
+    }
+    Admin.updatePendingBadge();
   },
   initCanvases:function(){
     document.querySelectorAll('.hw-annotation-canvas').forEach(function(canvas){
@@ -1804,6 +1901,54 @@ const Admin={
         canvas.height=container.offsetHeight;
       }
     });
+  },
+  startLiveSync:function(){
+    if(Admin._liveBound)return;
+    Admin._liveBound=true;
+    var handleUsers=function(snap,isPendingSource){
+      if(!App.user||App.user.role!=='admin')return;
+      var allData=snap.val()||{};
+      var allUsers=[];Object.keys(allData).forEach(function(id){var u=allData[id];if(u&&u.id)allUsers.push(u)});
+      if(!allUsers.length)return;
+      var prevPending=DB.users().filter(function(u){return u.role==='student'&&u.status==='pending'}).map(function(u){return u.id});
+      var existing=DB.users();
+      var byId={};var emailToId={};
+      existing.forEach(function(x){if(x&&x.id){byId[x.id]=x;if(x.email)emailToId[x.email]=x.id}});
+      allUsers.forEach(function(fu){
+        if(!fu||!fu.id)return;
+        if(isPendingSource){
+          var cur=byId[fu.id]||(fu.email?byId[emailToId[fu.email]]:null);
+          if(cur&&['approved','rejected','banned'].indexOf(cur.status)>=0)return;
+        }
+        byId[fu.id]=fu;if(fu.email)emailToId[fu.email]=fu.id;
+      });
+      var merged=Object.keys(byId).map(function(id){return byId[id]});
+      var newPending=[];
+      merged.filter(function(u){return u.role==='student'&&u.status==='pending'}).forEach(function(u){
+        if(prevPending.indexOf(u.id)===-1)newPending.push(u);
+      });
+      DB._set('users',merged);
+      if(newPending.length){
+        newPending.forEach(function(u){
+          Notify.add('admin','طلب تسجيل جديد 📝','طلب تسجيل جديد من "'+u.name+'" بانتظار المراجعة.',u.id,true,{needApproval:true});
+        });
+        if(App.currentView==='admin'&&(App.currentSubView==='pending'||App.currentSubView==='students'||App.currentSubView==='overview')){
+          var content=document.getElementById('adminContent');
+          if(content){content.innerHTML=Admin.renderSection();Admin.init();}
+        }
+        Admin.updatePendingBadge();
+        showToast('🔔 '+(newPending.length===1?'طلب تسجيل جديد من "'+newPending[0].name+'"':'طلبات تسجيل جديدة ('+newPending.length+')'));
+      }
+    };
+    try{
+      Admin._liveOff=FB_DB.ref('all_users').on('value',handleUsers);
+      Admin._liveOffPen=FB_DB.ref('pending_users').on('value',function(snap){handleUsers(snap,true)});
+    }catch(e){console.log('Admin live sync error:',e)}
+  },
+  stopLiveSync:function(){
+    if(Admin._liveOff){FB_DB.ref('all_users').off('value',Admin._liveOff);Admin._liveOff=null;}
+    if(Admin._liveOffPen){FB_DB.ref('pending_users').off('value',Admin._liveOffPen);Admin._liveOffPen=null;}
+    Admin._liveBound=false;
   },
   overview:function(){
     var T=Lang.t.bind(Lang);
@@ -1871,7 +2016,12 @@ const Admin={
   approveStudent:function(id){
     DB.updateUser(id,{status:'approved'});
     var u=DB.getUserById(id);
-    if(u){FB_DB.ref('all_users/'+id).set(u).catch(function(){})}
+    if(u){
+      FB_DB.ref('all_users/'+id).set(u).catch(function(){});
+      Notify.add('admin','تم قبول طلبك ✅','أهلاً بك على المنصة! تم قبول تسجيلك، يمكنك الدخول الآن.',id);
+    }
+    FB_DB.ref('pending_users/'+id).remove().catch(function(){});
+    DB.saveNotifications(DB.notifications().filter(function(n){return n.studentId!==id||!n.needApproval}));
     showToast(Lang.t('toastApproved'));
     this.switchSection(App.currentSubView||'students');
   },
@@ -1880,6 +2030,8 @@ const Admin={
     DB.updateUser(id,{status:'rejected'});
     var u=DB.getUserById(id);
     if(u){FB_DB.ref('all_users/'+id).set(u).catch(function(){})}
+    FB_DB.ref('pending_users/'+id).remove().catch(function(){});
+    DB.saveNotifications(DB.notifications().filter(function(n){return n.studentId!==id||!n.needApproval}));
     showToast(Lang.t('toastRejected'),'error');
     this.switchSection(App.currentSubView||'students');
   },
@@ -1888,6 +2040,7 @@ const Admin={
     DB.updateUser(id,{status:'banned'});
     var u=DB.getUserById(id);
     if(u){FB_DB.ref('all_users/'+id).set(u).catch(function(){})}
+    FB_DB.ref('pending_users/'+id).remove().catch(function(){});
     showToast(Lang.t('toastBanned'),'error');
     this.switchSection(App.currentSubView||'students');
   },
@@ -1928,6 +2081,7 @@ const Admin={
     if(u){
       DB.archiveUser(u);
       FB_DB.ref('all_users/'+id).remove().catch(function(){});
+      FB_DB.ref('pending_users/'+id).remove().catch(function(){});
     }
     showToast(Lang.t('toastDeleted'),'error');
     this.switchSection(App.currentSubView||'students');
@@ -2216,15 +2370,35 @@ const Admin={
   deleteFile:function(id){if(!confirm(Lang.t('confirmDeleteFile')))return;DB.saveFiles(DB.files().filter(function(f){return f.id!==id}));showToast(Lang.t('toastFileDeleted'),'error');this.switchSection('files')},
   walletMgmt:function(){
     var T=Lang.t.bind(Lang);
+    var isAr=Lang.get()==='ar';
     var users=DB.users().filter(function(u){return u.role==='student'&&u.status==='approved'});
     return '<div class="fade-in"><div class="page-header"><h1 class="page-title">'+T('adminWalletPageTitle')+'</h1><p class="page-subtitle">'+T('adminWalletSub')+'</p></div>'+
-    '<div class="content-grid">'+
-    users.map(function(u){return '<div class="card fade-in"><div class="card-header"><h3 class="card-title">'+Utils.escHtml(u.name)+'</h3><span class="badge badge-accent">'+Utils.escHtml(u.grade)+'</span></div>'+
+    '<div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap"><div style="flex:1;min-width:220px;position:relative"><input class="form-input" id="walletSearch" placeholder="'+(isAr?'🔍 ابحث عن طالب بالاسم أو البريد أو الصف...':'🔍 Search student by name, email or grade...')+'" oninput="Admin.filterWallet()" style="width:100%;padding-'+(isAr?'left':'right')+':34px"><span style="position:absolute;'+(isAr?'left':'right')+':12px;top:50%;transform:translateY(-50%);opacity:0.5;pointer-events:none">🔍</span></div><span class="badge badge-accent" id="walletCount">'+users.length+' / '+users.length+'</span></div>'+
+    '<div class="content-grid" id="walletGrid">'+
+    users.map(function(u){return '<div class="card fade-in wallet-card" data-name="'+encodeURIComponent((u.name||'')+' '+(u.email||'')+' '+(u.grade||''))+'"><div class="card-header"><h3 class="card-title">'+Utils.escHtml(u.name)+'</h3><span class="badge badge-accent">'+Utils.escHtml(u.grade)+'</span></div>'+
     '<div style="text-align:center;margin:16px 0"><div style="font-size:2rem;font-weight:900;color:var(--accent)">'+Utils.formatMoney(u.wallet||0)+'</div><div style="font-size:0.78rem;color:var(--text-muted)">'+T('adminCurrentBalance')+'</div></div>'+
     '<form onsubmit="Admin.addBalance(event,\''+u.id+'\')" style="display:flex;gap:8px;margin-bottom:8px"><input class="form-input" type="number" id="bal_'+u.id+'" placeholder="'+T('adminAmountLabel')+'" min="1" required style="flex:1"><button type="submit" class="btn btn-sm btn-primary">+ '+T('adminAddBtn')+'</button></form>'+
     '<form onsubmit="Admin.deductBalance(event,\''+u.id+'\')" style="display:flex;gap:8px"><input class="form-input" type="number" id="dbal_'+u.id+'" placeholder="'+T('adminAmountLabel')+'" min="1" required style="flex:1"><button type="submit" class="btn btn-sm btn-danger">- '+T('adminDeductBtn')+'</button></form>'+
     '<div style="margin-top:12px"><button class="btn btn-sm btn-secondary btn-block" onclick="Admin.viewTransactions(\''+u.id+'\')">📋 '+T('adminTxHistory')+'</button></div></div>'}).join('')+
-    (users.length===0?'<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">💰</div><p>'+T('adminNoApproved')+'</p></div>':'')+'</div></div>';
+    (users.length===0?'<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">💰</div><p>'+T('adminNoApproved')+'</p></div>':'')+
+    '<div class="empty-state" id="walletNoResults" style="grid-column:1/-1;display:none"><div class="empty-icon">🔍</div><p>'+T('adminNoResults')+'</p></div>'+
+    '</div></div>';
+  },
+  filterWallet:function(){
+    var q=(document.getElementById('walletSearch').value||'').trim().toLowerCase();
+    var cards=document.querySelectorAll('#walletGrid .wallet-card');
+    var shown=0;
+    cards.forEach(function(c){
+      var match=!q||decodeURIComponent(c.getAttribute('data-name')||'').toLowerCase().indexOf(q)>=0;
+      c.style.display=match?'':'none';
+      if(match)shown++;
+    });
+    var count=document.getElementById('walletCount');
+    if(count)count.textContent=shown+' / '+cards.length;
+    var empty=document.getElementById('walletNoResults');
+    if(empty)empty.style.display=shown>0?'none':'';
+    var any=document.getElementById('walletGrid').querySelector('.empty-state:not(#walletNoResults)');
+    if(any)any.style.display=(cards.length===0)?'':'none';
   },
   addBalance:function(e,userId){
     e.preventDefault();
