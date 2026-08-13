@@ -1188,6 +1188,23 @@ const Utils={
   timeAgo(d){const s=Math.floor((Date.now()-d)/1000);if(s<60)return'الآن';if(s<3600)return Math.floor(s/60)+' دقيقة';if(s<86400)return Math.floor(s/3600)+' ساعة';return Math.floor(s/86400)+' يوم'},
   escHtml(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML},
   searchMatch(text,q){return !q||text.toLowerCase().includes(q.toLowerCase())},
+  copyText(text){
+    var done=false;
+    if(window.__origClipboardWrite){
+      try{window.__origClipboardWrite(text).then(function(){showToast('تم نسخ الرقم 📋');done=true}).catch(function(){});}catch(e){}
+    }
+    if(done)return;
+    var ta=document.createElement('textarea');
+    ta.value=text;
+    ta.style.cssText='position:fixed;top:-9999px;left:-9999px;opacity:0';
+    document.body.appendChild(ta);
+    ta.select();
+    var ok=false;
+    try{ok=document.execCommand('copy')}catch(e){}
+    document.body.removeChild(ta);
+    if(ok)showToast('تم نسخ الرقم 📋');
+    else showToast(text,'info');
+  },
   loadVideos(){setTimeout(function(){document.querySelectorAll('.video-placeholder[data-lesson-id]').forEach(function(el){var lid=el.getAttribute('data-lesson-id');if(!lid||el.dataset.loaded)return;el.dataset.loaded='1';VideoStore.get(lid,function(data){if(data){var v=document.createElement('video');v.controls=true;v.style.cssText='width:100%;height:100%;object-fit:contain;background:#000;border-radius:0';v.src=data;v.onplay=function(){var lesson=DB.lessons().find(function(x){return x.id===lid});var mxViews=lesson?lesson.maxViews||0:0;var uid=App.user?App.user.id:'admin';if(mxViews>0&&uid!=='admin'&&App.user&&App.user.role!=='admin'){var cnt=DB.countViews(lid,uid);if(cnt>=mxViews){v.pause();v.remove();el.innerHTML='<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;height:100%;background:#000;color:#ff4757;font-size:0.9rem;text-align:center;padding:16px"><div style="font-size:2rem;margin-bottom:8px">🚫</div><div>لقد وصلت للحد الأقصى للمشاهدات</div><div style="font-size:0.75rem;color:var(--text-muted);margin-top:4px">'+cnt+'/'+mxViews+' مشاهدة مستخدمة</div></div>';el.dataset.loaded='';return}}DB.logVideoView(lid,uid,App.user?App.user.name:'')};el.parentNode.replaceChild(v,el)}else{var ls=DB.lessons();var lx=ls.find(function(x){return x.id===lid});if(lx&&lx.videoUrl){var a=document.createElement('a');a.href=lx.videoUrl;a.target='_blank';a.style.cssText='width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.2rem;text-decoration:none;background:#000;position:absolute;inset:0;flex-direction:column;gap:6px';a.innerHTML='▶️ <span style="font-size:0.7rem;opacity:0.7">شاهد من الرابط</span>';a.onclick=function(e){e.stopPropagation();var lesson=DB.lessons().find(function(x){return x.id===lid});var mxViews=lesson?lesson.maxViews||0:0;var uid=App.user?App.user.id:'admin';if(mxViews>0&&uid!=='admin'&&App.user&&App.user.role!=='admin'){var cnt=DB.countViews(lid,uid);if(cnt>=mxViews){e.preventDefault();showToast('🚫 وصلت للحد الأقصى من المشاهدات ('+cnt+'/'+mxViews+')','error');return}}DB.logVideoView(lid,uid,App.user?App.user.name:'')};el.style.position='relative';el.appendChild(a)}else if(lx&&lx._hasVideo){el.innerHTML='<span style="color:var(--warning);font-size:0.75rem;text-align:center;padding:8px">⚠️ الفيديو محفوظ على جهاز آخر<br>استخدم رابط YouTube بديل</span>';el.style.cursor='default'}else{el.innerHTML='<span style="color:var(--text-muted);font-size:0.8rem">🎬 لا يوجد فيديو</span>';el.style.cursor='default'}}})})},100)}
 };
 function showToast(msg,type){
@@ -1249,7 +1266,7 @@ const Notify={
   markRead:function(id){var ids=this.getReadIds();if(ids.indexOf(id)===-1){ids.push(id);localStorage.setItem(this._storageKey(),JSON.stringify(ids))}},
   markAllRead:function(){var notifs=DB.notifications();var ids=notifs.map(function(n){return n.id});localStorage.setItem(this._storageKey(),JSON.stringify(ids))},
   unreadCount:function(){var ids=this.getReadIds();var u=App.user;var all=DB.notifications();var filtered=u&&u.role!=='admin'?all.filter(function(n){return !n.studentId||n.studentId===u.id}):all;return filtered.filter(function(n){return ids.indexOf(n.id)===-1}).length},
-  add:function(type,title,msg){var notifs=DB.notifications();var n={id:Utils.uid(),type:type,title:title,message:msg,date:Date.now()};notifs.push(n);DB.saveNotifications(notifs);if(navigator.vibrate)navigator.vibrate(200);this.renderBell()},
+  add:function(type,title,msg,studentId){var notifs=DB.notifications();var n={id:Utils.uid(),type:type,title:title,message:msg,date:Date.now()};if(studentId)n.studentId=studentId;notifs.push(n);DB.saveNotifications(notifs);if(navigator.vibrate)navigator.vibrate(200);this.renderBell()},
   renderBell:function(){
     var c=document.getElementById('notifBellContainer');if(!c)return;
     var count=this.unreadCount();
@@ -1683,6 +1700,7 @@ const Admin={
     var links=[
       {id:'overview',icon:'📊',label:T('adminOverview')},
       {id:'students',icon:'👥',label:Lang.t('adminStudents')},
+      {id:'admins',icon:'👑',label:Lang.get()==='ar'?'الأدمنز':'Admins'},
       {id:'pending',icon:'⏳',label:Lang.t('adminPending')},
       {id:'lessons',icon:'🎬',label:Lang.t('adminLessons')},
       {id:'files',icon:'📁',label:Lang.t('adminFiles')},
@@ -1700,7 +1718,7 @@ const Admin={
   },
   switchSection:function(sub){
     App.currentSubView=sub;App.currentView='admin';
-    var doUpdate=function(){var content=document.getElementById('adminContent');if(content){content.innerHTML=Admin.renderSection();Admin.init();Utils.loadVideos()}document.querySelectorAll('#adminSidebar .sidebar-link').forEach(function(b){b.classList.remove('active')});var allSubs=['overview','students','pending','lessons','files','exams','homework','wallet','reports','broadcast','aibot','settings'];var idx=allSubs.indexOf(sub);var btns=document.querySelectorAll('#adminSidebar .sidebar-link');if(idx>=0&&btns[idx])btns[idx].classList.add('active')};
+    var doUpdate=function(){var content=document.getElementById('adminContent');if(content){content.innerHTML=Admin.renderSection();Admin.init();Utils.loadVideos()}document.querySelectorAll('#adminSidebar .sidebar-link').forEach(function(b){b.classList.remove('active')});var allSubs=['overview','students','admins','pending','lessons','files','exams','homework','wallet','reports','broadcast','aibot','settings'];var idx=allSubs.indexOf(sub);var btns=document.querySelectorAll('#adminSidebar .sidebar-link');if(idx>=0&&btns[idx])btns[idx].classList.add('active')};
     if(sub==='overview'||sub==='students'||sub==='pending'){
       FB_DB.ref('all_users').once('value').then(function(snap){
         var allData=snap.val()||{};var allUsers=[];Object.keys(allData).forEach(function(id){var u=allData[id];if(u&&u.id)allUsers.push(u)});
@@ -1712,7 +1730,7 @@ const Admin={
   renderSection:function(){
     var s=App.currentSubView||'overview';
     var self=this;
-    var map={overview:function(){return self.overview()},students:function(){return self.students()},pending:function(){return self.pendingRequests()},lessons:function(){return self.lessonsMgmt()},files:function(){return self.filesMgmt()},wallet:function(){return self.walletMgmt()},exams:function(){return self.examsMgmt()},homework:function(){return self.homeworkMgmt()},reports:function(){return self.reportsMgmt()},broadcast:function(){return self.broadcastMgmt()},aibot:function(){return AIBot.render()},settings:function(){return self.settingsMgmt()}};
+    var map={overview:function(){return self.overview()},students:function(){return self.students()},admins:function(){return self.adminsMgmt()},pending:function(){return self.pendingRequests()},lessons:function(){return self.lessonsMgmt()},files:function(){return self.filesMgmt()},wallet:function(){return self.walletMgmt()},exams:function(){return self.examsMgmt()},homework:function(){return self.homeworkMgmt()},reports:function(){return self.reportsMgmt()},broadcast:function(){return self.broadcastMgmt()},aibot:function(){return AIBot.render()},settings:function(){return self.settingsMgmt()}};
     return (map[s]||map.overview)();
   },
   init:function(){
@@ -1778,8 +1796,18 @@ const Admin={
     if(users.length===0){tbody.innerHTML='';empty.style.display='block';return}
     empty.style.display='none';
     tbody.innerHTML=users.map(function(u){
-      return '<tr><td><strong>'+Utils.escHtml(u.name)+'</strong></td><td style="font-family:var(--font-en);font-size:0.8rem" dir="ltr">'+Utils.escHtml(u.email)+'</td><td dir="ltr">'+Utils.escHtml(u.phone||'-')+'</td><td>'+Utils.escHtml(u.parentName||'-')+'</td><td dir="ltr"><a href="https://wa.me/'+(u.parentPhone||'').replace(/^0/,'20')+'" target="_blank">'+Utils.escHtml(u.parentPhone||'-')+' 📱</a></td><td>'+Utils.escHtml(u.grade)+'</td><td><span class="badge badge-info">'+Utils.escHtml(u.track)+'</span></td><td>'+Utils.escHtml(u.governorate||'-')+'</td><td><span class="badge '+(u.status==='approved'?'badge-accent':u.status==='rejected'?'badge-danger':u.status==='banned'?'badge-danger':'badge-warning')+'">'+(u.status==='approved'?Lang.t('adminApproved'):u.status==='rejected'?Lang.t('adminRejected'):u.status==='banned'?Lang.t('adminBanned'):Lang.t('adminPendingStatus'))+'</span></td><td style="display:flex;gap:4px;flex-wrap:wrap">'+(u.status!=='approved'?'<button class="btn btn-sm btn-primary" onclick="Admin.approveStudent(\''+u.id+'\')">'+Lang.t('adminApprove')+'</button>':'')+(u.status!=='rejected'&&u.status!=='banned'?'<button class="btn btn-sm btn-danger" onclick="Admin.rejectStudent(\''+u.id+'\')">'+Lang.t('adminReject')+'</button>':'')+(u.status!=='banned'?'<button class="btn btn-sm btn-danger" onclick="Admin.banStudent(\''+u.id+'\')">🚫 '+Lang.t('adminBan')+'</button>':'<button class="btn btn-sm btn-primary" onclick="Admin.unbanStudent(\''+u.id+'\')">✅ '+Lang.t('adminUnban')+'</button>')+(u.id!=='admin_001'?'<button class="btn btn-sm btn-danger" onclick="Admin.deleteStudent(\''+u.id+'\')">🗑️</button>':'')+'</td></tr>';
+      return '<tr><td><strong>'+Utils.escHtml(u.name)+'</strong></td><td style="font-family:var(--font-en);font-size:0.8rem" dir="ltr">'+Utils.escHtml(u.email)+'</td><td dir="ltr">'+Utils.escHtml(u.phone||'-')+'</td><td>'+Utils.escHtml(u.parentName||'-')+'</td><td dir="ltr"><a href="https://wa.me/'+(u.parentPhone||'').replace(/^0/,'20')+'" target="_blank">'+Utils.escHtml(u.parentPhone||'-')+' 📱</a></td><td>'+Utils.escHtml(u.grade)+'</td><td><span class="badge badge-info">'+Utils.escHtml(u.track)+'</span></td><td>'+Utils.escHtml(u.governorate||'-')+'</td><td><span class="badge '+(u.status==='approved'?'badge-accent':u.status==='rejected'?'badge-danger':u.status==='banned'?'badge-danger':'badge-warning')+'">'+(u.status==='approved'?Lang.t('adminApproved'):u.status==='rejected'?Lang.t('adminRejected'):u.status==='banned'?Lang.t('adminBanned'):Lang.t('adminPendingStatus'))+'</span></td><td style="display:flex;gap:4px;flex-wrap:wrap">'+(u.status!=='approved'?'<button class="btn btn-sm btn-primary" onclick="Admin.approveStudent(\''+u.id+'\')">'+Lang.t('adminApprove')+'</button>':'')+(u.status!=='rejected'&&u.status!=='banned'?'<button class="btn btn-sm btn-danger" onclick="Admin.rejectStudent(\''+u.id+'\')">'+Lang.t('adminReject')+'</button>':'')+(u.status!=='banned'?'<button class="btn btn-sm btn-danger" onclick="Admin.banStudent(\''+u.id+'\')">🚫 '+Lang.t('adminBan')+'</button>':'<button class="btn btn-sm btn-primary" onclick="Admin.unbanStudent(\''+u.id+'\')">✅ '+Lang.t('adminUnban')+'</button>')+(u.id!=='admin_001'?'<button class="btn btn-sm btn-danger" onclick="Admin.deleteStudent(\''+u.id+'\')">🗑️</button>':'')+'<button class="btn btn-sm btn-accent" onclick="Admin.makeAdmin(\''+u.id+'\')" title="رفع إلى أدمن">👑</button></td></tr>';
     }).join('');
+  },
+  adminsMgmt:function(){
+    var T=Lang.t.bind(Lang);var isAr=Lang.get()==='ar';
+    var admins=DB.users().filter(function(u){return u.role==='admin'});
+    var self=this;
+    return '<div class="fade-in"><div class="page-header"><h1 class="page-title">'+(isAr?'إدارة الأدمنز 👑':'Admins Management 👑')+'</h1><p class="page-subtitle">'+(isAr?'جميع الحسابات التي تمتلك صلاحيات الإدارة الكاملة':'All accounts with full admin permissions')+'</p></div>'+
+    '<div class="card"><div class="table-container"><table><thead><tr><th>'+(isAr?'الاسم':'Name')+'</th><th>'+T('loginEmail')+'</th><th>'+(isAr?'رقم الهاتف':'Phone')+'</th><th>'+T('adminGradeCol')+'</th><th>'+(isAr?'الحالة':'Status')+'</th><th>'+(isAr?'إجراءات':'Actions')+'</th></tr></thead><tbody>'+
+    admins.map(function(u){return '<tr><td><strong>'+Utils.escHtml(u.name)+'</strong>'+(u.id==='admin_001'?' <span class="badge badge-danger">'+(isAr?'مالك':'Owner')+'</span>':'')+'</td><td style="font-family:var(--font-en);font-size:0.8rem" dir="ltr">'+Utils.escHtml(u.email)+'</td><td dir="ltr">'+Utils.escHtml(u.phone||'-')+'</td><td>'+Utils.escHtml(u.grade||'-')+'</td><td><span class="badge '+(u.status==='approved'?'badge-accent':'badge-warning')+'">'+(u.status==='approved'?T('adminApproved'):u.status)+'</span></td><td style="display:flex;gap:4px;flex-wrap:wrap"><a class="btn btn-sm btn-primary" target="_blank" href="https://wa.me/'+(u.phone||'').replace(/^0/,'20')+'">💬</a>'+(u.id!=='admin_001'?'<button class="btn btn-sm btn-danger" onclick="Admin.demoteAdmin(\''+u.id+'\')">'+(isAr?'إلغاء الأدمن':'Demote')+'</button>':'')+'</td></tr>'}).join('')+
+    '</tbody></table></div>'+(admins.length===0?'<div class="empty-state"><div class="empty-icon">👑</div><p>'+(isAr?'لا يوجد أدمنز حالياً':'No admins yet')+'</p></div>':'')+'</div>'+
+    '<div class="card" style="margin-top:20px"><p style="color:var(--text-secondary);line-height:1.8">💡 '+(isAr?'يمكنك رفع أي طالب إلى أدمن من قسم الطلاب بضغط زر 👑 بجانب اسمه. سيمتلك كل صلاحيات الإدارة فوراً (إضافة دروس وامتحانات وواجبات...).':'You can promote any student to admin from the Students section by pressing the 👑 button next to their name. They will get full admin permissions immediately.')+'</p></div></div>';
   },
   approveStudent:function(id){
     DB.updateUser(id,{status:'approved'});
@@ -1810,6 +1838,27 @@ const Admin={
     var u=DB.getUserById(id);
     if(u){FB_DB.ref('all_users/'+id).set(u).catch(function(){})}
     showToast(Lang.t('toastUnbanned'));
+    this.switchSection(App.currentSubView||'students');
+  },
+  makeAdmin:function(id){
+    var u=DB.getUserById(id);
+    if(!u)return;
+    if(!confirm('هل تريد رفع "'+u.name+'" إلى أدمن بكل الصلاحيات؟'))return;
+    DB.updateUser(id,{role:'admin',status:'approved'});
+    var fresh=DB.getUserById(id);
+    if(fresh){FB_DB.ref('all_users/'+id).set(fresh).catch(function(){})}
+    showToast('تم رفع "'+u.name+'" إلى أدمن بنجاح 👑');
+    Notify.add('admin','تم ترقيتك إلى أدمن 👑','مبروك! أصبح لك كل صلاحيات الإدارة: إضافة الدروس والامتحانات والواجبات وغيرها.',id);
+    this.switchSection(App.currentSubView||'students');
+  },
+  demoteAdmin:function(id){
+    var u=DB.getUserById(id);
+    if(!u)return;
+    if(!confirm('هل تريد إلغاء صلاحيات الأدمن عن "'+u.name+'"؟'))return;
+    DB.updateUser(id,{role:'student'});
+    var fresh=DB.getUserById(id);
+    if(fresh){FB_DB.ref('all_users/'+id).set(fresh).catch(function(){})}
+    showToast('تم إلغاء صلاحيات الأدمن عن "'+u.name+'"');
     this.switchSection(App.currentSubView||'students');
   },
   deleteStudent:function(id){
@@ -2659,6 +2708,14 @@ const Student={
     var txns=DB.transactions().filter(function(t){return t.userId===u.id}).reverse();
     return '<div class="fade-in"><div class="page-header"><h1 class="page-title">محفظتي</h1></div>'+
     '<div class="card wallet-balance glow-border"><div class="wallet-amount">'+Utils.formatMoney(u.wallet||0)+'</div><div class="wallet-currency">الرصيد المتاح</div></div>'+
+    '<div class="card" style="margin-bottom:20px"><h3 class="card-title" style="margin-bottom:16px">💳 طرق الدفع / التحويل</h3>'+
+    '<p style="color:var(--text-secondary);line-height:1.8;margin-bottom:16px">لإيداع رصيد في محفظتك، حوّل المبلغ على أحد الأرقام التالية ثم تواصل معنا على واتساب لتأكيد التحويل وإضافة الرصيد.</p>'+
+    '<div style="display:flex;flex-direction:column;gap:12px">'+
+    '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:14px 16px;border-radius:var(--radius-sm);background:rgba(44,95,168,0.12);border:1px solid rgba(44,95,168,0.3)"><div><div style="font-weight:800">📲 إنستاباي InstaPay</div><div style="font-family:var(--font-en);direction:ltr;color:var(--text-secondary);letter-spacing:1px">01551346605</div></div><button class="btn btn-sm btn-primary" onclick="Utils.copyText(\'01551346605\')">📋 نسخ</button></div>'+
+    '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:14px 16px;border-radius:var(--radius-sm);background:rgba(200,162,78,0.12);border:1px solid rgba(200,162,78,0.35)"><div><div style="font-weight:800">👛 محفظة / واتساب</div><div style="font-family:var(--font-en);direction:ltr;color:var(--text-secondary);letter-spacing:1px">01110228959</div></div><button class="btn btn-sm btn-accent" onclick="Utils.copyText(\'01110228959\')">📋 نسخ</button></div>'+
+    '</div>'+
+    '<div style="margin-top:16px"><a class="btn btn-primary btn-block" target="_blank" href="https://wa.me/201551346605?text='+encodeURIComponent('أرسلت مبلغ لشحن محفظتي في منصة د. مؤمن يسري')+'">📩 تأكيد التحويل عبر واتساب</a></div>'+
+    '</div>'+
     '<div class="card"><h3 class="card-title" style="margin-bottom:16px">سجل المعاملات</h3>'+
     (txns.length===0?'<div class="empty-state"><div class="empty-icon">💰</div><p>لا توجد معاملات بعد</p></div>':'')+
     txns.map(function(t){return '<div class="transaction-item"><div class="transaction-icon" style="background:'+(t.type==='credit'?'rgba(200,162,78,0.15)':'rgba(255,71,87,0.15)')+'">'+(t.type==='credit'?'📥':'📤')+'</div><div class="transaction-info"><div class="transaction-title">'+Utils.escHtml(t.note)+'</div><div class="transaction-date">'+Utils.formatDate(t.date)+'</div></div><div class="transaction-amount '+t.type+'">'+(t.type==='credit'?'+':'')+Utils.formatMoney(t.amount)+'</div></div>'}).join('')+'</div></div>';
@@ -3588,6 +3645,7 @@ function reportScreenshot(reason){
     });
     if(navigator.clipboard&&navigator.clipboard.writeText){
       var origWrite=navigator.clipboard.writeText.bind(navigator.clipboard);
+      window.__origClipboardWrite=origWrite;
       navigator.clipboard.writeText=function(){reportScreenshot('Clipboard write attempt');return Promise.reject(new DOMException('Clipboard write blocked','NotAllowedError'))};
     }
     var origExec=document.execCommand;
