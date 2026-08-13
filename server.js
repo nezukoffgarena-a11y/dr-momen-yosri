@@ -22,7 +22,7 @@ const OPENROUTER_KEY = process.env.OPENROUTER_API_KEY || '';
 const OPENROUTER_MODEL = process.env.OPENROUTER_MODEL || 'nvidia/nemotron-nano-9b-v2:free';
 const GAME_MODEL = process.env.OPENROUTER_GAME_MODEL || 'nvidia/nemotron-nano-9b-v2:free';
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
-const MODEL_FALLBACKS = (process.env.OPENROUTER_FALLBACKS || '').split(',').map(function(s){return s.trim()}).filter(Boolean);
+const MODEL_FALLBACKS = (process.env.OPENROUTER_FALLBACKS || 'google/gemma-4-26b-a4b-it:free,openai/gpt-oss-20b:free,nvidia/nemotron-nano-12b-v2-vl:free').split(',').map(function(s){return s.trim()}).filter(Boolean);
 
 function openRouterRequest(model, messages, opts) {
   const body = {
@@ -65,17 +65,22 @@ function callOpenRouter(messages, opts, callback) {
     var model = models[modelIdx];
     openRouterRequest(model, messages, opts).then(function(result){
       if (result.ok) {
-        try {
-          var data = JSON.parse(result.text);
-          var content = '';
-          try { content = data.choices[0].message.content || ''; } catch (e) {}
-          if (content && content.trim()) { callback(data, null); return; }
-          callback(null, { status: 500, error: { message: 'AI returned an empty response' } });
-          return;
-        } catch (e) {
-          callback(null, { status: 500, error: { message: 'Invalid AI response' } });
+        var data = null;
+        try { data = JSON.parse(result.text); } catch (e) {}
+        var content = '';
+        if (data) { try { content = data.choices[0].message.content || ''; } catch (e) {} }
+        if (data && content && content.trim()) { callback(data, null); return; }
+        // Empty or invalid content: retry same model, then move to next model
+        if (attempt < delays.length) {
+          var wait = delays[attempt];
+          attempt++;
+          setTimeout(next, wait);
           return;
         }
+        modelIdx++;
+        attempt = 0;
+        setTimeout(next, 200);
+        return;
       }
       if (retryStatus.indexOf(result.status) !== -1 && attempt < delays.length) {
         var wait = delays[attempt];

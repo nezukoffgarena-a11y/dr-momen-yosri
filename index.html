@@ -3501,6 +3501,7 @@ const AIBot={
       var reply='عذراً، لم أتمكن من معالجة سؤالك.';
       try{reply=data.candidates[0].content.parts[0].text;}catch(x){}
       reply=reply.replace(/\*\*/g,'').replace(/\*([^*\n]+)\*/g,'$1').replace(/\n{3,}/g,'\n\n');
+      if(!reply||!reply.trim()){self._showError(container,loadingId,'المساعد الذكي مشغول حالياً، حاول مرة أخرى بعد لحظات.');self.messages.pop();self._save();self.loading=false;if(btn)btn.disabled=false;return}
       self.messages.push({role:'model',text:reply});
       self._save();
       container.insertAdjacentHTML('beforeend','<div style="align-self:flex-start;background:var(--glass);padding:12px 18px;border-radius:16px 16px 16px 4px;max-width:80%;border:1px solid var(--glass-border)"><p style="font-size:0.88rem;line-height:1.8">'+Utils.escHtml(reply)+'</p></div>');
