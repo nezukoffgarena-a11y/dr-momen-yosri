@@ -21,15 +21,16 @@ app.use(express.json({ limit: '10mb' }));
 const OPENROUTER_KEY = process.env.OPENROUTER_API_KEY || '';
 const OPENROUTER_MODEL = process.env.OPENROUTER_MODEL || 'liquid/lfm-2.5-2.6b:free';
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
+const MODEL_FALLBACKS = (process.env.OPENROUTER_FALLBACKS || '').split(',').map(function(s){return s.trim()}).filter(Boolean);
 
-function callOpenRouter(messages, opts, callback) {
+function openRouterRequest(model, messages, opts) {
   const body = {
-    model: OPENROUTER_MODEL,
+    model: model,
     messages: messages,
     max_tokens: opts.maxTokens || 2048,
     temperature: opts.temperature != null ? opts.temperature : 0.7
   };
-  fetch(OPENROUTER_URL, {
+  return fetch(OPENROUTER_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -41,20 +42,62 @@ function callOpenRouter(messages, opts, callback) {
   }).then(function(r){
     return r.text().then(function(t){return {ok:r.ok,status:r.status,text:t}});
   }).then(function(result){
-    if (!result.ok) {
-      var err = null;
-      try { err = JSON.parse(result.text).error; } catch (e) {}
-      callback(null, { status: result.status, error: err || { message: result.text } });
+    var err = null;
+    try { err = JSON.parse(result.text).error; } catch (e) {}
+    return { ok: result.ok, status: result.status, text: result.text, error: err };
+  });
+}
+
+// Try primary model with retries, then fallback models. Returns {data} or {status, error}.
+function callOpenRouter(messages, opts, callback) {
+  const models = [OPENROUTER_MODEL].concat(MODEL_FALLBACKS);
+  const retryStatus = [429, 408, 500, 502, 503, 504, 520, 529];
+  const delays = [800, 2000, 5000];
+  var attempt = 0;
+  var modelIdx = 0;
+
+  function next() {
+    if (modelIdx >= models.length) {
+      callback(null, { status: 503, error: { message: 'All AI models are currently unavailable, please try again in a moment' } });
       return;
     }
-    try {
-      callback(JSON.parse(result.text), null);
-    } catch (e) {
-      callback(null, { status: 500, error: { message: 'Invalid OpenRouter response' } });
-    }
-  }).catch(function(e){
-    callback(null, { status: 500, error: { message: e.message } });
-  });
+    var model = models[modelIdx];
+    openRouterRequest(model, messages, opts).then(function(result){
+      if (result.ok) {
+        try {
+          var data = JSON.parse(result.text);
+          var content = '';
+          try { content = data.choices[0].message.content || ''; } catch (e) {}
+          if (content && content.trim()) { callback(data, null); return; }
+          callback(null, { status: 500, error: { message: 'AI returned an empty response' } });
+          return;
+        } catch (e) {
+          callback(null, { status: 500, error: { message: 'Invalid AI response' } });
+          return;
+        }
+      }
+      if (retryStatus.indexOf(result.status) !== -1 && attempt < delays.length) {
+        var wait = delays[attempt];
+        attempt++;
+        setTimeout(next, wait);
+        return;
+      }
+      modelIdx++;
+      attempt = 0;
+      setTimeout(next, 200);
+    }).catch(function(e){
+      if (attempt < delays.length) {
+        var wait = delays[attempt];
+        attempt++;
+        setTimeout(next, wait);
+        return;
+      }
+      modelIdx++;
+      attempt = 0;
+      setTimeout(next, 200);
+    });
+  }
+  next();
 }
 
 function extractOpenRouterText(data) {

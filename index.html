@@ -3475,7 +3475,7 @@ const AIBot={
       if(btn)btn.disabled=false;
       var el=document.getElementById(loadingId);if(el)el.remove();
     };
-    var resetTimer=setTimeout(resetLoading,30000);
+    var resetTimer=setTimeout(resetLoading,90000);
     this.messages.push({role:'user',text:text});
     this._save();
     var apiContents=[];
