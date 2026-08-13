@@ -59,14 +59,19 @@ function openRouterRequest(model, messages, opts) {
 // Try primary model with retries, then fallback models. Returns {data} or {status, error}.
 function callOpenRouter(messages, opts, callback) {
   const models = [opts.primaryModel || OPENROUTER_MODEL].concat(MODEL_FALLBACKS);
-  const retryStatus = [429, 408, 500, 502, 503, 504, 520, 529];
+  const retryStatus = [408, 500, 502, 503, 504, 520, 529];
   const delays = [800, 2000, 5000];
   var attempt = 0;
   var modelIdx = 0;
+  var rateLimited = false;
 
   function next() {
     if (modelIdx >= models.length) {
-      callback(null, { status: 503, error: { message: 'All AI models are currently unavailable, please try again in a moment' } });
+      if (rateLimited) {
+        callback(null, { status: 503, error: { message: 'انتهت الحصة المجانية اليومية لطلبات المساعد الذكي، أعد المحاولة غداً بعد منتصف الليل', code: 'RATE_LIMIT' } });
+      } else {
+        callback(null, { status: 503, error: { message: 'All AI models are currently unavailable, please try again in a moment' } });
+      }
       return;
     }
     var model = models[modelIdx];
@@ -89,6 +94,7 @@ function callOpenRouter(messages, opts, callback) {
         setTimeout(next, 200);
         return;
       }
+      if (result.status === 429) { rateLimited = true; }
       if (retryStatus.indexOf(result.status) !== -1 && attempt < delays.length) {
         var wait = delays[attempt];
         attempt++;
