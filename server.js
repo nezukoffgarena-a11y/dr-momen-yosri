@@ -112,6 +112,26 @@ function extractOpenRouterText(data) {
   } catch (e) { return ''; }
 }
 
+// Strip markdown symbols so replies are clean plain text
+function cleanMarkdown(text) {
+  if (!text) return '';
+  var out = String(text);
+  out = out.replace(/\*\*/g, '');
+  out = out.replace(/\*/g, '');
+  out = out.replace(/_([^_\n]+)_/g, '$1');
+  out = out.replace(/`{1,3}/g, '');
+  out = out.replace(/^#{1,6}\s*/gm, '');
+  out = out.replace(/^[•▪◦··]\s*/gm, '');
+  out = out.replace(/^[-+]\s+/gm, '');
+  out = out.replace(/\[([^\]]+)\]\([^)]*\)/g, '$1');
+  out = out.replace(/!\[([^\]]*)\]\([^)]*\)/g, '$1');
+  out = out.replace(/[ \t]+/g, ' ');
+  out = out.replace(/^[ \t]+/gm, '');
+  out = out.replace(/\n{3,}/g, '\n\n');
+  out = out.trim();
+  return out;
+}
+
 // Convert Gemini-style contents [{role, parts:[{text}]}] to OpenAI messages
 function convertContentsToMessages(contents) {
   var messages = [];
@@ -148,7 +168,7 @@ app.post('/api/ai', async (req, res) => {
       res.status(err.status || 500).json({ error: err.error || { message: 'OpenRouter error' } });
       return;
     }
-    const text = extractOpenRouterText(data);
+    const text = cleanMarkdown(extractOpenRouterText(data));
     res.json({ candidates: [{ content: { parts: [{ text: text }] } }] });
   });
 });
