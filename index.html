@@ -1866,6 +1866,7 @@ const Admin={
   init:function(){
     if(App.currentSubView==='aibot')setTimeout(function(){AIBot.init()},50);
     if(App.currentSubView==='homework')setTimeout(function(){Admin.initCanvases()},100);
+    this.cleanupRequestNotifs();
     if(App.currentSubView==='pending'){
       setTimeout(function(){
         FB_DB.ref('pending_users').once('value').then(function(snap){
@@ -1892,6 +1893,23 @@ const Admin={
       },600);
     }
     Admin.updatePendingBadge();
+  },
+  cleanupRequestNotifs:function(){
+    try{
+      var notifs=DB.notifications();
+      var pendingIds={};
+      DB.users().filter(function(u){return u.role==='student'&&u.status==='pending'}).forEach(function(u){pendingIds[u.id]=true});
+      var seen={};
+      var out=notifs.filter(function(n){
+        if(!n.needApproval)return true;
+        if(!n.studentId)return false;
+        if(!pendingIds[n.studentId])return false;
+        if(seen[n.studentId])return false;
+        seen[n.studentId]=true;
+        return true;
+      });
+      if(out.length!==notifs.length){DB.saveNotifications(out)}
+    }catch(e){console.log('cleanupRequestNotifs error:',e)}
   },
   initCanvases:function(){
     document.querySelectorAll('.hw-annotation-canvas').forEach(function(canvas){
@@ -1928,6 +1946,12 @@ const Admin={
         if(prevPending.indexOf(u.id)===-1)newPending.push(u);
       });
       DB._set('users',merged);
+      if(newPending.length){
+        var existingNotifs=DB.notifications();
+        newPending=newPending.filter(function(u){
+          return !existingNotifs.some(function(n){return n.needApproval&&n.studentId===u.id});
+        });
+      }
       if(newPending.length){
         newPending.forEach(function(u){
           Notify.add('admin','طلب تسجيل جديد 📝','طلب تسجيل جديد من "'+u.name+'" بانتظار المراجعة.',u.id,true,{needApproval:true});
