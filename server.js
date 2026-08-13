@@ -18,7 +18,67 @@ try {
 const app = express();
 app.use(express.json({ limit: '10mb' }));
 
-const GEMINI_KEY = process.env.GEMINI_API_KEY || '';
+const OPENROUTER_KEY = process.env.OPENROUTER_API_KEY || '';
+const OPENROUTER_MODEL = process.env.OPENROUTER_MODEL || 'liquid/lfm-2.5-2.6b:free';
+const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
+
+function callOpenRouter(messages, opts, callback) {
+  const body = {
+    model: OPENROUTER_MODEL,
+    messages: messages,
+    max_tokens: opts.maxTokens || 2048,
+    temperature: opts.temperature != null ? opts.temperature : 0.7
+  };
+  fetch(OPENROUTER_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + OPENROUTER_KEY,
+      'HTTP-Referer': 'https://dr-momen-yosri.vercel.app',
+      'X-Title': 'Dr. Momen Yosri Science Platform'
+    },
+    body: JSON.stringify(body)
+  }).then(function(r){
+    return r.text().then(function(t){return {ok:r.ok,status:r.status,text:t}});
+  }).then(function(result){
+    if (!result.ok) {
+      var err = null;
+      try { err = JSON.parse(result.text).error; } catch (e) {}
+      callback(null, { status: result.status, error: err || { message: result.text } });
+      return;
+    }
+    try {
+      callback(JSON.parse(result.text), null);
+    } catch (e) {
+      callback(null, { status: 500, error: { message: 'Invalid OpenRouter response' } });
+    }
+  }).catch(function(e){
+    callback(null, { status: 500, error: { message: e.message } });
+  });
+}
+
+function extractOpenRouterText(data) {
+  try {
+    return data.choices[0].message.content || '';
+  } catch (e) { return ''; }
+}
+
+// Convert Gemini-style contents [{role, parts:[{text}]}] to OpenAI messages
+function convertContentsToMessages(contents) {
+  var messages = [];
+  (contents || []).forEach(function(c){
+    var role = c.role === 'model' ? 'assistant' : 'user';
+    var text = '';
+    if (c.parts && c.parts[0]) text = c.parts[0].text;
+    if (typeof c.parts === 'string') text = c.parts;
+    if (text === undefined || text === null) text = '';
+    messages.push({ role: role, content: String(text) });
+  });
+  if (messages.length && messages[0].content.indexOf('[تعليمات النظام]') !== -1) {
+    messages[0].role = 'system';
+  }
+  return messages;
+}
 
 // ===== Serve index.html =====
 app.get('/', (req, res) => {
@@ -27,25 +87,26 @@ app.get('/', (req, res) => {
 
 // ===== AI Bot Proxy =====
 app.post('/api/ai', async (req, res) => {
-  if (!GEMINI_KEY) return res.status(500).json({ error: 'AI key not configured' });
+  if (!OPENROUTER_KEY) return res.status(500).json({ error: 'AI key not configured' });
   const { contents, generationConfig } = req.body;
   if (!contents) return res.status(400).json({ error: 'Missing contents' });
-  fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=' + GEMINI_KEY, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ contents, generationConfig })
-  }).then(function(r){return r.text().then(function(t){return {ok:r.ok,status:r.status,text:t}})})
-  .then(function(result){
-    if (!result.ok) { res.status(result.status).send(result.text); return; }
-    res.json(JSON.parse(result.text));
-  }).catch(function(e){
-    res.status(500).json({ error: e.message });
+  const messages = convertContentsToMessages(contents);
+  callOpenRouter(messages, {
+    temperature: (generationConfig && generationConfig.temperature) || 0.7,
+    maxTokens: (generationConfig && generationConfig.maxOutputTokens) || 2048
+  }, function(data, err) {
+    if (err) {
+      res.status(err.status || 500).json({ error: err.error || { message: 'OpenRouter error' } });
+      return;
+    }
+    const text = extractOpenRouterText(data);
+    res.json({ candidates: [{ content: { parts: [{ text: text }] } }] });
   });
 });
 
 // ===== Daily Game Generator =====
 app.post('/api/game', async (req, res) => {
-  if (!GEMINI_KEY) return res.status(500).json({ error: 'AI key not configured' });
+  if (!OPENROUTER_KEY) return res.status(500).json({ error: 'AI key not configured' });
   const { grade, track, gameType } = req.body;
   if (!grade) return res.status(400).json({ error: 'Missing grade' });
   const gameTypes = {
@@ -69,27 +130,19 @@ For "order" type, each item: {"q":"Arrange these in order","items":["item1","ite
 
 Topics: biology, physics, chemistry, environmental science, earth science.
 Make questions educational and age-appropriate for ${grade}.`;
-  fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=' + GEMINI_KEY, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      contents: [{ role: 'user', parts: [{ text: prompt }] }],
-      generationConfig: { temperature: 0.8, maxOutputTokens: 4096 }
-    })
-  }).then(function(r){return r.text().then(function(t){return {ok:r.ok,status:r.status,text:t}})})
-  .then(function(result){
-    if (!result.ok) { res.status(result.status).send(result.text); return; }
+  callOpenRouter([{ role: 'user', content: prompt }], { temperature: 0.8, maxTokens: 4096 }, function(data, err) {
+    if (err) {
+      res.status(err.status || 500).json({ error: err.error || { message: 'OpenRouter error' } });
+      return;
+    }
     try {
-      var data = JSON.parse(result.text);
-      var text = data.candidates[0].content.parts[0].text;
+      var text = extractOpenRouterText(data);
       text = text.replace(/```json\n?/g,'').replace(/```\n?/g,'').trim();
       var questions = JSON.parse(text);
       res.json({ questions: questions, gameType: gameType });
     } catch(e) {
       res.status(500).json({ error: 'Failed to parse game data' });
     }
-  }).catch(function(e){
-    res.status(500).json({ error: e.message });
   });
 });
 

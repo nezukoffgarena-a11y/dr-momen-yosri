@@ -3488,7 +3488,7 @@ const AIBot={
       apiContents.push({role:m.role==='user'?'user':'model',parts:[{text:m.text}]});
     });
     var fetchPromise;
-    fetchPromise=fetch('/api/ai',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:apiContents,generationConfig:{temperature:0.7,maxOutputTokens:2048}})});
+    fetchPromise=fetch('/api/ai',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:apiContents,generationConfig:{temperature:0.7,maxOutputTokens:4096}})});
     fetchPromise.then(function(r){
       return r.text().then(function(t){
         if(!r.ok){console.error('AI Bot HTTP Error:',r.status,t);var errMsg='خطأ في الخادم ('+r.status+')';try{var d=JSON.parse(t);if(d.error&&d.error.message)errMsg=d.error.message;if(d.error&&d.error.code)errMsg+=' (Code: '+d.error.code+')';}catch(x){errMsg+=' '+t.substring(0,200)}return {error:true,msg:errMsg}}
