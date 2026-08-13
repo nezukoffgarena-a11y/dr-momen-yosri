@@ -19,7 +19,7 @@ const app = express();
 app.use(express.json({ limit: '10mb' }));
 
 const OPENROUTER_KEY = process.env.OPENROUTER_API_KEY || '';
-const OPENROUTER_MODEL = process.env.OPENROUTER_MODEL || 'liquid/lfm-2.5-2.6b:free';
+const OPENROUTER_MODEL = process.env.OPENROUTER_MODEL || 'nvidia/nemotron-nano-9b-v2:free';
 const GAME_MODEL = process.env.OPENROUTER_GAME_MODEL || 'nvidia/nemotron-nano-9b-v2:free';
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
 const MODEL_FALLBACKS = (process.env.OPENROUTER_FALLBACKS || '').split(',').map(function(s){return s.trim()}).filter(Boolean);
