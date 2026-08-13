@@ -1168,7 +1168,15 @@ const DB={
         });
         merged=Object.keys(mById).map(function(id){return mById[id]});
         try{DB._set('users',merged)}catch(e){}
-        return FB_DB.ref('users/'+emailKey).once('value');
+        return FB_DB.ref('deleted_users').once('value').then(function(delSnap){
+          var delData=delSnap.val()||{};
+          var localDel=DB.deletedUsers();
+          var dById={};
+          localDel.forEach(function(x){if(x&&x.id)dById[x.id]=x});
+          Object.keys(delData).forEach(function(id){var x=delData[id];if(x&&x.id)dById[id]=x});
+          DB.saveDeletedUsers(Object.keys(dById).map(function(id){return dById[id]}));
+          return FB_DB.ref('users/'+emailKey).once('value');
+        });
       });
     }).then(function(snap){
       var res=snap.val()||{};
@@ -1189,6 +1197,29 @@ const DB={
   },
   pushAllUsers:function(users){
     FB_DB.ref('all_users').set(users).catch(function(e){console.log(e)});
+  },
+  deletedUsers:function(){return this._get('deletedUsers')||[]},
+  saveDeletedUsers:function(u){this._set('deletedUsers',u)},
+  archiveUser:function(user){
+    if(!user)return;
+    var del=this.deletedUsers().filter(function(x){return x.id!==user.id});
+    var copy=Object.assign({},user,{deletedAt:Date.now()});
+    del.unshift(copy);
+    this.saveDeletedUsers(del);
+    FB_DB.ref('deleted_users/'+user.id).set(copy).catch(function(){});
+  },
+  restoreUser:function(id){
+    var del=this.deletedUsers();
+    var u=del.find(function(x){return x.id===id});
+    if(!u)return null;
+    this.saveDeletedUsers(del.filter(function(x){return x.id!==id}));
+    FB_DB.ref('deleted_users/'+id).remove().catch(function(){});
+    var restored=Object.assign({},u,{status:'approved'});
+    if(!this.getUserById(id)){
+      this.addUser(restored);
+    }
+    FB_DB.ref('all_users/'+id).set(restored).catch(function(){});
+    return restored;
   }
 };
 (function migrateVideos(){
@@ -1729,6 +1760,7 @@ const Admin={
       {id:'students',icon:'👥',label:Lang.t('adminStudents')},
       {id:'admins',icon:'👑',label:Lang.get()==='ar'?'الأدمنز':'Admins'},
       {id:'pending',icon:'⏳',label:Lang.t('adminPending')},
+      {id:'deletedStudents',icon:'🗑️',label:Lang.get()==='ar'?'المحذوفون':'Deleted'},
       {id:'lessons',icon:'🎬',label:Lang.t('adminLessons')},
       {id:'files',icon:'📁',label:Lang.t('adminFiles')},
       {id:'wallet',icon:'💰',label:Lang.t('adminWallet')},
@@ -1745,7 +1777,7 @@ const Admin={
   },
   switchSection:function(sub){
     App.currentSubView=sub;App.currentView='admin';
-    var doUpdate=function(){var content=document.getElementById('adminContent');if(content){content.innerHTML=Admin.renderSection();Admin.init();Utils.loadVideos()}document.querySelectorAll('#adminSidebar .sidebar-link').forEach(function(b){b.classList.remove('active')});var allSubs=['overview','students','admins','pending','lessons','files','exams','homework','wallet','reports','broadcast','aibot','settings'];var idx=allSubs.indexOf(sub);var btns=document.querySelectorAll('#adminSidebar .sidebar-link');if(idx>=0&&btns[idx])btns[idx].classList.add('active')};
+    var doUpdate=function(){var content=document.getElementById('adminContent');if(content){content.innerHTML=Admin.renderSection();Admin.init();Utils.loadVideos()}document.querySelectorAll('#adminSidebar .sidebar-link').forEach(function(b){b.classList.remove('active')});    var allSubs=['overview','students','admins','pending','deletedStudents','lessons','files','exams','homework','wallet','reports','broadcast','aibot','settings'];var idx=allSubs.indexOf(sub);var btns=document.querySelectorAll('#adminSidebar .sidebar-link');if(idx>=0&&btns[idx])btns[idx].classList.add('active')};
     if(sub==='overview'||sub==='students'||sub==='pending'){
       FB_DB.ref('all_users').once('value').then(function(snap){
         var allData=snap.val()||{};var allUsers=[];Object.keys(allData).forEach(function(id){var u=allData[id];if(u&&u.id)allUsers.push(u)});
@@ -1757,7 +1789,7 @@ const Admin={
   renderSection:function(){
     var s=App.currentSubView||'overview';
     var self=this;
-    var map={overview:function(){return self.overview()},students:function(){return self.students()},admins:function(){return self.adminsMgmt()},pending:function(){return self.pendingRequests()},lessons:function(){return self.lessonsMgmt()},files:function(){return self.filesMgmt()},wallet:function(){return self.walletMgmt()},exams:function(){return self.examsMgmt()},homework:function(){return self.homeworkMgmt()},reports:function(){return self.reportsMgmt()},broadcast:function(){return self.broadcastMgmt()},aibot:function(){return AIBot.render()},settings:function(){return self.settingsMgmt()}};
+    var map={overview:function(){return self.overview()},students:function(){return self.students()},admins:function(){return self.adminsMgmt()},pending:function(){return self.pendingRequests()},deletedStudents:function(){return self.deletedStudents()},lessons:function(){return self.lessonsMgmt()},files:function(){return self.filesMgmt()},wallet:function(){return self.walletMgmt()},exams:function(){return self.examsMgmt()},homework:function(){return self.homeworkMgmt()},reports:function(){return self.reportsMgmt()},broadcast:function(){return self.broadcastMgmt()},aibot:function(){return AIBot.render()},settings:function(){return self.settingsMgmt()}};
     return (map[s]||map.overview)();
   },
   init:function(){
@@ -1894,11 +1926,40 @@ const Admin={
     var users=DB.users().filter(function(u){return u.id!==id});
     DB.saveUsers(users);
     if(u){
+      DB.archiveUser(u);
       FB_DB.ref('all_users/'+id).remove().catch(function(){});
-      if(u.email){var fk=u.email.replace(/\./g,'_dot_');FB_DB.ref('users/'+fk).remove().catch(function(){})}
     }
     showToast(Lang.t('toastDeleted'),'error');
     this.switchSection(App.currentSubView||'students');
+  },
+  deletedStudents:function(){
+    var T=Lang.t.bind(Lang);var isAr=Lang.get()==='ar';
+    var del=DB.deletedUsers();
+    return '<div class="fade-in"><div class="page-header"><h1 class="page-title">'+(isAr?'الطلاب المحذوفون 🗑️':'Deleted Students 🗑️')+'</h1><p class="page-subtitle">'+(isAr?'بيانات الطلاب المحذوفين محفوظة، يمكنك استعادتهم في أي وقت.':'Deleted students are preserved. You can restore them anytime.')+'</p></div>'+
+    '<div class="card"><div class="table-container"><table><thead><tr><th>'+T('adminNameCol')+'</th><th>'+T('loginEmail')+'</th><th>'+T('adminStudentPhoneLabel')+'</th><th>'+T('adminParentLabel')+'</th><th>'+T('adminGradeCol')+'</th><th>'+T('adminTrackCol')+'</th><th>'+T('adminGovernorateLabel')+'</th><th>'+(isAr?'تاريخ الحذف':'Deleted At')+'</th><th>'+(isAr?'إجراءات':'Actions')+'</th></tr></thead><tbody>'+
+    del.map(function(u){
+      return '<tr><td><strong>'+Utils.escHtml(u.name)+'</strong></td><td style="font-family:var(--font-en);font-size:0.8rem" dir="ltr">'+Utils.escHtml(u.email)+'</td><td dir="ltr">'+Utils.escHtml(u.phone||'-')+'</td><td>'+Utils.escHtml(u.parentName||'-')+'</td><td>'+Utils.escHtml(u.grade||'-')+'</td><td><span class="badge badge-info">'+Utils.escHtml(u.track||'-')+'</span></td><td>'+Utils.escHtml(u.governorate||'-')+'</td><td>'+(u.deletedAt?Utils.formatDate(u.deletedAt):'-')+'</td><td style="display:flex;gap:4px;flex-wrap:wrap"><button class="btn btn-sm btn-primary" onclick="Admin.restoreStudent(\''+u.id+'\')">'+(isAr?'↩️ استعادة':'↩️ Restore')+'</button><button class="btn btn-sm btn-danger" onclick="Admin.purgeStudent(\''+u.id+'\')">'+(isAr?'حذف نهائي':'Purge')+'</button></td></tr>';
+    }).join('')+
+    '</tbody></table></div>'+(del.length===0?'<div class="empty-state"><div class="empty-icon">🗑️</div><p>'+(isAr?'لا يوجد طلاب محذوفون حالياً':'No deleted students yet')+'</p></div>':'')+'</div></div>';
+  },
+  restoreStudent:function(id){
+    var isAr=Lang.get()==='ar';
+    var u=DB.restoreUser(id);
+    if(u){
+      showToast((isAr?'تمت استعادة "':'Restored "')+u.name+(isAr?'" ✅':'" ✅'));
+      Notify.add('admin',(isAr?'تمت استعادة حسابك ✅':'Your account was restored ✅'),(isAr?'تمت استعادة حسابك على المنصة بواسطة الإدارة. أهلاً بعودتك!':'Your account was restored by the admin. Welcome back!'),id);
+    }
+    this.switchSection('deletedStudents');
+  },
+  purgeStudent:function(id){
+    var isAr=Lang.get()==='ar';
+    if(!confirm(isAr?'حذف بيانات هذا الطالب نهائياً من الأرشيف؟ لا يمكن التراجع.':'Permanently delete this student from the archive? This cannot be undone.'))return;
+    var u=DB.deletedUsers().find(function(x){return x.id===id});
+    DB.saveDeletedUsers(DB.deletedUsers().filter(function(x){return x.id!==id}));
+    FB_DB.ref('deleted_users/'+id).remove().catch(function(){});
+    if(u&&u.email){var fk=u.email.replace(/\./g,'_dot_');FB_DB.ref('users/'+fk).remove().catch(function(){})}
+    showToast(isAr?'تم الحذف النهائي':'Deleted permanently','error');
+    this.switchSection('deletedStudents');
   },
   pendingRequests:function(){
     var T=Lang.t.bind(Lang);
