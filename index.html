@@ -2878,11 +2878,11 @@ const Student={
   render:function(){return '<div class="dashboard">'+this.renderSidebar()+'<div class="main-content" id="studentContent">'+this.renderSection()+'</div></div>'},
   renderSidebar:function(){
     var s=App.currentSubView;
-    var links=[{id:'overview',icon:'🏠',label:Lang.t('navHome')},{id:'lessons',icon:'🎬',label:Lang.t('adminLessons')},{id:'wallet',icon:'💰',label:Lang.t('walletPageTitle')},{id:'paymentRequest',icon:'💳',label:'طلب فتح المنصة'},{id:'exams',icon:'📝',label:Lang.t('examTitle')},{id:'homework',icon:'📚',label:Lang.t('hwTitle')},{id:'files',icon:'📁',label:Lang.t('filesTitle')},{id:'reports',icon:'📊',label:Lang.t('reportsTitle')},{id:'badges',icon:'🏆',label:Lang.t('badgesTitle')},{id:'profile',icon:'👤',label:Lang.t('profilePageTitle')},{id:'parent',icon:'👨‍👩‍👦',label:Lang.t('parentTitle')},{id:'aibot',icon:'🤖',label:Lang.t('aiTitle')},{id:'game',icon:'🎮',label:Lang.t('gameTitle')}];
+    var links=[{id:'overview',icon:'🏠',label:Lang.t('navHome')},{id:'lessons',icon:'🎬',label:Lang.t('adminLessons')},{id:'wallet',icon:'💰',label:Lang.t('walletPageTitle')},{id:'exams',icon:'📝',label:Lang.t('examTitle')},{id:'homework',icon:'📚',label:Lang.t('hwTitle')},{id:'files',icon:'📁',label:Lang.t('filesTitle')},{id:'reports',icon:'📊',label:Lang.t('reportsTitle')},{id:'badges',icon:'🏆',label:Lang.t('badgesTitle')},{id:'profile',icon:'👤',label:Lang.t('profilePageTitle')},{id:'parent',icon:'👨‍👩‍👦',label:Lang.t('parentTitle')},{id:'aibot',icon:'🤖',label:Lang.t('aiTitle')},{id:'game',icon:'🎮',label:Lang.t('gameTitle')}];
     return '<div class="sidebar" id="studentSidebar"><button class="mobile-sidebar-close" onclick="App.toggleSidebar()">✕</button><div class="mobile-sidebar-header"><div class="sidebar-avatar" style="overflow:hidden"><img src="https://i.ibb.co/qMbk8PJT/Whats-App-Image-2026-07-28-at-16-32-06.jpg" alt="Logo" style="width:100%;height:100%;object-fit:cover"></div><div class="sidebar-name">'+Utils.escHtml(App.user?App.user.name:'Student')+'</div><div class="sidebar-role">'+Utils.escHtml((App.user?App.user.grade:'')+' — '+(App.user?App.user.track:''))+'</div></div><div class="sidebar-section">'+Lang.t('sidebarLouhati')+'</div>'+
     links.map(function(l){return '<button class="sidebar-link '+(s===l.id||(!s&&l.id==='overview')?'active':'')+'" onclick="Student.switchSection(\''+l.id+'\')"><span class="link-icon">'+l.icon+'</span><span>'+l.label+'</span></button>'}).join('')+'</div>';
   },
-  switchSection:function(sub){App.currentSubView=sub;App.currentView='student';var content=document.getElementById('studentContent');if(content){content.innerHTML=Student.renderSection();Student.init();Utils.loadVideos()}document.querySelectorAll('#studentSidebar .sidebar-link').forEach(function(b){b.classList.remove('active')});var idx=['overview','lessons','wallet','paymentRequest','exams','homework','files','reports','badges','profile','parent','aibot','game'].indexOf(sub);var btns=document.querySelectorAll('#studentSidebar .sidebar-link');if(idx>=0&&btns[idx])btns[idx].classList.add('active')},
+  switchSection:function(sub){App.currentSubView=sub;App.currentView='student';var content=document.getElementById('studentContent');if(content){content.innerHTML=Student.renderSection();Student.init();Utils.loadVideos()}document.querySelectorAll('#studentSidebar .sidebar-link').forEach(function(b){b.classList.remove('active')});var idx=['overview','lessons','wallet','exams','homework','files','reports','badges','profile','parent','aibot','game'].indexOf(sub);var btns=document.querySelectorAll('#studentSidebar .sidebar-link');if(idx>=0&&btns[idx])btns[idx].classList.add('active')},
   renderSection:function(){var s=App.currentSubView||'overview';App.user=DB.getUserById(App.user.id);var self=this;var map={overview:function(){return self.overview()},lessons:function(){return self.lessonsView()},wallet:function(){return self.walletView()},paymentRequest:function(){return self.paymentRequestView()},exams:function(){return self.examsView()},homework:function(){return self.homeworkView()},files:function(){return self.filesView()},reports:function(){return self.reportsView()},badges:function(){return self.badgesView()},profile:function(){return self.profileView()},parent:function(){return self.parentView()},aibot:function(){return AIBot.render()},game:function(){return Game.render()}};return (map[s]||map.overview)()},
   init:function(){
     if(App.currentSubView==='aibot')setTimeout(function(){AIBot.init()},50);
@@ -2931,7 +2931,7 @@ const Student={
   unlockLesson:function(lessonId){
     var lesson=DB.lessons().find(function(l){return l.id===lessonId});if(!lesson)return;
     var u=DB.getUserById(App.user.id);
-    if((u.wallet||0)<lesson.price){showToast('رصيد محفظتك غير كافٍ!','error');return}
+    if((u.wallet||0)<lesson.price){Student._pendingLesson=lesson;Student.switchSection('paymentRequest');return}
     if(!confirm('هل تريد فتح الدرس "'+lesson.title+'" بـ '+Utils.formatMoney(lesson.price)+'؟'))return;
     DB.updateUser(u.id,{wallet:(u.wallet||0)-lesson.price});
     var txns=DB.transactions();txns.push({id:Utils.uid(),userId:u.id,amount:lesson.price,type:'debit',note:'شراء درس: '+lesson.title,date:Date.now()});DB.saveTransactions(txns);
@@ -3352,19 +3352,24 @@ const Student={
     showToast(Lang.get()==='ar'?'تم تسليم الواجب بنجاح!':'Homework submitted!');
     this.switchSection('homework');
   },
+  _pendingLesson:null,
   paymentRequestView:function(){
+    var lesson=this._pendingLesson;
+    var lessonName=lesson?lesson.title:'درس';
+    var lessonPrice=lesson?lesson.price:0;
     var name=App.user?App.user.name:'طالب';
-    var msg=encodeURIComponent('أنا '+name+' أرسلت مبلغ تحويل لشحن محفظتي في منصة د. مؤمن يسري، يرجى فتح المنصة对我说. 🙏');
-    return '<div class="fade-in"><div class="page-header"><h1 class="page-title">💳 فتح المنصة</h1></div>'+
-    '<div class="card" style="margin-bottom:20px;border-left:4px solid var(--primary)">'+
-    '<h3 style="font-size:1.1rem;margin-bottom:12px">📢 خطوات فتح المنصة</h3>'+
+    var msg=encodeURIComponent('أنا '+name+' أريد فتح الدرس "'+lessonName+'" (المبلغ: '+lessonPrice+' ج.م). أرسلت صورة التحويل، يرجى فتح الدرس أو إرسال الكود. 🙏');
+    return '<div class="fade-in"><div class="page-header"><h1 class="page-title">💳 فتح الدرس</h1></div>'+
+    (lesson?'<div class="card" style="margin-bottom:20px;border-left:4px solid var(--primary)"><div style="display:flex;align-items:center;gap:12px"><div style="font-size:2rem">🎬</div><div><div style="font-weight:800;font-size:1.1rem">'+Utils.escHtml(lesson.title)+'</div><div style="color:var(--text-secondary)">سعر الفتح: <strong style="color:var(--primary)">'+Utils.formatMoney(lesson.price)+'</strong></div></div></div></div>':'')+
+    '<div class="card" style="margin-bottom:20px;border-left:4px solid var(--accent)">'+
+    '<h3 class="card-title" style="margin-bottom:16px">📲 خطوات الفتح</h3>'+
     '<ol style="color:var(--text-secondary);line-height:2.2;padding-right:20px;margin:0">'+
-    '<li>حوّل المبلغ على أحد الأرقام التالية</li>'+
+    '<li>حوّل مبلغ <strong>'+Utils.formatMoney(lessonPrice)+'</strong> على أحد الأرقام التالية</li>'+
     '<li>التقط صورة للإيصال / التحويل</li>'+
     '<li>ابعت الصورة على الواتساب من الزر أدناه</li>'+
-    '<li>المدرس هيفتحها لك فوراً ✅</li>'+
+    '<li>المدرس هيفتح الدرس لك أو يبعتلك الكود ✅</li>'+
     '</ol></div>'+
-    '<div class="card" style="margin-bottom:20px;border-left:4px solid var(--accent)">'+
+    '<div class="card" style="margin-bottom:20px;border-left:4px solid var(--primary)">'+
     '<h3 class="card-title" style="margin-bottom:16px">📲 أرقام الدفع</h3>'+
     '<div style="display:flex;flex-direction:column;gap:12px">'+
     '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:14px 16px;border-radius:var(--radius-sm);background:rgba(44,95,168,0.12);border:1px solid rgba(44,95,168,0.3)"><div><div style="font-weight:800">📲 إنستاباي InstaPay</div><div style="font-family:var(--font-en);direction:ltr;color:var(--text-secondary);letter-spacing:1px">01551346605</div></div><button class="btn btn-sm btn-primary" onclick="Utils.copyText(\'01551346605\')">📋 نسخ</button></div>'+
@@ -3372,9 +3377,11 @@ const Student={
     '</div></div>'+
     '<div class="card" style="text-align:center">'+
     '<h3 style="font-size:1.1rem;margin-bottom:16px">📩 ابعت صورة التحويل على الواتساب</h3>'+
-    '<p style="color:var(--text-secondary);margin-bottom:20px">بعد التحويل، اضغط الزر التالي وأرسل صورة الإيصال للمدرس وافتحها لك فوراً</p>'+
+    '<p style="color:var(--text-secondary);margin-bottom:20px">بعد التحويل، اضغط الزر التالي وأرسل صورة الإيصال للمدرس</p>'+
     '<a class="btn btn-accent btn-block" target="_blank" href="https://wa.me/201551346605?text='+msg+'" style="font-size:1.1rem;padding:14px">📱 فتح واتساب وإرسال صورة التحويل</a>'+
-    '</div></div>';
+    '</div>'+
+    '<div style="text-align:center;margin-top:16px"><button class="btn btn-secondary" onclick="Student.switchSection(\'lessons\')">← العودة للدروس</button></div>'+
+    '</div>';
   }
 };
 const CommunityPage={
