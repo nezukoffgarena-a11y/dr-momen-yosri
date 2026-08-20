@@ -1084,6 +1084,8 @@ const DB={
   saveHwSubmissions(s){this._set('hwSubmissions',s);this._push()},
   videoViews(){return this._get('videoViews')||[]},
   saveVideoViews(v){this._set('videoViews',v);this._push()},
+  paymentRequests(){return this._get('paymentRequests')||[]},
+  savePaymentRequests(p){this._set('paymentRequests',p);this._push()},
   logVideoView:function(lessonId,studentId,studentName){
     var views=this.videoViews();
     views.push({id:Utils.uid(),lessonId:lessonId,studentId:studentId,studentName:studentName,viewedAt:Date.now()});
@@ -1133,7 +1135,8 @@ const DB={
       users:DB.users(),
       homeworks:DB.homeworks(),
       hwSubmissions:DB.hwSubmissions(),
-      videoViews:DB.videoViews()
+      videoViews:DB.videoViews(),
+      paymentRequests:DB.paymentRequests()
     };
     var personal={
       transactions:DB.transactions(),
@@ -1840,6 +1843,7 @@ const Admin={
       {id:'lessons',icon:'🎬',label:Lang.t('adminLessons')},
       {id:'files',icon:'📁',label:Lang.t('adminFiles')},
       {id:'wallet',icon:'💰',label:Lang.t('adminWallet')},
+      {id:'paymentRequests',icon:'💳',label:'طلبات الدفع'},
       {id:'exams',icon:'📝',label:Lang.t('adminExams')},
       {id:'homework',icon:'📚',label:Lang.t('adminHomework')},
       {id:'reports',icon:'📋',label:Lang.t('adminReports')},
@@ -1852,18 +1856,27 @@ const Admin={
     '</div>';
   },
   pendingBadgeHtml:function(id){
-    if(id!=='pending')return'';
-    var count=DB.users().filter(function(u){return u.role==='student'&&u.status==='pending'}).length;
-    return count>0?'<span class="admin-pending-badge" id="adminPendingBadge">'+count+'</span>':'';
+    if(id==='pending'){
+      var count=DB.users().filter(function(u){return u.role==='student'&&u.status==='pending'}).length;
+      return count>0?'<span class="admin-pending-badge" id="adminPendingBadge">'+count+'</span>':'';
+    }
+    if(id==='paymentRequests'){
+      var pcount=DB.paymentRequests().filter(function(r){return r.status==='pending'}).length;
+      return pcount>0?'<span class="admin-pending-badge" id="adminPaymentBadge">'+pcount+'</span>':'';
+    }
+    return'';
   },
   updatePendingBadge:function(){
     var badge=document.getElementById('adminPendingBadge');
     var count=DB.users().filter(function(u){return u.role==='student'&&u.status==='pending'}).length;
     if(badge){badge.style.display=count>0?'':'none';badge.textContent=count;}
+    var pbadge=document.getElementById('adminPaymentBadge');
+    var pcount=DB.paymentRequests().filter(function(r){return r.status==='pending'}).length;
+    if(pbadge){pbadge.style.display=pcount>0?'':'none';pbadge.textContent=pcount;}
   },
   switchSection:function(sub){
     App.currentSubView=sub;App.currentView='admin';
-    var doUpdate=function(){var content=document.getElementById('adminContent');if(content){content.innerHTML=Admin.renderSection();Admin.init();Utils.loadVideos()}Admin.updatePendingBadge();document.querySelectorAll('#adminSidebar .sidebar-link').forEach(function(b){b.classList.remove('active')});    var allSubs=['overview','students','admins','pending','deletedStudents','lessons','files','exams','homework','wallet','reports','broadcast','aibot','settings'];var idx=allSubs.indexOf(sub);var btns=document.querySelectorAll('#adminSidebar .sidebar-link');if(idx>=0&&btns[idx])btns[idx].classList.add('active')};
+    var doUpdate=function(){var content=document.getElementById('adminContent');if(content){content.innerHTML=Admin.renderSection();Admin.init();Utils.loadVideos()}Admin.updatePendingBadge();document.querySelectorAll('#adminSidebar .sidebar-link').forEach(function(b){b.classList.remove('active')});    var allSubs=['overview','students','admins','pending','deletedStudents','lessons','files','exams','homework','wallet','paymentRequests','reports','broadcast','aibot','settings'];var idx=allSubs.indexOf(sub);var btns=document.querySelectorAll('#adminSidebar .sidebar-link');if(idx>=0&&btns[idx])btns[idx].classList.add('active')};
     if(sub==='overview'||sub==='students'||sub==='pending'){
       Promise.all([
         FB_DB.ref('all_users').once('value'),
@@ -1891,7 +1904,7 @@ const Admin={
   renderSection:function(){
     var s=App.currentSubView||'overview';
     var self=this;
-    var map={overview:function(){return self.overview()},students:function(){return self.students()},admins:function(){return self.adminsMgmt()},pending:function(){return self.pendingRequests()},deletedStudents:function(){return self.deletedStudents()},lessons:function(){return self.lessonsMgmt()},files:function(){return self.filesMgmt()},wallet:function(){return self.walletMgmt()},exams:function(){return self.examsMgmt()},homework:function(){return self.homeworkMgmt()},reports:function(){return self.reportsMgmt()},broadcast:function(){return self.broadcastMgmt()},aibot:function(){return AIBot.render()},settings:function(){return self.settingsMgmt()}};
+    var map={overview:function(){return self.overview()},students:function(){return self.students()},admins:function(){return self.adminsMgmt()},pending:function(){return self.pendingRequests()},deletedStudents:function(){return self.deletedStudents()},lessons:function(){return self.lessonsMgmt()},files:function(){return self.filesMgmt()},wallet:function(){return self.walletMgmt()},paymentRequests:function(){return self.paymentRequestsMgmt()},exams:function(){return self.examsMgmt()},homework:function(){return self.homeworkMgmt()},reports:function(){return self.reportsMgmt()},broadcast:function(){return self.broadcastMgmt()},aibot:function(){return AIBot.render()},settings:function(){return self.settingsMgmt()}};
     return (map[s]||map.overview)();
   },
   init:function(){
@@ -2872,18 +2885,88 @@ const Admin={
     App.user=DB.getUserById(App.user.id);
     showToast(Lang.t('adminUpdated'));
     this.switchSection('settings');
+  },
+  paymentRequestsMgmt:function(){
+    var T=Lang.t.bind(Lang);
+    var reqs=DB.paymentRequests().slice().reverse();
+    var pending=reqs.filter(function(r){return r.status==='pending'});
+    var processed=reqs.filter(function(r){return r.status!=='pending'});
+    var html='<div class="fade-in"><div class="page-header"><h1 class="page-title">💳 طلبات الدفع</h1></div>';
+    html+='<div style="display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap">';
+    html+='<div class="card" style="flex:1;min-width:120px;text-align:center;padding:16px"><div style="font-size:1.8rem;font-weight:800;color:var(--primary)">'+pending.length+'</div><div style="color:var(--text-secondary);font-size:0.85rem">قيد المراجعة</div></div>';
+    html+='<div class="card" style="flex:1;min-width:120px;text-align:center;padding:16px"><div style="font-size:1.8rem;font-weight:800;color:var(--accent)">'+reqs.filter(function(r){return r.status==='approved'}).length+'</div><div style="color:var(--text-secondary);font-size:0.85rem">تمت الموافقة</div></div>';
+    html+='<div class="card" style="flex:1;min-width:120px;text-align:center;padding:16px"><div style="font-size:1.8rem;font-weight:800;color:var(--danger)">'+reqs.filter(function(r){return r.status==='rejected'}).length+'</div><div style="color:var(--text-secondary);font-size:0.85rem">مرفوضة</div></div>';
+    html+='</div>';
+    if(pending.length>0){
+      html+='<h3 class="card-title" style="margin-bottom:16px">⏳ طلبات قيد المراجعة</h3>';
+      pending.forEach(function(r){
+        html+='<div class="card" style="margin-bottom:16px;border-left:4px solid var(--primary)">';
+        html+='<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px">';
+        html+='<div><strong style="font-size:1.1rem">'+Utils.escHtml(r.studentName)+'</strong><div style="color:var(--text-secondary);font-size:0.85rem">'+Utils.formatDate(r.date)+'</div></div>';
+        html+='<div style="font-size:1.3rem;font-weight:800;color:var(--primary)">'+Utils.formatMoney(r.amount)+'</div>';
+        html+='</div>';
+        if(r.screenshot&&r.screenshot!==''){
+          html+='<div style="margin-bottom:12px"><img src="'+r.screenshot+'" style="max-width:100%;max-height:300px;border-radius:var(--radius-sm);border:1px solid var(--border);cursor:pointer" onclick="window.open(this.src)"></div>';
+        }
+        html+='<div style="display:flex;gap:8px;flex-wrap:wrap">';
+        html+='<button class="btn btn-accent" onclick="Admin.approvePaymentRequest(\''+r.id+'\')" style="flex:1">✅ موافقة وإضافة '+Utils.formatMoney(r.amount)+' للمحفظة</button>';
+        html+='<button class="btn btn-danger" onclick="Admin.rejectPaymentRequest(\''+r.id+'\')" style="flex:1">❌ رفض</button>';
+        html+='</div></div>';
+      });
+    }
+    if(processed.length>0){
+      html+='<h3 class="card-title" style="margin:20px 0 16px">📋 الطلبات المعالجة</h3>';
+      processed.forEach(function(r){
+        html+='<div class="card" style="margin-bottom:12px;border-left:3px solid '+(r.status==='approved'?'var(--accent)':'var(--danger)')+'">';
+        html+='<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">';
+        html+='<div><strong>'+Utils.escHtml(r.studentName)+'</strong> — '+Utils.formatDate(r.date)+'<div style="color:var(--text-secondary);font-size:0.8rem">'+Utils.formatMoney(r.amount)+' — '+(r.status==='approved'?'✅ تمت الموافقة':'❌ مرفوض')+'</div></div>';
+        html+='</div></div>';
+      });
+    }
+    if(reqs.length===0){
+      html+='<div class="empty-state"><div class="empty-icon">💳</div><p>لا توجد طلبات دفع بعد</p></div>';
+    }
+    html+='</div>';
+    return html;
+  },
+  approvePaymentRequest:function(reqId){
+    var reqs=DB.paymentRequests();
+    var req=reqs.find(function(r){return r.id===reqId});
+    if(!req)return;
+    req.status='approved';req.reviewedAt=Date.now();
+    DB.savePaymentRequests(reqs);
+    var user=DB.getUserById(req.studentId);
+    if(user){
+      DB.updateUser(user.id,{wallet:(user.wallet||0)+req.amount});
+      var txns=DB.transactions();
+      txns.push({id:Utils.uid(),userId:user.id,amount:req.amount,type:'credit',note:'شحن محفظة via طلب فتح المنصة',date:Date.now()});
+      DB.saveTransactions(txns);
+      Notify.add('payment','تمت الموافقة على طلبك ✅','تمت الموافقة على طلبك بمبلغ '+Utils.formatMoney(req.amount)+' وتمت إضافته لمحفظتك',user.id);
+    }
+    showToast('تمت الموافقة على الطلب بنجاح ✅');
+    this.switchSection('paymentRequests');
+  },
+  rejectPaymentRequest:function(reqId){
+    var reqs=DB.paymentRequests();
+    var req=reqs.find(function(r){return r.id===reqId});
+    if(!req)return;
+    req.status='rejected';req.reviewedAt=Date.now();
+    DB.savePaymentRequests(reqs);
+    Notify.add('payment','تم رفض طلبك ❌','تم رفض طلبك بمبلغ '+Utils.formatMoney(req.amount),req.studentId);
+    showToast('تم رفض الطلب ❌');
+    this.switchSection('paymentRequests');
   }
 };
 const Student={
   render:function(){return '<div class="dashboard">'+this.renderSidebar()+'<div class="main-content" id="studentContent">'+this.renderSection()+'</div></div>'},
   renderSidebar:function(){
     var s=App.currentSubView;
-    var links=[{id:'overview',icon:'🏠',label:Lang.t('navHome')},{id:'lessons',icon:'🎬',label:Lang.t('adminLessons')},{id:'wallet',icon:'💰',label:Lang.t('walletPageTitle')},{id:'exams',icon:'📝',label:Lang.t('examTitle')},{id:'homework',icon:'📚',label:Lang.t('hwTitle')},{id:'files',icon:'📁',label:Lang.t('filesTitle')},{id:'reports',icon:'📊',label:Lang.t('reportsTitle')},{id:'badges',icon:'🏆',label:Lang.t('badgesTitle')},{id:'profile',icon:'👤',label:Lang.t('profilePageTitle')},{id:'parent',icon:'👨‍👩‍👦',label:Lang.t('parentTitle')},{id:'aibot',icon:'🤖',label:Lang.t('aiTitle')},{id:'game',icon:'🎮',label:Lang.t('gameTitle')}];
+    var links=[{id:'overview',icon:'🏠',label:Lang.t('navHome')},{id:'lessons',icon:'🎬',label:Lang.t('adminLessons')},{id:'wallet',icon:'💰',label:Lang.t('walletPageTitle')},{id:'paymentRequest',icon:'💳',label:'طلب فتح المنصة'},{id:'exams',icon:'📝',label:Lang.t('examTitle')},{id:'homework',icon:'📚',label:Lang.t('hwTitle')},{id:'files',icon:'📁',label:Lang.t('filesTitle')},{id:'reports',icon:'📊',label:Lang.t('reportsTitle')},{id:'badges',icon:'🏆',label:Lang.t('badgesTitle')},{id:'profile',icon:'👤',label:Lang.t('profilePageTitle')},{id:'parent',icon:'👨‍👩‍👦',label:Lang.t('parentTitle')},{id:'aibot',icon:'🤖',label:Lang.t('aiTitle')},{id:'game',icon:'🎮',label:Lang.t('gameTitle')}];
     return '<div class="sidebar" id="studentSidebar"><button class="mobile-sidebar-close" onclick="App.toggleSidebar()">✕</button><div class="mobile-sidebar-header"><div class="sidebar-avatar" style="overflow:hidden"><img src="https://i.ibb.co/qMbk8PJT/Whats-App-Image-2026-07-28-at-16-32-06.jpg" alt="Logo" style="width:100%;height:100%;object-fit:cover"></div><div class="sidebar-name">'+Utils.escHtml(App.user?App.user.name:'Student')+'</div><div class="sidebar-role">'+Utils.escHtml((App.user?App.user.grade:'')+' — '+(App.user?App.user.track:''))+'</div></div><div class="sidebar-section">'+Lang.t('sidebarLouhati')+'</div>'+
     links.map(function(l){return '<button class="sidebar-link '+(s===l.id||(!s&&l.id==='overview')?'active':'')+'" onclick="Student.switchSection(\''+l.id+'\')"><span class="link-icon">'+l.icon+'</span><span>'+l.label+'</span></button>'}).join('')+'</div>';
   },
-  switchSection:function(sub){App.currentSubView=sub;App.currentView='student';var content=document.getElementById('studentContent');if(content){content.innerHTML=Student.renderSection();Student.init();Utils.loadVideos()}document.querySelectorAll('#studentSidebar .sidebar-link').forEach(function(b){b.classList.remove('active')});var idx=['overview','lessons','wallet','exams','homework','files','reports','badges','profile','parent','aibot','game'].indexOf(sub);var btns=document.querySelectorAll('#studentSidebar .sidebar-link');if(idx>=0&&btns[idx])btns[idx].classList.add('active')},
-  renderSection:function(){var s=App.currentSubView||'overview';App.user=DB.getUserById(App.user.id);var self=this;var map={overview:function(){return self.overview()},lessons:function(){return self.lessonsView()},wallet:function(){return self.walletView()},exams:function(){return self.examsView()},homework:function(){return self.homeworkView()},files:function(){return self.filesView()},reports:function(){return self.reportsView()},badges:function(){return self.badgesView()},profile:function(){return self.profileView()},parent:function(){return self.parentView()},aibot:function(){return AIBot.render()},game:function(){return Game.render()}};return (map[s]||map.overview)()},
+  switchSection:function(sub){App.currentSubView=sub;App.currentView='student';var content=document.getElementById('studentContent');if(content){content.innerHTML=Student.renderSection();Student.init();Utils.loadVideos()}document.querySelectorAll('#studentSidebar .sidebar-link').forEach(function(b){b.classList.remove('active')});var idx=['overview','lessons','wallet','paymentRequest','exams','homework','files','reports','badges','profile','parent','aibot','game'].indexOf(sub);var btns=document.querySelectorAll('#studentSidebar .sidebar-link');if(idx>=0&&btns[idx])btns[idx].classList.add('active')},
+  renderSection:function(){var s=App.currentSubView||'overview';App.user=DB.getUserById(App.user.id);var self=this;var map={overview:function(){return self.overview()},lessons:function(){return self.lessonsView()},wallet:function(){return self.walletView()},paymentRequest:function(){return self.paymentRequestView()},exams:function(){return self.examsView()},homework:function(){return self.homeworkView()},files:function(){return self.filesView()},reports:function(){return self.reportsView()},badges:function(){return self.badgesView()},profile:function(){return self.profileView()},parent:function(){return self.parentView()},aibot:function(){return AIBot.render()},game:function(){return Game.render()}};return (map[s]||map.overview)()},
   init:function(){
     if(App.currentSubView==='aibot')setTimeout(function(){AIBot.init()},50);
     if(App.currentSubView==='game')setTimeout(function(){Game.init()},50);
@@ -3351,6 +3434,60 @@ const Student={
     delete this._hwFiles[hwId];
     showToast(Lang.get()==='ar'?'تم تسليم الواجب بنجاح!':'Homework submitted!');
     this.switchSection('homework');
+  },
+  paymentRequestView:function(){
+    var u=DB.getUserById(App.user.id);
+    var myReqs=DB.paymentRequests().filter(function(r){return r.studentId===u.id}).reverse();
+    var pendingCount=myReqs.filter(function(r){return r.status==='pending'}).length;
+    return '<div class="fade-in"><div class="page-header"><h1 class="page-title">💳 طلب فتح المنصة</h1></div>'+
+    '<div class="card" style="margin-bottom:20px;border-left:4px solid var(--primary)">'+
+    '<h3 class="card-title" style="margin-bottom:16px">📲 أرقام الدفع والتحويل</h3>'+
+    '<p style="color:var(--text-secondary);line-height:1.8;margin-bottom:16px">حوّل المبلغ على أحد الأرقام التالية ثم أرفق صورة التحويل أدناه. سيتم مراجعة طلبك من قبل المدرس وفتح المنصة لك.</p>'+
+    '<div style="display:flex;flex-direction:column;gap:12px">'+
+    '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:14px 16px;border-radius:var(--radius-sm);background:rgba(44,95,168,0.12);border:1px solid rgba(44,95,168,0.3)"><div><div style="font-weight:800">📲 إنستاباي InstaPay</div><div style="font-family:var(--font-en);direction:ltr;color:var(--text-secondary);letter-spacing:1px">01551346605</div></div><button class="btn btn-sm btn-primary" onclick="Utils.copyText(\'01551346605\')">📋 نسخ</button></div>'+
+    '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:14px 16px;border-radius:var(--radius-sm);background:rgba(200,162,78,0.12);border:1px solid rgba(200,162,78,0.35)"><div><div style="font-weight:800">👛 محفظة / واتساب</div><div style="font-family:var(--font-en);direction:ltr;color:var(--text-secondary);letter-spacing:1px">01110228959</div></div><button class="btn btn-sm btn-accent" onclick="Utils.copyText(\'01110228959\')">📋 نسخ</button></div>'+
+    '</div></div>'+
+    '<div class="card" style="margin-bottom:20px">'+
+    '<h3 class="card-title" style="margin-bottom:16px">📝 إرسال طلب فتح</h3>'+
+    '<div class="form-group"><label class="form-label">المبلغ (ج.م)</label><input class="form-input" type="number" id="prAmount" min="1" placeholder="أدخل المبلغ المحول"></div>'+
+    '<div class="form-group"><label class="form-label">صورة التحويل / الإيصال</label>'+
+    '<div id="prPreview" style="margin-bottom:12px;display:none"><img id="prPreviewImg" style="max-width:100%;max-height:250px;border-radius:var(--radius-sm);border:1px solid var(--border)"></div>'+
+    '<input type="file" id="prFile" accept="image/*" style="display:none" onchange="Student.previewPaymentScreenshot(event)">'+
+    '<button type="button" class="btn btn-secondary" onclick="document.getElementById(\'prFile\').click()">📷 اختر صورة التحويل</button>'+
+    '</div>'+
+    '<button class="btn btn-primary btn-block" onclick="Student.submitPaymentRequest()" style="margin-top:12px">📤 إرسال الطلب</button>'+
+    '</div>'+
+    '<div class="card"><h3 class="card-title" style="margin-bottom:16px">📋 طلباتي السابقة</h3>'+
+    (myReqs.length===0?'<div class="empty-state"><div class="empty-icon">💳</div><p>لا توجد طلبات بعد</p></div>':'')+
+    myReqs.map(function(r){return '<div class="transaction-item" style="border-left:3px solid '+(r.status==='approved'?'var(--accent)':r.status==='rejected'?'var(--danger)':'var(--primary)')+'">'+
+    '<div class="transaction-icon" style="background:'+(r.status==='approved'?'rgba(200,162,78,0.15)':r.status==='rejected'?'rgba(255,71,87,0.15)':'rgba(44,95,168,0.15)')+'">'+(r.status==='approved'?'✅':r.status==='rejected'?'❌':'⏳')+'</div>'+
+    '<div class="transaction-info"><div class="transaction-title">'+Utils.formatMoney(r.amount)+'</div>'+
+    '<div class="transaction-date">'+Utils.formatDate(r.date)+(r.status==='pending'?' — قيد المراجعة':r.status==='approved'?' — ✅ تمت الموافقة':' — ❌ تم الرفض')+'</div>'+
+    '</div></div>'}).join('')+'</div></div>';
+  },
+  previewPaymentScreenshot:function(e){
+    var file=e.target.files[0];if(!file)return;
+    var reader=new FileReader();
+    reader.onload=function(ev){
+      Utils.compressImage(ev.target.result,0.4,600).then(function(dataUrl){
+        document.getElementById('prPreviewImg').src=dataUrl;
+        document.getElementById('prPreview').style.display='block';
+      });
+    };
+    reader.readAsDataURL(file);
+  },
+  _prScreenshot:null,
+  submitPaymentRequest:function(){
+    var amount=parseInt(document.getElementById('prAmount').value);
+    if(!amount||amount<=0){showToast('أدخل مبلغ صحيح!','error');return}
+    var previewImg=document.getElementById('prPreviewImg');
+    var screenshot=previewImg?previewImg.src:'';
+    var u=DB.getUserById(App.user.id);
+    var req={id:Utils.uid(),studentId:u.id,studentName:u.name,amount:amount,screenshot:screenshot,status:'pending',date:Date.now()};
+    var reqs=DB.paymentRequests();reqs.push(req);DB.savePaymentRequests(reqs);
+    Notify.add('payment','طلب فتح منصة جديد 💳','طالب "'+u.name+'" أرسل طلب فتح بمبلغ '+Utils.formatMoney(amount),u.id,true,{paymentRequestId:req.id});
+    showToast('تم إرسال طلبك بنجاح! سيتم مراجعته من قبل المessor قريباً 🎉');
+    this.switchSection('paymentRequest');
   }
 };
 const CommunityPage={
