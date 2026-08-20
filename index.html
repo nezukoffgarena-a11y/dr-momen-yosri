@@ -1147,12 +1147,10 @@ const DB={
       if(k.startsWith('dm_aiChat_'))aiChats[k.replace('dm_aiChat_','')]=DB._get(k.replace('dm_',''));
     });
     personal.unlocks=unlocks;personal.aiChats=aiChats;
-    var hasShared=Object.keys(shared).some(function(k){return Array.isArray(shared[k])&&shared[k].length>0});
     var hasPersonal=(personal.transactions.length||personal.examResults.length||personal.reports.length||Object.keys(unlocks).length||Object.keys(aiChats).length)>0;
     var writes=[];
-    if(hasShared&&isAdmin)writes.push(FB_DB.ref('shared/data').set(shared));
-    else if(hasShared)console.log('Firebase: skipped shared push (only admin writes shared data)');
-    else console.log('Firebase: skipped empty shared push (protecting cloud data)');
+    if(isAdmin)writes.push(FB_DB.ref('shared/data').set(shared));
+    else if(Object.keys(shared).some(function(k){return Array.isArray(shared[k])&&shared[k].length>0}))console.log('Firebase: skipped shared push (only admin writes shared data)');
     if(hasPersonal)writes.push(FB_DB.ref('users/'+emailKey).set(personal));
     Promise.all(writes).then(function(){DB._pushing=false}).catch(function(e){console.log('Firebase push error:',e);DB._pushing=false});
     setTimeout(function(){DB._pushing=false},5000);
@@ -1167,16 +1165,10 @@ const DB={
         var data=res[k]||[];
         var local=DB._get(k)||[];
         if(k==='users'&&Array.isArray(data)){
-          if(local.length&&data.length){
-            var byId={};
-            local.forEach(function(u){if(u&&u.id)byId[u.id]=u});
-            data.forEach(function(u){if(u&&u.id)byId[u.id]=u});
-            data=Object.keys(byId).map(function(id){return byId[id]});
-          }else if(local.length&&!data.length){
+          if(data.length){
+          }else{
             data=local;
           }
-        }else if(!data.length&&local.length){
-          data=local;
         }
         if(k==='lessons'&&Array.isArray(data)){data=data.map(function(les){var c=Object.assign({},les);if(c.videoData){var vidData=c.videoData;var lid=c.id;delete c.videoData;c._hasVideo=true;VideoStore.save(lid,vidData,function(ok){if(!ok){console.error('syncFromServer: video save failed for',lid);var ls=DB._get('lessons')||[];var idx=ls.findIndex(function(x){return x.id===lid});if(idx>=0){ls[idx]._hasVideo=false;try{DB._set('lessons',ls)}catch(e){}}}})}else if(!c._hasVideo){delete c._hasVideo}return c})}
         try{DB._set(k,data)}catch(e){console.error('sync write failed:',k,e)}
@@ -1184,20 +1176,23 @@ const DB={
       var emailKey=session.email.replace(/\./g,'_dot_');
       return Promise.all([
         FB_DB.ref('all_users').once('value'),
-        FB_DB.ref('pending_users').once('value')
+        FB_DB.ref('pending_users').once('value'),
+        FB_DB.ref('deleted_users').once('value')
       ]).then(function(alls){
         var allData=alls[0].val()||{};
         var penData=alls[1].val()||{};
+        var delData=alls[2].val()||{};
+        var delIds={};Object.keys(delData).forEach(function(id){delIds[id]=true});
         var merged=DB.users();
         var mById={};
         merged.forEach(function(u){if(u&&u.id)mById[u.id]=u});
         Object.keys(allData).forEach(function(id){
           var u=allData[id];
-          if(u&&u.id)mById[u.id]=u;
+          if(u&&u.id&&!delIds[id])mById[u.id]=u;
         });
         Object.keys(penData).forEach(function(id){
           var u=penData[id];
-          if(u&&u.id){
+          if(u&&u.id&&!delIds[id]){
             var lu=mById[u.id];
             if(lu&&['approved','rejected','banned'].indexOf(lu.status)>=0)return;
             mById[u.id]=u;
@@ -1205,15 +1200,12 @@ const DB={
         });
         merged=Object.keys(mById).map(function(id){return mById[id]});
         try{DB._set('users',merged)}catch(e){}
-        return FB_DB.ref('deleted_users').once('value').then(function(delSnap){
-          var delData=delSnap.val()||{};
-          var localDel=DB.deletedUsers();
-          var dById={};
-          localDel.forEach(function(x){if(x&&x.id)dById[x.id]=x});
-          Object.keys(delData).forEach(function(id){var x=delData[id];if(x&&x.id)dById[id]=x});
-          DB.saveDeletedUsers(Object.keys(dById).map(function(id){return dById[id]}));
-          return FB_DB.ref('users/'+emailKey).once('value');
-        });
+        var localDel=DB.deletedUsers();
+        var dById={};
+        localDel.forEach(function(x){if(x&&x.id)dById[x.id]=x});
+        Object.keys(delData).forEach(function(id){var x=delData[id];if(x&&x.id)dById[id]=x});
+        DB.saveDeletedUsers(Object.keys(dById).map(function(id){return dById[id]}));
+        return FB_DB.ref('users/'+emailKey).once('value');
       });
     }).then(function(snap){
       var res=snap.val()||{};
@@ -1520,6 +1512,8 @@ const App={
       }).catch(function(){
         if(u.status==='pending'){callback({pending:true});return}
         if(u.status==='banned'){callback({banned:true});return}
+        var delUsers=DB.deletedUsers()||[];
+        if(delUsers.some(function(d){return d.id===u.id})){callback({error:'تم حذف هذا الحساب'});return}
         DB.saveSession({userId:u.id,email:email,role:u.role});
         self.user=u;
         callback({success:true,role:u.role});
@@ -1959,12 +1953,13 @@ const Admin={
       var allData=snap.val()||{};
       var allUsers=[];Object.keys(allData).forEach(function(id){var u=allData[id];if(u&&u.id)allUsers.push(u)});
       if(!allUsers.length)return;
+      var delIds={};(DB.deletedUsers()||[]).forEach(function(d){if(d&&d.id)delIds[d.id]=true});
       var prevPending=DB.users().filter(function(u){return u.role==='student'&&u.status==='pending'}).map(function(u){return u.id});
       var existing=DB.users();
       var byId={};var emailToId={};
       existing.forEach(function(x){if(x&&x.id){byId[x.id]=x;if(x.email)emailToId[x.email]=x.id}});
       allUsers.forEach(function(fu){
-        if(!fu||!fu.id)return;
+        if(!fu||!fu.id||delIds[fu.id])return;
         if(isPendingSource){
           var cur=byId[fu.id]||(fu.email?byId[emailToId[fu.email]]:null);
           if(cur&&['approved','rejected','banned'].indexOf(cur.status)>=0)return;
@@ -1972,6 +1967,7 @@ const Admin={
         byId[fu.id]=fu;if(fu.email)emailToId[fu.email]=fu.id;
       });
       var merged=Object.keys(byId).map(function(id){return byId[id]});
+      merged=merged.filter(function(u){return !delIds[u.id]});
       var newPending=[];
       merged.filter(function(u){return u.role==='student'&&u.status==='pending'}).forEach(function(u){
         if(prevPending.indexOf(u.id)===-1)newPending.push(u);
