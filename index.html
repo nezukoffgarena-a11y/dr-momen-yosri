@@ -237,8 +237,10 @@ tr:hover td{background:rgba(200,162,78,0.03)}
 .content-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:20px}
 .lesson-card{display:flex;flex-direction:column;overflow:hidden}
 .lesson-thumb{height:180px;background:linear-gradient(135deg,var(--cobalt),rgba(11,19,43,0.8));display:flex;align-items:center;justify-content:center;font-size:3rem;position:relative;overflow:hidden}
+.lesson-thumb:has(> img){aspect-ratio:16/9;height:auto;min-height:140px;max-height:220px}
 .lesson-thumb > img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0!important;pointer-events:none}
 .lesson-thumb > img ~ span{display:none!important}
+.lesson-thumb::after{content:'';position:absolute;inset:0;background:linear-gradient(45deg,transparent 30%,rgba(200,162,78,0.03) 50%,transparent 70%);animation:shimmerCard 3s linear infinite;z-index:1;pointer-events:none}
 .lesson-thumb > img ~ .lesson-thumb-overlay{z-index:2}
 @keyframes shimmerCard{to{transform:translateX(100%)}}
 .lesson-thumb-overlay{position:absolute;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;opacity:0;transition:var(--transition);backdrop-filter:blur(2px)}
@@ -419,7 +421,7 @@ body.sidebar-open{overflow:hidden}
 .exam-timer{font-size:1.1rem;text-align:center}
 .question-text{font-size:0.95rem}
 .option-label{padding:12px 14px;font-size:0.88rem}
-.lesson-thumb{height:140px}
+.lesson-thumb{height:140px;min-height:120px;max-height:180px}
 .lesson-body{padding:16px}
 .feature-card{padding:22px}
 .feature-icon{width:48px;height:48px;font-size:1.3rem;border-radius:12px}
@@ -2300,8 +2302,19 @@ const Admin={
     };
     var readThumb=function(cb){
       if(thumbFile){
-        if(thumbFile.size>5*1024*1024){showToast('حجم الصورة أكبر من 5MB','error');if(submitBtn){submitBtn.disabled=false;submitBtn.textContent=editId?'حفظ التعديلات':'إضافة الدرس'}return}
-        var tr=new FileReader();tr.onload=function(){cb(tr.result)};tr.onerror=function(){cb(null)};tr.readAsDataURL(thumbFile)
+        if(thumbFile.size>10*1024*1024){showToast('حجم الصورة أكبر من 10MB','error');if(submitBtn){submitBtn.disabled=false;submitBtn.textContent=editId?'حفظ التعديلات':'إضافة الدرس'}return}
+        var img=new Image();
+        var url=URL.createObjectURL(thumbFile);
+        img.onload=function(){
+          URL.revokeObjectURL(url);
+          var maxW=800;var w=img.width;var h=img.height;
+          if(w>maxW){h=Math.round(h*maxW/w);w=maxW}
+          var c=document.createElement('canvas');c.width=w;c.height=h;
+          c.getContext('2d').drawImage(img,0,0,w,h);
+          cb(c.toDataURL('image/jpeg',0.7))
+        };
+        img.onerror=function(){URL.revokeObjectURL(url);cb(null)};
+        img.src=url
       }else{cb(null)}
     };
     if(file){
