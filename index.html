@@ -2260,24 +2260,23 @@ const Admin={
     '<div style="display:flex;gap:6px"><select class="form-select" id="lFreeStudent" style="flex:1"><option value="">— اختر طالب —</option>'+
     DB.users().filter(function(u){return u.role==='student'&&u.status==='approved'}).map(function(u){return '<option value="'+u.id+'">'+Utils.escHtml(u.name)+' — '+Utils.escHtml(u.grade)+'</option>'}).join('')+
     '</select><button type="button" class="btn btn-sm btn-accent" onclick="var s=document.getElementById(\'lFreeStudent\');if(!s||!s.value){showToast(\'اختر طالب أولاً\',\'error\');return}document.getElementById(\'lessonForm\').requestSubmit()">🔓 حفظ + فتح</button></div>'+
-    '</div>'+
+    '</div></div>':'')+
     '<div style="border-top:1px solid var(--glass-border);margin:16px 0;padding-top:16px">'+
     '<h4 style="color:var(--accent);margin-bottom:8px;font-size:0.95rem">🔢 حد مشاهدات لطالب معين</h4>'+
-    '<p style="color:var(--text-muted);font-size:0.8rem;margin-bottom:10px">حدد عدد المشاهدات الأقصى لكل طالب. القيمة الافتراضية: '+((lesson.maxViews||0)||'بلا حد')+'. اترك 0 لبلا حد.</p>'+
+    '<p style="color:var(--text-muted);font-size:0.8rem;margin-bottom:10px">حدد عدد المشاهدات الأقصى لكل طالب. القيمة الافتراضية في الحقل العلوي. اترك 0 لبلا حد.</p>'+
     '<div id="studentLimitsList" style="max-height:250px;overflow-y:auto;margin-bottom:10px">'+
     DB.users().filter(function(u){return u.role==='student'&&u.status==='approved'}).map(function(u){
-      var curLimit=(lesson.studentLimits&&lesson.studentLimits[u.id]!==undefined)?lesson.studentLimits[u.id]:'';
+      var curLimit=(isEdit&&lesson&&lesson.studentLimits&&lesson.studentLimits[u.id]!==undefined)?lesson.studentLimits[u.id]:'';
       return '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--glass-border)">'+
       '<span style="flex:1;font-size:0.82rem;font-weight:600">'+Utils.escHtml(u.name)+'</span>'+
       '<span style="font-size:0.72rem;color:var(--text-muted)">'+Utils.escHtml(u.grade)+'</span>'+
-      '<input type="number" class="form-input" min="0" data-student-id="'+u.id+'" value="'+curLimit+'" placeholder="'+(lesson.maxViews||0)+'" style="width:80px;font-size:0.8rem;padding:4px 8px;text-align:center" dir="ltr">'+
+      '<input type="number" class="form-input" min="0" data-student-id="'+u.id+'" value="'+curLimit+'" placeholder="'+(isEdit&&lesson?(lesson.maxViews||0):0)+'" style="width:80px;font-size:0.8rem;padding:4px 8px;text-align:center" dir="ltr">'+
       '</div>'
     }).join('')+
     '</div>'+
     '<button type="button" class="btn btn-sm btn-secondary" onclick="var inputs=document.querySelectorAll(\'#studentLimitsList input[data-student-id]\');var limits={};inputs.forEach(function(inp){var sid=inp.getAttribute(\'data-student-id\');var val=parseInt(inp.value);if(sid){limits[sid]=isNaN(val)?0:val}});document.getElementById(\'lStudentLimits\').value=JSON.stringify(limits);showToast(\'تم حفظ الحدود مؤقتاً — اضغط حفظ لإتمام العملية\')">💾 حفظ الحدود</button>'+
-    '<input type="hidden" id="lStudentLimits" value="'+(isEdit&&lesson.studentLimits?JSON.stringify(lesson.studentLimits):'{}')+'">'+
+    '<input type="hidden" id="lStudentLimits" value="'+(isEdit&&lesson&&lesson.studentLimits?JSON.stringify(lesson.studentLimits):'{}')+'">'+
     '</div>'+
-    '</div>':'')+
     '<button type="submit" class="btn btn-primary btn-block">'+(isEdit?T('adminSaveLesson'):T('adminAddLessonBtn'))+'</button></form></div></div>';
     document.body.insertAdjacentHTML('beforeend',html);
   },
