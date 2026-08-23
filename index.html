@@ -1098,6 +1098,11 @@ const DB={
     var views=this.videoViews();
     return views.filter(function(v){return v.lessonId===lessonId&&v.studentId===studentId}).length;
   },
+  getStudentMaxViews:function(lesson,studentId){
+    if(!lesson)return 0;
+    if(lesson.studentLimits&&lesson.studentLimits[studentId]!==undefined)return lesson.studentLimits[studentId];
+    return lesson.maxViews||0;
+  },
   session(){return this._get('session')},
   saveSession(s){this._set('session',s)},
   clearSession(){localStorage.removeItem('dm_session')},
@@ -1322,7 +1327,7 @@ const Utils={
     if(ok)showToast('تم نسخ الرقم 📋');
     else showToast(text,'info');
   },
-  loadVideos(){setTimeout(function(){document.querySelectorAll('.video-placeholder[data-lesson-id]').forEach(function(el){var lid=el.getAttribute('data-lesson-id');if(!lid||el.dataset.loaded)return;el.dataset.loaded='1';VideoStore.get(lid,function(data){if(data){var v=document.createElement('video');v.controls=true;v.style.cssText='width:100%;height:100%;object-fit:contain;background:#000;border-radius:0';v.src=data;v.onplay=function(){var lesson=DB.lessons().find(function(x){return x.id===lid});var mxViews=lesson?lesson.maxViews||0:0;var uid=App.user?App.user.id:'admin';if(mxViews>0&&uid!=='admin'&&App.user&&App.user.role!=='admin'){var cnt=DB.countViews(lid,uid);if(cnt>=mxViews){v.pause();v.remove();el.innerHTML='<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;height:100%;background:#000;color:#ff4757;font-size:0.9rem;text-align:center;padding:16px"><div style="font-size:2rem;margin-bottom:8px">🚫</div><div>لقد وصلت للحد الأقصى للمشاهدات</div><div style="font-size:0.75rem;color:var(--text-muted);margin-top:4px">'+cnt+'/'+mxViews+' مشاهدة مستخدمة</div></div>';el.dataset.loaded='';return}}DB.logVideoView(lid,uid,App.user?App.user.name:'')};el.parentNode.replaceChild(v,el)}else{var ls=DB.lessons();var lx=ls.find(function(x){return x.id===lid});if(lx&&lx.videoUrl){var a=document.createElement('a');a.href=lx.videoUrl;a.target='_blank';a.style.cssText='width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.2rem;text-decoration:none;background:#000;position:absolute;inset:0;flex-direction:column;gap:6px';a.innerHTML='▶️ <span style="font-size:0.7rem;opacity:0.7">شاهد من الرابط</span>';a.onclick=function(e){e.stopPropagation();var lesson=DB.lessons().find(function(x){return x.id===lid});var mxViews=lesson?lesson.maxViews||0:0;var uid=App.user?App.user.id:'admin';if(mxViews>0&&uid!=='admin'&&App.user&&App.user.role!=='admin'){var cnt=DB.countViews(lid,uid);if(cnt>=mxViews){e.preventDefault();showToast('🚫 وصلت للحد الأقصى من المشاهدات ('+cnt+'/'+mxViews+')','error');return}}DB.logVideoView(lid,uid,App.user?App.user.name:'')};el.style.position='relative';el.appendChild(a)}else if(lx&&lx._hasVideo){el.innerHTML='<span style="color:var(--warning);font-size:0.75rem;text-align:center;padding:8px">⚠️ الفيديو محفوظ على جهاز آخر<br>استخدم رابط YouTube بديل</span>';el.style.cursor='default'}else{el.innerHTML='<span style="color:var(--text-muted);font-size:0.8rem">🎬 لا يوجد فيديو</span>';el.style.cursor='default'}}})})},100)}
+  loadVideos(){setTimeout(function(){document.querySelectorAll('.video-placeholder[data-lesson-id]').forEach(function(el){var lid=el.getAttribute('data-lesson-id');if(!lid||el.dataset.loaded)return;el.dataset.loaded='1';VideoStore.get(lid,function(data){if(data){var v=document.createElement('video');v.controls=true;v.style.cssText='width:100%;height:100%;object-fit:contain;background:#000;border-radius:0';v.src=data;v.onplay=function(){var lesson=DB.lessons().find(function(x){return x.id===lid});var mxViews=lesson?DB.getStudentMaxViews(lesson,uid):0;var uid=App.user?App.user.id:'admin';if(mxViews>0&&uid!=='admin'&&App.user&&App.user.role!=='admin'){var cnt=DB.countViews(lid,uid);if(cnt>=mxViews){v.pause();v.remove();el.innerHTML='<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;height:100%;background:#000;color:#ff4757;font-size:0.9rem;text-align:center;padding:16px"><div style="font-size:2rem;margin-bottom:8px">🚫</div><div>لقد وصلت للحد الأقصى للمشاهدات</div><div style="font-size:0.75rem;color:var(--text-muted);margin-top:4px">'+cnt+'/'+mxViews+' مشاهدة مستخدمة</div></div>';el.dataset.loaded='';return}}DB.logVideoView(lid,uid,App.user?App.user.name:'')};el.parentNode.replaceChild(v,el)}else{var ls=DB.lessons();var lx=ls.find(function(x){return x.id===lid});if(lx&&lx.videoUrl){var a=document.createElement('a');a.href=lx.videoUrl;a.target='_blank';a.style.cssText='width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.2rem;text-decoration:none;background:#000;position:absolute;inset:0;flex-direction:column;gap:6px';a.innerHTML='▶️ <span style="font-size:0.7rem;opacity:0.7">شاهد من الرابط</span>';a.onclick=function(e){e.stopPropagation();var lesson=DB.lessons().find(function(x){return x.id===lid});var mxViews=lesson?DB.getStudentMaxViews(lesson,uid):0;var uid=App.user?App.user.id:'admin';if(mxViews>0&&uid!=='admin'&&App.user&&App.user.role!=='admin'){var cnt=DB.countViews(lid,uid);if(cnt>=mxViews){e.preventDefault();showToast('🚫 وصلت للحد الأقصى من المشاهدات ('+cnt+'/'+mxViews+')','error');return}}DB.logVideoView(lid,uid,App.user?App.user.name:'')};el.style.position='relative';el.appendChild(a)}else if(lx&&lx._hasVideo){el.innerHTML='<span style="color:var(--warning);font-size:0.75rem;text-align:center;padding:8px">⚠️ الفيديو محفوظ على جهاز آخر<br>استخدم رابط YouTube بديل</span>';el.style.cursor='default'}else{el.innerHTML='<span style="color:var(--text-muted);font-size:0.8rem">🎬 لا يوجد فيديو</span>';el.style.cursor='default'}}})})},100)}
 };
 function showToast(msg,type){
   type=type||'success';
@@ -2256,6 +2261,22 @@ const Admin={
     DB.users().filter(function(u){return u.role==='student'&&u.status==='approved'}).map(function(u){return '<option value="'+u.id+'">'+Utils.escHtml(u.name)+' — '+Utils.escHtml(u.grade)+'</option>'}).join('')+
     '</select><button type="button" class="btn btn-sm btn-accent" onclick="var s=document.getElementById(\'lFreeStudent\');if(!s||!s.value){showToast(\'اختر طالب أولاً\',\'error\');return}document.getElementById(\'lessonForm\').requestSubmit()">🔓 حفظ + فتح</button></div>'+
     '</div>'+
+    '<div style="border-top:1px solid var(--glass-border);margin:16px 0;padding-top:16px">'+
+    '<h4 style="color:var(--accent);margin-bottom:8px;font-size:0.95rem">🔢 حد مشاهدات لطالب معين</h4>'+
+    '<p style="color:var(--text-muted);font-size:0.8rem;margin-bottom:10px">حدد عدد المشاهدات الأقصى لكل طالب. القيمة الافتراضية: '+((lesson.maxViews||0)||'بلا حد')+'. اترك 0 لبلا حد.</p>'+
+    '<div id="studentLimitsList" style="max-height:250px;overflow-y:auto;margin-bottom:10px">'+
+    DB.users().filter(function(u){return u.role==='student'&&u.status==='approved'}).map(function(u){
+      var curLimit=(lesson.studentLimits&&lesson.studentLimits[u.id]!==undefined)?lesson.studentLimits[u.id]:'';
+      return '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--glass-border)">'+
+      '<span style="flex:1;font-size:0.82rem;font-weight:600">'+Utils.escHtml(u.name)+'</span>'+
+      '<span style="font-size:0.72rem;color:var(--text-muted)">'+Utils.escHtml(u.grade)+'</span>'+
+      '<input type="number" class="form-input" min="0" data-student-id="'+u.id+'" value="'+curLimit+'" placeholder="'+(lesson.maxViews||0)+'" style="width:80px;font-size:0.8rem;padding:4px 8px;text-align:center" dir="ltr">'+
+      '</div>'
+    }).join('')+
+    '</div>'+
+    '<button type="button" class="btn btn-sm btn-secondary" onclick="var inputs=document.querySelectorAll(\'#studentLimitsList input[data-student-id]\');var limits={};inputs.forEach(function(inp){var sid=inp.getAttribute(\'data-student-id\');var val=parseInt(inp.value);if(sid){limits[sid]=isNaN(val)?0:val}});document.getElementById(\'lStudentLimits\').value=JSON.stringify(limits);showToast(\'تم حفظ الحدود مؤقتاً — اضغط حفظ لإتمام العملية\')">💾 حفظ الحدود</button>'+
+    '<input type="hidden" id="lStudentLimits" value="'+(isEdit&&lesson.studentLimits?JSON.stringify(lesson.studentLimits):'{}')+'">'+
+    '</div>'+
     '</div>':'')+
     '<button type="submit" class="btn btn-primary btn-block">'+(isEdit?T('adminSaveLesson'):T('adminAddLessonBtn'))+'</button></form></div></div>';
     document.body.insertAdjacentHTML('beforeend',html);
@@ -2271,6 +2292,8 @@ const Admin={
       var data={title:document.getElementById('lTitle').value.trim(),description:document.getElementById('lDesc').value.trim(),subject:document.getElementById('lSubject').value,price:parseInt(document.getElementById('lPrice').value)||0,maxViews:parseInt(document.getElementById('lMaxViews').value)||0,grade:document.getElementById('lGrade').value,track:document.getElementById('lTrack').value,videoUrl:document.getElementById('lVideo').value.trim(),videoUrlAlt:document.getElementById('lVideoAlt').value.trim(),videoEmbed:document.getElementById('lVideoEmbed').value.trim()};
       if(videoData)data.videoData=videoData;
       if(thumbData)data.thumbnail=thumbData;
+      var slEl=document.getElementById('lStudentLimits');
+      if(slEl&&slEl.value){try{data.studentLimits=JSON.parse(slEl.value)}catch(e){}}
       var codesEl=document.getElementById('lCodes');
       if(codesEl){
         var rawCodes=codesEl.value.trim();
@@ -2398,19 +2421,19 @@ const Admin={
   },
   viewLessonViews:function(lessonId){
     var l=DB.lessons().find(function(x){return x.id===lessonId});if(!l)return;
-    var mxViews=l.maxViews||0;
+    var hasLimits=l.studentLimits&&Object.keys(l.studentLimits).length>0;
     function renderViews(allViews){
       var byStudent={};allViews.forEach(function(v){if(!byStudent[v.studentId])byStudent[v.studentId]={name:v.studentName,id:v.studentId,count:0,lastView:0};byStudent[v.studentId].count++;if(v.viewedAt>byStudent[v.studentId].lastView)byStudent[v.studentId].lastView=v.viewedAt});
       var students=Object.values(byStudent).sort(function(a,b){return b.lastView-a.lastView});
       var html='<div class="modal-overlay" id="viewsModal" onclick="if(event.target===this)this.remove()"><div class="modal" style="max-width:500px"><button class="modal-close" onclick="document.getElementById(\'viewsModal\').remove()">✕</button>'+
       '<h3 class="modal-title">👁️ المشاهدين: '+Utils.escHtml(l.title)+'</h3>'+
-      '<p style="color:var(--text-muted);font-size:0.85rem;margin-bottom:16px">'+allViews.length+' مشاهدة إجمالية — '+students.length+' طالب'+(mxViews>0?' — الحد: '+mxViews+' لكل طالب':'')+'</p>'+
+      '<p style="color:var(--text-muted);font-size:0.85rem;margin-bottom:16px">'+allViews.length+' مشاهدة إجمالية — '+students.length+' طالب'+(hasLimits?' — حد مخصص لكل طالب':(l.maxViews>0?' — الحد: '+l.maxViews+' لكل طالب':''))+'</p>'+
       (students.length>0?'<div style="max-height:400px;overflow-y:auto">'+students.map(function(s){
-        var atLimit=mxViews>0&&s.count>=mxViews;
+        var sMax=DB.getStudentMaxViews(l,s.id);var atLimit=sMax>0&&s.count>=sMax;
         return '<div style="display:flex;align-items:center;gap:12px;padding:10px 12px;border-bottom:1px solid var(--glass-border)">'+
         '<div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,'+(atLimit?'#ff4757':'var(--accent)')+','+(atLimit?'#ff6b81':'var(--accent2)')+');display:flex;align-items:center;justify-content:center;font-size:0.8rem;color:var(--bg-primary);font-weight:800;flex-shrink:0">'+Utils.escHtml((s.name||'?').charAt(0))+'</div>'+
         '<div style="flex:1"><div style="font-weight:600;font-size:0.88rem">'+Utils.escHtml(s.name||'غير معروف')+'</div><div style="font-size:0.72rem;color:var(--text-muted)">'+Utils.timeAgo(s.lastView)+'</div></div>'+
-        '<div style="font-size:0.8rem;font-weight:700;color:'+(atLimit?'#ff4757':'var(--accent)')+'">'+s.count+(mxViews>0?'/'+mxViews:'')+(atLimit?' 🚫':'')+'</div></div>'}).join('')+'</div>':
+        '<div style="font-size:0.8rem;font-weight:700;color:'+(atLimit?'#ff4757':'var(--accent)')+'">'+s.count+(sMax>0?'/'+sMax:'')+(atLimit?' 🚫':'')+'</div></div>'}).join('')+'</div>':
       '<p style="text-align:center;color:var(--text-muted);padding:30px">لم يشاهد أحد هذا الدرس بعد</p>')+
       '</div></div>';
       var existing=document.getElementById('viewsModal');if(existing)existing.remove();
@@ -2949,10 +2972,10 @@ const Student={
     (notifs.length>0?'<div class="card" style="margin-bottom:20px"><h3 class="card-title" style="margin-bottom:14px">📢 '+Lang.t('notificationsTitle')+'</h3>'+
     notifs.map(function(n){return '<div style="padding:10px 0;border-bottom:1px solid var(--glass-border)"><div style="font-weight:700;font-size:0.9rem">'+Utils.escHtml(n.title)+'</div><div style="color:var(--text-secondary);font-size:0.85rem">'+Utils.escHtml(n.message)+'</div><div style="color:var(--text-muted);font-size:0.72rem;margin-top:4px">'+Utils.timeAgo(n.date)+'</div></div>'}).join('')+'</div>':'')+
     (lessons.length>0?'<h3 class="card-title" style="margin-bottom:14px">🎬 '+Lang.t('availableLessons')+'</h3><div class="content-grid">'+
-    lessons.slice(0,4).map(function(l){var unlocked=userUnlocks.includes(l.id);var viewCnt=l.maxViews>0?DB.countViews(l.id,u.id):0;var viewsLeft=l.maxViews>0?Math.max(0,l.maxViews-viewCnt):0;var noViewsLeft=l.maxViews>0&&viewsLeft<=0;
+    lessons.slice(0,4).map(function(l){var unlocked=userUnlocks.includes(l.id);var sMax=DB.getStudentMaxViews(l,u.id);var viewCnt=sMax>0?DB.countViews(l.id,u.id):0;var viewsLeft=sMax>0?Math.max(0,sMax-viewCnt):0;var noViewsLeft=sMax>0&&viewsLeft<=0;
       return '<div class="card lesson-card fade-in"><div class="lesson-thumb">'+(l.thumbnail?'<img src="'+l.thumbnail+'" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;z-index:1">':'')+(unlocked&&l.videoEmbed?(l.thumbnail?'':'<span>🎬</span>')+'<div class="lesson-thumb-overlay">'+(noViewsLeft?'<span style="color:#ff4757;font-size:0.8rem">🚫 انتهت المشاهدات</span>':'<button class="btn btn-sm btn-primary" onclick="Student.showLessonEmbed(\''+l.id+'\')">▶️ '+Lang.t('watchBtn')+'</button>')+'</div>':unlocked&&(l._hasVideo||l.videoData)?'<div class="video-placeholder" data-lesson-id="'+l.id+'" style="width:100%;height:100%;background:#000;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:1.5rem">🎬</div>':(l.thumbnail?'':'<span>🎬</span>')+'<div class="lesson-thumb-overlay">'+(unlocked?(noViewsLeft?'<span style="color:#ff4757;font-size:0.8rem">🚫 انتهت المشاهدات</span>':'<a href="'+Utils.escHtml(l.videoUrl||'#')+'" target="_blank" class="btn btn-sm btn-primary" onclick="DB.logVideoView(\''+l.id+'\',App.user?App.user.id:\'\',App.user?App.user.name:\'\')">▶️ '+Lang.t('watchBtn')+'</a>'):'<span class="badge badge-warning">🔒 '+Lang.t('locked')+'</span>')+'</div>')+'</div>'+
       '<div class="lesson-body"><div class="lesson-meta"><span class="badge badge-warning">'+Utils.escHtml(l.subject||'عام')+'</span></div><h3 class="lesson-title">'+Utils.escHtml(l.title)+'</h3>'+
-      (l.maxViews>0?'<div style="font-size:0.78rem;color:'+(noViewsLeft?'#ff4757':'var(--text-muted)')+';margin:4px 0">👁️ '+viewCnt+'/'+l.maxViews+' مشاهدة'+(noViewsLeft?' — انتهت المشاهدات!':' — متبقي '+viewsLeft)+'</div>':'')+
+      (sMax>0?'<div style="font-size:0.78rem;color:'+(noViewsLeft?'#ff4757':'var(--text-muted)')+';margin:4px 0">👁️ '+viewCnt+'/'+sMax+' مشاهدة'+(noViewsLeft?' — انتهت المشاهدات!':' — متبقي '+viewsLeft)+'</div>':'')+
       '<div class="lesson-footer"><span class="lesson-price">'+Utils.formatMoney(l.price)+'</span>'+(unlocked?(noViewsLeft?'<span class="badge badge-danger">🚫 انتهت المشاهدات</span>':'<span class="badge badge-accent">✅ '+Lang.t('opened')+'</span>'):
       '<div style="display:flex;flex-direction:column;gap:6px;width:100%"><div style="display:flex;gap:6px"><button class="btn btn-sm btn-primary" onclick="Student.unlockLesson(\''+l.id+'\')" style="flex:1">🔓 '+Utils.formatMoney(l.price)+'</button>'+
       ((l.codes&&l.codes.length>0)?'<div style="display:flex;gap:4px;flex:1"><input class="form-input" id="oc_'+l.id+'" placeholder="الكود" style="font-size:0.7rem;padding:5px 6px;flex:1" dir="ltr"><button class="btn btn-sm btn-accent" onclick="Student.unlockByCodeOC(\''+l.id+'\')" style="font-size:0.7rem;padding:5px 8px">🔑</button></div>':'')+
@@ -2968,11 +2991,11 @@ const Student={
     return '<div class="fade-in"><div class="page-header"><h1 class="page-title">'+Lang.t('lessonsTitle')+'</h1><p class="page-subtitle">'+lessons.length+' '+Lang.t('lessonsSub')+'</p></div>'+
     filterTabs+'<div class="content-grid">'+
     (lessons.length===0?'<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">🎬</div><p>'+Lang.t('noLessons')+'</p></div>':'')+
-    lessons.map(function(l){var unlocked=userUnlocks.includes(l.id);var viewCnt=l.maxViews>0?DB.countViews(l.id,u.id):0;var viewsLeft=l.maxViews>0?Math.max(0,l.maxViews-viewCnt):0;var noViewsLeft=l.maxViews>0&&viewsLeft<=0;
+    lessons.map(function(l){var unlocked=userUnlocks.includes(l.id);var sMax=DB.getStudentMaxViews(l,u.id);var viewCnt=sMax>0?DB.countViews(l.id,u.id):0;var viewsLeft=sMax>0?Math.max(0,sMax-viewCnt):0;var noViewsLeft=sMax>0&&viewsLeft<=0;
       return '<div class="card lesson-card fade-in"><div class="lesson-thumb">'+(l.thumbnail?'<img src="'+l.thumbnail+'" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;z-index:1">':'')+(unlocked&&l.videoEmbed?(l.thumbnail?'':'<span>🎬</span>')+'<div class="lesson-thumb-overlay">'+(noViewsLeft?'<span style="color:#ff4757;font-size:0.8rem">🚫 انتهت المشاهدات</span>':'<button class="btn btn-sm btn-primary" onclick="Student.showLessonEmbed(\''+l.id+'\')">▶️ '+Lang.t('watchBtn')+'</button>')+'</div>':unlocked&&(l._hasVideo||l.videoData)?'<div class="video-placeholder" data-lesson-id="'+l.id+'" style="width:100%;height:100%;background:#000;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:1.5rem">🎬</div>':(l.thumbnail?'':'<span>🎬</span>')+'<div class="lesson-thumb-overlay">'+(unlocked?(noViewsLeft?'<span style="color:#ff4757;font-size:0.8rem">🚫 انتهت المشاهدات</span>':'<a href="'+Utils.escHtml(l.videoUrl||'#')+'" target="_blank" class="btn btn-sm btn-primary" onclick="DB.logVideoView(\''+l.id+'\',App.user?App.user.id:\'\',App.user?App.user.name:\'\')">▶️ '+Lang.t('watchBtn')+'</a>'):'<span class="badge badge-warning">🔒 '+Lang.t('locked')+'</span>')+'</div>')+'</div>'+
       '<div class="lesson-body"><div class="lesson-meta"><span class="badge badge-info">'+Utils.escHtml(l.grade)+'</span><span class="badge badge-accent">'+Utils.escHtml(l.track)+'</span><span class="badge badge-warning">'+Utils.escHtml(l.subject||'عام')+'</span></div>'+
       '<h3 class="lesson-title">'+Utils.escHtml(l.title)+'</h3><p class="lesson-desc">'+Utils.escHtml(l.description||'')+'</p>'+
-      (l.maxViews>0?'<div style="font-size:0.78rem;color:'+(noViewsLeft?'#ff4757':'var(--text-muted)')+';margin:4px 0">👁️ '+viewCnt+'/'+l.maxViews+' مشاهدة'+(noViewsLeft?' — انتهت المشاهدات!':' — متبقي '+viewsLeft)+'</div>':'')+
+      (sMax>0?'<div style="font-size:0.78rem;color:'+(noViewsLeft?'#ff4757':'var(--text-muted)')+';margin:4px 0">👁️ '+viewCnt+'/'+sMax+' مشاهدة'+(noViewsLeft?' — انتهت المشاهدات!':' — متبقي '+viewsLeft)+'</div>':'')+
       '<div class="lesson-footer"><span class="lesson-price">'+Utils.formatMoney(l.price)+'</span>'+
       (unlocked?(noViewsLeft?'<span class="badge badge-danger">🚫 انتهت المشاهدات</span>':'<span class="badge badge-accent">✅ '+Lang.t('opened')+'</span>'):
       '<div style="display:flex;flex-direction:column;gap:6px;width:100%"><div style="display:flex;gap:6px"><button class="btn btn-sm btn-primary" onclick="Student.unlockLesson(\''+l.id+'\')" style="flex:1">🔓 '+Utils.formatMoney(l.price)+'</button>'+
@@ -3046,7 +3069,7 @@ const Student={
   showLessonEmbed:function(lessonId){
     var l=DB.lessons().find(function(x){return x.id===lessonId});if(!l||!l.videoEmbed)return;
     if(App.user&&App.user.role!=='admin'){
-      var mxViews=l.maxViews||0;
+      var mxViews=DB.getStudentMaxViews(l,App.user.id);
       if(mxViews>0){var cnt=DB.countViews(lessonId,App.user.id);if(cnt>=mxViews){showToast('🚫 وصلت للحد الأقصى من المشاهدات ('+cnt+'/'+mxViews+')','error');return}}
       DB.logVideoView(lessonId,App.user.id,App.user.name);
     }
