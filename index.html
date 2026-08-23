@@ -3376,8 +3376,40 @@ const Student={
     '<p style="color:var(--text-secondary);margin-bottom:20px">بعد التحويل، اضغط الزر التالي وأرسل صورة الإيصال للمدرس</p>'+
     '<a class="btn btn-accent btn-block" target="_blank" href="https://wa.me/201551346605?text='+msg+'" style="font-size:1.1rem;padding:14px">📱 فتح واتساب وإرسال صورة التحويل</a>'+
     '</div>'+
+    (lesson?'<div class="card" style="margin-bottom:20px;border-left:4px solid var(--accent)">'+
+    '<h3 class="card-title" style="margin-bottom:16px">🔑 لو عندك كود تفعيل</h3>'+
+    '<p style="color:var(--text-secondary);margin-bottom:12px">لو المدرس بعتلك كود تفعيل، اكتبه هنا وافتح الدرس فوراً</p>'+
+    '<div style="display:flex;gap:8px"><input class="form-input" id="prCodeInput" placeholder="اكتب الكود هنا" dir="ltr" style="flex:1"><button class="btn btn-accent" onclick="Student.unlockByCodeFromPayment()">🔑 تفعيل</button></div>'+
+    '</div>':'')+
     '<div style="text-align:center;margin-top:16px"><button class="btn btn-secondary" onclick="Student.switchSection(\'lessons\')">← العودة للدروس</button></div>'+
     '</div>';
+  },
+  unlockByCodeFromPayment:function(){
+    var lesson=this._pendingLesson;if(!lesson)return;
+    var input=document.getElementById('prCodeInput');
+    if(!input)return;
+    var code=input.value.trim();
+    if(!code){showToast('اكتب الكود أولاً','error');return}
+    var lessons=DB.lessons();
+    var lIdx=lessons.findIndex(function(x){return x.id===lesson.id});
+    if(lIdx<0)return;
+    var l=lessons[lIdx];
+    var codes=l.codes||[];
+    var codeIdx=-1;
+    for(var i=0;i<codes.length;i++){if(codes[i].code===code&&!codes[i].usedBy){codeIdx=i;break}}
+    if(codeIdx<0){showToast('الكود غير صحيح أو مستخدم بالفعل!','error');return}
+    codes[codeIdx].usedBy=App.user.id;
+    codes[codeIdx].usedByName=App.user.name;
+    codes[codeIdx].usedAt=Date.now();
+    lessons[lIdx].codes=codes;
+    DB.saveLessons(lessons);
+    var u=DB.getUserById(App.user.id);
+    var unlocks=(DB._get('unlocks_'+u.id))||[];
+    unlocks.push(lesson.id);
+    DB._set('unlocks_'+u.id,unlocks);
+    App.user=DB.getUserById(u.id);
+    showToast('تم فتح الدرس بالكود بنجاح! 🎉');
+    this.switchSection('lessons');
   }
 };
 const CommunityPage={
