@@ -2882,12 +2882,12 @@ const Student={
   render:function(){return '<div class="dashboard">'+this.renderSidebar()+'<div class="main-content" id="studentContent">'+this.renderSection()+'</div></div>'},
   renderSidebar:function(){
     var s=App.currentSubView;
-    var links=[{id:'overview',icon:'🏠',label:Lang.t('navHome')},{id:'lessons',icon:'🎬',label:Lang.t('adminLessons')},{id:'wallet',icon:'💰',label:Lang.t('walletPageTitle')},{id:'exams',icon:'📝',label:Lang.t('examTitle')},{id:'homework',icon:'📚',label:Lang.t('hwTitle')},{id:'files',icon:'📁',label:Lang.t('filesTitle')},{id:'reports',icon:'📊',label:Lang.t('reportsTitle')},{id:'badges',icon:'🏆',label:Lang.t('badgesTitle')},{id:'profile',icon:'👤',label:Lang.t('profilePageTitle')},{id:'parent',icon:'👨‍👩‍👦',label:Lang.t('parentTitle')},{id:'aibot',icon:'🤖',label:Lang.t('aiTitle')},{id:'game',icon:'🎮',label:Lang.t('gameTitle')}];
+    var links=[{id:'overview',icon:'🏠',label:Lang.t('navHome')},{id:'lessons',icon:'🎬',label:Lang.t('adminLessons')},{id:'wallet',icon:'💰',label:Lang.t('walletPageTitle')},{id:'exams',icon:'📝',label:Lang.t('examTitle')},{id:'homework',icon:'📚',label:Lang.t('hwTitle')},{id:'files',icon:'📁',label:Lang.t('filesTitle')},{id:'reports',icon:'📊',label:Lang.t('reportsTitle')},{id:'badges',icon:'🏆',label:Lang.t('badgesTitle')},{id:'profile',icon:'👤',label:Lang.t('profilePageTitle')},{id:'parent',icon:'👨‍👩‍👦',label:Lang.t('parentTitle')},{id:'aibot',icon:'🤖',label:Lang.t('aiTitle')},{id:'game',icon:'🎮',label:Lang.t('gameTitle')},{id:'guide',icon:'📖',label:'دليل الاستخدام'}];
     return '<div class="sidebar" id="studentSidebar"><button class="mobile-sidebar-close" onclick="App.toggleSidebar()">✕</button><div class="mobile-sidebar-header"><div class="sidebar-avatar" style="overflow:hidden"><img src="https://i.ibb.co/qMbk8PJT/Whats-App-Image-2026-07-28-at-16-32-06.jpg" alt="Logo" style="width:100%;height:100%;object-fit:cover"></div><div class="sidebar-name">'+Utils.escHtml(App.user?App.user.name:'Student')+'</div><div class="sidebar-role">'+Utils.escHtml((App.user?App.user.grade:'')+' — '+(App.user?App.user.track:''))+'</div></div><div class="sidebar-section">'+Lang.t('sidebarLouhati')+'</div>'+
     links.map(function(l){return '<button class="sidebar-link '+(s===l.id||(!s&&l.id==='overview')?'active':'')+'" onclick="Student.switchSection(\''+l.id+'\')"><span class="link-icon">'+l.icon+'</span><span>'+l.label+'</span></button>'}).join('')+'</div>';
   },
-  switchSection:function(sub){App.currentSubView=sub;App.currentView='student';var content=document.getElementById('studentContent');if(content){content.innerHTML=Student.renderSection();Student.init();Utils.loadVideos()}document.querySelectorAll('#studentSidebar .sidebar-link').forEach(function(b){b.classList.remove('active')});var idx=['overview','lessons','wallet','exams','homework','files','reports','badges','profile','parent','aibot','game'].indexOf(sub);var btns=document.querySelectorAll('#studentSidebar .sidebar-link');if(idx>=0&&btns[idx])btns[idx].classList.add('active')},
-  renderSection:function(){var s=App.currentSubView||'overview';App.user=DB.getUserById(App.user.id);var self=this;var map={overview:function(){return self.overview()},lessons:function(){return self.lessonsView()},wallet:function(){return self.walletView()},paymentRequest:function(){return self.paymentRequestView()},exams:function(){return self.examsView()},homework:function(){return self.homeworkView()},files:function(){return self.filesView()},reports:function(){return self.reportsView()},badges:function(){return self.badgesView()},profile:function(){return self.profileView()},parent:function(){return self.parentView()},aibot:function(){return AIBot.render()},game:function(){return Game.render()}};return (map[s]||map.overview)()},
+  switchSection:function(sub){App.currentSubView=sub;App.currentView='student';var content=document.getElementById('studentContent');if(content){content.innerHTML=Student.renderSection();Student.init();Utils.loadVideos()}document.querySelectorAll('#studentSidebar .sidebar-link').forEach(function(b){b.classList.remove('active')});var idx=['overview','lessons','wallet','exams','homework','files','reports','badges','profile','parent','aibot','game','guide'].indexOf(sub);var btns=document.querySelectorAll('#studentSidebar .sidebar-link');if(idx>=0&&btns[idx])btns[idx].classList.add('active')},
+  renderSection:function(){var s=App.currentSubView||'overview';App.user=DB.getUserById(App.user.id);var self=this;var map={overview:function(){return self.overview()},lessons:function(){return self.lessonsView()},wallet:function(){return self.walletView()},paymentRequest:function(){return self.paymentRequestView()},exams:function(){return self.examsView()},homework:function(){return self.homeworkView()},files:function(){return self.filesView()},reports:function(){return self.reportsView()},badges:function(){return self.badgesView()},profile:function(){return self.profileView()},parent:function(){return self.parentView()},aibot:function(){return AIBot.render()},game:function(){return Game.render()},guide:function(){return self.guideView()}};return (map[s]||map.overview)()},
   init:function(){
     if(App.currentSubView==='aibot')setTimeout(function(){AIBot.init()},50);
     if(App.currentSubView==='game')setTimeout(function(){Game.init()},50);
@@ -2915,10 +2915,14 @@ const Student={
       '</div>')+ '</div></div></div>'}).join('')+'</div>':'')+'</div>';
   },
   lessonsView:function(){
-    var u=App.user;var lessons=DB.lessons();
+    var u=App.user;var lessons=Student.getFilteredLessons();var allCount=DB.lessons().length;
     var userUnlocks=(DB._get('unlocks_'+u.id))||[];
+    var f=Student._lessonFilter||'all';
+    var filterTabs='<div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap"><button class="btn btn-sm '+(f==='all'?'btn-primary':'btn-outline')+'" onclick="Student.filterLessons(\'all\')">🎬 كل الحصص <span style="opacity:0.7;font-size:0.75rem">('+allCount+')</span></button>'+
+    '<button class="btn btn-sm '+(f==='track'?'btn-primary':'btn-outline')+'" onclick="Student.filterLessons(\'track\')">📂 حصص مساري <span style="opacity:0.7;font-size:0.75rem">('+DB.lessons().filter(function(l){return l.track===u.track}).length+')</span></button>'+
+    '<button class="btn btn-sm '+(f==='grade'?'btn-primary':'btn-outline')+'" onclick="Student.filterLessons(\'grade\')">🏫 حصص صفّي <span style="opacity:0.7;font-size:0.75rem">('+DB.lessons().filter(function(l){return l.grade===u.grade}).length+')</span></button></div>';
     return '<div class="fade-in"><div class="page-header"><h1 class="page-title">'+Lang.t('lessonsTitle')+'</h1><p class="page-subtitle">'+lessons.length+' '+Lang.t('lessonsSub')+'</p></div>'+
-    '<div class="content-grid">'+
+    filterTabs+'<div class="content-grid">'+
     (lessons.length===0?'<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">🎬</div><p>'+Lang.t('noLessons')+'</p></div>':'')+
     lessons.map(function(l){var unlocked=userUnlocks.includes(l.id);var viewCnt=l.maxViews>0?DB.countViews(l.id,u.id):0;var viewsLeft=l.maxViews>0?Math.max(0,l.maxViews-viewCnt):0;var noViewsLeft=l.maxViews>0&&viewsLeft<=0;
       return '<div class="card lesson-card fade-in"><div class="lesson-thumb">'+(unlocked&&l.videoEmbed?'<span>🎬</span><div class="lesson-thumb-overlay">'+(noViewsLeft?'<span style="color:#ff4757;font-size:0.8rem">🚫 انتهت المشاهدات</span>':'<button class="btn btn-sm btn-primary" onclick="Student.showLessonEmbed(\''+l.id+'\')">▶️ '+Lang.t('watchBtn')+'</button>')+'</div>':unlocked&&(l._hasVideo||l.videoData)?'<div class="video-placeholder" data-lesson-id="'+l.id+'" style="width:100%;height:100%;background:#000;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:1.5rem">🎬</div>':'<span>🎬</span><div class="lesson-thumb-overlay">'+(unlocked?(noViewsLeft?'<span style="color:#ff4757;font-size:0.8rem">🚫 انتهت المشاهدات</span>':'<a href="'+Utils.escHtml(l.videoUrl||'#')+'" target="_blank" class="btn btn-sm btn-primary" onclick="DB.logVideoView(\''+l.id+'\',App.user?App.user.id:\'\',App.user?App.user.name:\'\')">▶️ '+Lang.t('watchBtn')+'</a>'):'<span class="badge badge-warning">🔒 '+Lang.t('locked')+'</span>')+'</div>')+'</div>'+
@@ -3239,6 +3243,89 @@ const Student={
     reader.readAsText(file);
     input.value='';
   },
+  guideView:function(){
+    var u=App.user;var grade=u?u.grade:'';var track=u?u.track:'';
+    return '<div class="fade-in"><div class="page-header"><h1 class="page-title">📖 دليل استخدام المنصة</h1><p class="page-subtitle">دليل مفصّل لكيفية استخدام جميع ميزات المنصة</p></div>'+
+
+    '<div class="card" style="margin-bottom:16px;border-right:4px solid var(--primary)"><h3 class="card-title" style="color:var(--primary)">🏠 ١. الصفحة الرئيسية (الرئيسية)</h3><div style="font-size:0.88rem;line-height:1.9;color:var(--text-secondary);padding:8px 0">'+
+    '<b>ما الذي تراه:</b><br>'+
+    '• <b>إحصائيات سريعة:</b> عدد الحصص المتاحة، رصيد محفظتك، عدد الاختبارات التي حليتها، والشارات التي جمعتها.<br>'+
+    '• <b>آخر الإشعارات:</b> أي تحديثات أو أخبار من المعلّم.<br>'+
+    '• <b>أول 4 حصص:</b> معاينة سريعة لأحدث الحصص.<br><br>'+
+    '<b>كيف تستخدمها:</b> هذه صفحتك الرئيسية. ارجع إليها في أي وقت بالضغط على "🏠 الرئيسية" في القائمة الجانبية.</div></div>'+
+
+    '<div class="card" style="margin-bottom:16px;border-right:4px solid #00b894"><h3 class="card-title" style="color:#00b894">🎬 ٢. الحصص الدراسية</h3><div style="font-size:0.88rem;line-height:1.9;color:var(--text-secondary);padding:8px 0">'+
+    '<b> فلتر تصفية الحصص:</b><br>'+
+    '• <b>كل الحصص:</b> يعرض جميع الحصص المتاحة في المنصة (لجميع الصفوف والمسارات).<br>'+
+    '• <b>حصص مساري:</b> يعرض فقط الحصص الخاصة بمسارك (<b>'+Utils.escHtml(track)+'</b>) — مثلاً إذا كنت في مسار "علوم" ستظهر حصص العلوم فقط.<br>'+
+    '• <b>حصص صفّي:</b> يعرض فقط الحصص الخاصة بصفك (<b>'+Utils.escHtml(grade)+'</b>) — مثلاً إذا كنت في "<b>'+Utils.escHtml(grade)+'</b>" ستظهر حصص هذا الصف فقط.<br><br>'+
+    '<b>لكل درس:</b><br>'+
+    '• <b>الفيديو:</b> اضغط على زر "▶️ شاهد" لفتح فيديو الدرس.<br>'+
+    '• <b>حد المشاهدات:</b> بعض الحصص لها عدد محدد من المشاهدات (مثلاً 5 مرات). بعد ذلك لن تتمكن من المشاهدة مرة أخرى.<br>'+
+    '• <b>فتح الدرس:</b> اضغط على "🔓 افتح الدرس" لفتحه برصيد محفظتك. يمكنك أيضاً استخدام كود من المعلّم إذا كان متاحاً.<br>'+
+    '• <b>السعر:</b> موضح أسفل كل درس. إذا لم يكن لديك رصيد كافٍ، ستنتقل لصفحة الدفع.<br>'+
+    '• <b>الرابط البديل:</b> إذا توفر، سترى زر "🔗 رابط بديل" يفتح فيديو على منصة أخرى.</div></div>'+
+
+    '<div class="card" style="margin-bottom:16px;border-right:4px solid #fdcb6e"><h3 class="card-title" style="color:#fdcb6e">💰 ٣. المحفظة والدفع</h3><div style="font-size:0.88rem;line-height:1.9;color:var(--text-secondary);padding:8px 0">'+
+    '<b> شحن المحفظة:</b><br>'+
+    '• اذهب إلى <b>💰 المحفظة</b> في القائمة الجانبية.<br>'+
+    '• اختر طريقة الدفع: <b>إنستاباي</b> (01551346605) أو <b>فودافون كاش</b> (01110228959).<br>'+
+    '• أرسل المبلغ المطلوب على الرقم.<br>'+
+    '• الصق صورة إثبات التحويل في المربع المخصص.<br>'+
+    '• اضغط "إرسال طلب الشحن".<br>'+
+    '• سيقوم المعلّم بمراجعة طلبك وتفعيله (عادة خلال دقائق).<br><br>'+
+    '<b>شراء درس:</b><br>'+
+    '• عند الضغط على "🔓 افتح الدرس"، إذا لم يكن لديك رصيد كافٍ، ستنتقل تلقائياً لصفحة الدفع.<br>'+
+    '• ادفع المبلغ المطلوب ثم أرسل صورة الإثبات عبر الواتساب (01551346605).<br>'+
+    '• بعد التفعيل، الدرس سيفتح تلقائياً.</div></div>'+
+
+    '<div class="card" style="margin-bottom:16px;border-right:4px solid #e17055"><h3 class="card-title" style="color:#e17055">📝 ٤. الاختبارات</h3><div style="font-size:0.88rem;line-height:1.9;color:var(--text-secondary);padding:8px 0">'+
+    '<b>أداء الاختبار:</b><br>'+
+    '• اذهب إلى <b>📝 الاختبارات</b> في القائمة الجانبية.<br>'+
+    '• سترى قائمة الاختبارات المتاحة (المفتوحة والمغلقة).<br>'+
+    '• اضغط "ابدأ الاختبار" بجانب الاختبار المطلوب.<br>'+
+    '• اختر إجابة واحدة لكل سؤال ثم اضغط "إرسال".<br><br>'+
+    '<b>النتيجة:</b> ستظهر فوراً بعد التسليم. يمكنك مراجعة إجاباتك والاطلاع على التصحيح.</div></div>'+
+
+    '<div class="card" style="margin-bottom:16px;border-right:4px solid #6c5ce7"><h3 class="card-title" style="color:#6c5ce7">📚 ٥. الواجبات</h3><div style="font-size:0.88rem;line-height:1.9;color:var(--text-secondary);padding:8px 0">'+
+    '• اذهب إلى <b>📚 الواجبات</b> في القائمة الجانبية.<br>'+
+    '• سترى الواجبات المطلوبة مع تاريخ التسليم.<br>'+
+    '• لتسليم واجب، اضغط على "تسليم" ثم ارفق صورة أو ملف.<br>'+
+    '• يمكنك مراجعة ملاحظات المعلّم على تسليماتك السابقة.</div></div>'+
+
+    '<div class="card" style="margin-bottom:16px;border-right:4px solid #00cec9"><h3 class="card-title" style="color:#00cec9">📁 ٦. الملفات</h3><div style="font-size:0.88rem;line-height:1.9;color:var(--text-secondary);padding:8px 0">'+
+    '• اذهب إلى <b>📁 الملفات</b> في القائمة الجانبية.<br>'+
+    '• سترى جميع الملفات المرفقة من المعلّم (ملفات PDF، صور، تقديمات).<br>'+
+    '• اضغط على أي ملف لتحميله أو عرضه.</div></div>'+
+
+    '<div class="card" style="margin-bottom:16px;border-right:4px solid #a29bfe"><h3 class="card-title" style="color:#a29bfe">📊 ٧. التقارير</h3><div style="font-size:0.88rem;line-height:1.9;color:var(--text-secondary);padding:8px 0">'+
+    '• اذهب إلى <b>📊 التقارير</b> في القائمة الجانبية.<br>'+
+    '• سترى ملخصاً لأدائك: نتائج الاختبارات، عدد المشاهدات، التقدم العام.<br>'+
+    '• يمكنك استخدام هذه البيانات لمتابعة تقدمك والتركيز على نقاط الضعف.</div></div>'+
+
+    '<div class="card" style="margin-bottom:16px;border-right:4px solid #fd79a8"><h3 class="card-title" style="color:#fd79a8">🏆 ٨. الشارات والإنجازات</h3><div style="font-size:0.88rem;line-height:1.9;color:var(--text-secondary);padding:8px 0">'+
+    '• اذهب إلى <b>🏆 الشارات</b> في القائمة الجانبية.<br>'+
+    '• سترى الشارات التي حصلت عليها (مثل: أول اختبار، 10 مشاهدات، أول واجب).<br>'+
+    '• كل شارة تعني أنك حققت إنجازاً معيناً في المنصة.</div></div>'+
+
+    '<div class="card" style="margin-bottom:16px;border-right:4px solid #55efc4"><h3 class="card-title" style="color:#55efc4">👤 ٩. الملف الشخصي</h3><div style="font-size:0.88rem;line-height:1.9;color:var(--text-secondary);padding:8px 0">'+
+    '• اذهب إلى <b>👤 الملف الشخصي</b> في القائمة الجانبية.<br>'+
+    '• يمكنك تعديل: الاسم، رقم الهاتف، المسار، الصف، المدرسة، المحافظة.<br>'+
+    '• يمكنك تغيير صورة الملف الشخصي.<br>'+
+    '• اضغط "حفظ التعديلات" بعد أي تغيير.</div></div>'+
+
+    '<div class="card" style="margin-bottom:16px;border-right:4px solid #74b9ff"><h3 class="card-title" style="color:#74b9ff">👨‍👩‍👦 ١٠. ولي الأمر</h3><div style="font-size:0.88rem;line-height:1.9;color:var(--text-secondary);padding:8px 0">'+
+    '• اذهب إلى <b>👨‍👩‍👦 ولي الأمر</b> في القائمة الجانبية.<br>'+
+    '• يمكنك إضافة بيانات ولي أمرك: الاسم ورقم الهاتف.<br>'+
+    '• هذا يساعد المعلّم على التواصل مع ولي أمرك عند الحاجة.</div></div>'+
+
+    '<div class="card" style="margin-bottom:16px;border-right:4px solid #dfe6e9"><h3 class="card-title">📞 مساعدة وتواصل</h3><div style="font-size:0.88rem;line-height:1.9;color:var(--text-secondary);padding:8px 0">'+
+    '• للأسئلة أو الاستفسارات: تواصل عبر الواتساب على الرقم <b>01551346605</b>.<br>'+
+    '• لشحن المحفظة: أرسل المبلغ على <b>01551346605</b> (إنستاباي) أو <b>01110228959</b> (فودافون كاش).<br>'+
+    '• أرسل صورة إثبات التحويل وانتظر التفعيل.</div></div>'+
+
+    '</div>';
+  },
   parentView:function(){
     var u=App.user;
     return '<div class="fade-in"><div class="page-header"><h1 class="page-title">بيانات ولي الأمر</h1><p class="page-subtitle">المعلومات المسجلة لولي الأمر (للقراءة فقط)</p></div>'+
@@ -3357,6 +3444,22 @@ const Student={
     this.switchSection('homework');
   },
   _pendingLesson:null,
+  _lessonFilter:'all',
+  filterLessons:function(f){
+    Student._lessonFilter=f;
+    var content=document.getElementById('studentContent');
+    if(content){content.innerHTML=Student.renderSection();Student.init();Utils.loadVideos()}
+    document.querySelectorAll('#studentSidebar .sidebar-link').forEach(function(b){b.classList.remove('active')});
+    var idx=['overview','lessons','wallet','exams','homework','files','reports','badges','profile','parent','aibot','game','guide'].indexOf('lessons');
+    var btns=document.querySelectorAll('#studentSidebar .sidebar-link');
+    if(idx>=0&&btns[idx])btns[idx].classList.add('active')
+  },
+  getFilteredLessons:function(){
+    var lessons=DB.lessons();var u=App.user;
+    if(Student._lessonFilter==='grade'&&u&&u.grade){lessons=lessons.filter(function(l){return l.grade===u.grade})}
+    else if(Student._lessonFilter==='track'&&u&&u.track){lessons=lessons.filter(function(l){return l.track===u.track})}
+    return lessons
+  },
   paymentRequestView:function(){
     var lesson=this._pendingLesson;
     var lessonName=lesson?lesson.title:'درس';
