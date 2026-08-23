@@ -1138,7 +1138,8 @@ const DB={
     var personal={
       transactions:DB.transactions(),
       examResults:DB.examResults(),
-      reports:DB.reports()
+      reports:DB.reports(),
+      videoViews:DB.videoViews()
     };
     var allKeys=Object.keys(localStorage);
     var unlocks={};var aiChats={};
@@ -1147,7 +1148,7 @@ const DB={
       if(k.startsWith('dm_aiChat_'))aiChats[k.replace('dm_aiChat_','')]=DB._get(k.replace('dm_',''));
     });
     personal.unlocks=unlocks;personal.aiChats=aiChats;
-    var hasPersonal=(personal.transactions.length||personal.examResults.length||personal.reports.length||Object.keys(unlocks).length||Object.keys(aiChats).length)>0;
+    var hasPersonal=(personal.transactions.length||personal.examResults.length||personal.reports.length||personal.videoViews.length||Object.keys(unlocks).length||Object.keys(aiChats).length)>0;
     var writes=[];
     if(isAdmin)writes.push(FB_DB.ref('shared/data').set(shared));
     else if(Object.keys(shared).some(function(k){return Array.isArray(shared[k])&&shared[k].length>0}))console.log('Firebase: skipped shared push (only admin writes shared data)');
@@ -1160,7 +1161,7 @@ const DB={
     if(!session||!session.email){if(callback)callback();return}
     FB_DB.ref('shared/data').once('value').then(function(snap){
       var res=snap.val()||{};
-      var sharedKeys=['lessons','files','exams','notifications','community','users','homeworks','hwSubmissions','videoViews'];
+      var sharedKeys=['lessons','files','exams','notifications','community','users','homeworks','hwSubmissions'];
       sharedKeys.forEach(function(k){
         var data=res[k]||[];
         var local=DB._get(k)||[];
@@ -1212,6 +1213,13 @@ const DB={
       if(res.transactions)DB._set('transactions',res.transactions);
       if(res.examResults)DB._set('examResults',res.examResults);
       if(res.reports)DB._set('reports',res.reports);
+      if(res.videoViews){
+        var localViews=DB._get('videoViews')||[];
+        var remoteViews=Array.isArray(res.videoViews)?res.videoViews:[];
+        var mergedViews=localViews.slice();
+        remoteViews.forEach(function(v){if(v&&v.id&&!mergedViews.some(function(lv){return lv.id===v.id}))mergedViews.push(v)});
+        DB._set('videoViews',mergedViews);
+      }
       if(res.unlocks){Object.keys(res.unlocks).forEach(function(k){DB._set('unlocks_'+k,res.unlocks[k])})}
       if(res.aiChats){Object.keys(res.aiChats).forEach(function(k){DB._set('aiChat_'+k,res.aiChats[k])})}
       if(callback)callback();
