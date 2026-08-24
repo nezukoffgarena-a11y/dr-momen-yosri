@@ -1556,10 +1556,14 @@ const App={
   toggleSidebar(){
     var sb=document.querySelector('.sidebar');
     var ov=document.getElementById('sidebarOverlay');
-    if(!sb)return;
-    var isOpen=sb.classList.contains('open');
-    if(isOpen){sb.classList.remove('open');ov.classList.remove('show');document.body.classList.remove('sidebar-open')}
-    else{sb.classList.add('open');ov.classList.add('show');document.body.classList.add('sidebar-open')}
+    var mob=document.getElementById('mobileMenu');
+    if(sb){
+      var isOpen=sb.classList.contains('open');
+      if(isOpen){sb.classList.remove('open');ov.classList.remove('show');document.body.classList.remove('sidebar-open')}
+      else{sb.classList.add('open');ov.classList.add('show');document.body.classList.add('sidebar-open')}
+    }else if(mob){
+      mob.classList.toggle('open');
+    }
   },
   _initSwipeClose(){
     var sb=document.querySelector('.sidebar');if(!sb)return;
