@@ -2963,7 +2963,7 @@ const Student={
     if(App.currentSubView==='game')setTimeout(function(){Game.init()},50);
   },
   overview:function(){
-    var u=App.user;var lessons=DB.lessons();
+    var u=App.user;var lessons=Student.getFilteredLessons();
     var notifs=DB.notifications().slice(-5).reverse();var results=DB.examResults().filter(function(r){return r.studentId===u.id});
     var userUnlocks=(DB._get('unlocks_'+u.id))||[];
     return '<div class="fade-in"><div class="page-header"><h1 class="page-title">'+Lang.t('welcome')+' '+Utils.escHtml(u.name)+' 👋</h1><p class="page-subtitle">'+Utils.escHtml(u.grade)+' — '+Utils.escHtml(u.track)+'</p></div>'+
@@ -2985,14 +2985,10 @@ const Student={
       '</div>')+ '</div></div></div>'}).join('')+'</div>':'')+'</div>';
   },
   lessonsView:function(){
-    var u=App.user;var lessons=Student.getFilteredLessons();var allCount=DB.lessons().length;
+    var u=App.user;var lessons=Student.getFilteredLessons();
     var userUnlocks=(DB._get('unlocks_'+u.id))||[];
-    var f=Student._lessonFilter||'all';
-    var filterTabs='<div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap"><button class="btn btn-sm '+(f==='all'?'btn-primary':'btn-outline')+'" onclick="Student.filterLessons(\'all\')">🎬 كل الحصص <span style="opacity:0.7;font-size:0.75rem">('+allCount+')</span></button>'+
-    '<button class="btn btn-sm '+(f==='track'?'btn-primary':'btn-outline')+'" onclick="Student.filterLessons(\'track\')">📂 حصص مساري <span style="opacity:0.7;font-size:0.75rem">('+DB.lessons().filter(function(l){return l.track===u.track}).length+')</span></button>'+
-    '<button class="btn btn-sm '+(f==='grade'?'btn-primary':'btn-outline')+'" onclick="Student.filterLessons(\'grade\')">🏫 حصص صفّي <span style="opacity:0.7;font-size:0.75rem">('+DB.lessons().filter(function(l){return l.grade===u.grade}).length+')</span></button></div>';
-    return '<div class="fade-in"><div class="page-header"><h1 class="page-title">'+Lang.t('lessonsTitle')+'</h1><p class="page-subtitle">'+lessons.length+' '+Lang.t('lessonsSub')+'</p></div>'+
-    filterTabs+'<div class="content-grid">'+
+    return '<div class="fade-in"><div class="page-header"><h1 class="page-title">'+Lang.t('lessonsTitle')+'</h1><p class="page-subtitle">'+lessons.length+' '+Lang.t('lessonsSub')+' — '+Utils.escHtml(u.grade||'')+'</p></div>'+
+    '<div class="content-grid">'+
     (lessons.length===0?'<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">🎬</div><p>'+Lang.t('noLessons')+'</p></div>':'')+
     lessons.map(function(l){var unlocked=userUnlocks.includes(l.id);var sMax=DB.getStudentMaxViews(l,u.id);var viewCnt=sMax>0?DB.countViews(l.id,u.id):0;var viewsLeft=sMax>0?Math.max(0,sMax-viewCnt):0;var noViewsLeft=sMax>0&&viewsLeft<=0;
       return '<div class="card lesson-card fade-in"><div class="lesson-thumb">'+(l.thumbnail?'<img src="'+l.thumbnail+'" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;z-index:1">':'')+(unlocked&&l.videoEmbed?(l.thumbnail?'':'<span>🎬</span>')+'<div class="lesson-thumb-overlay">'+(noViewsLeft?'<span style="color:#ff4757;font-size:0.8rem">🚫 انتهت المشاهدات</span>':'<button class="btn btn-sm btn-primary" onclick="Student.showLessonEmbed(\''+l.id+'\')">▶️ '+Lang.t('watchBtn')+'</button>')+'</div>':unlocked&&(l._hasVideo||l.videoData)?'<div class="video-placeholder" data-lesson-id="'+l.id+'" style="width:100%;height:100%;background:#000;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:1.5rem">🎬</div>':(l.thumbnail?'':'<span>🎬</span>')+'<div class="lesson-thumb-overlay">'+(unlocked?(noViewsLeft?'<span style="color:#ff4757;font-size:0.8rem">🚫 انتهت المشاهدات</span>':'<a href="'+Utils.escHtml(l.videoUrl||'#')+'" target="_blank" class="btn btn-sm btn-primary" onclick="DB.logVideoView(\''+l.id+'\',App.user?App.user.id:\'\',App.user?App.user.name:\'\')">▶️ '+Lang.t('watchBtn')+'</a>'):'<span class="badge badge-warning">🔒 '+Lang.t('locked')+'</span>')+'</div>')+'</div>'+
@@ -3514,20 +3510,9 @@ const Student={
     this.switchSection('homework');
   },
   _pendingLesson:null,
-  _lessonFilter:'all',
-  filterLessons:function(f){
-    Student._lessonFilter=f;
-    var content=document.getElementById('studentContent');
-    if(content){content.innerHTML=Student.renderSection();Student.init();Utils.loadVideos()}
-    document.querySelectorAll('#studentSidebar .sidebar-link').forEach(function(b){b.classList.remove('active')});
-    var idx=['overview','lessons','wallet','exams','homework','files','reports','badges','profile','parent','aibot','game','guide'].indexOf('lessons');
-    var btns=document.querySelectorAll('#studentSidebar .sidebar-link');
-    if(idx>=0&&btns[idx])btns[idx].classList.add('active')
-  },
   getFilteredLessons:function(){
     var lessons=DB.lessons();var u=App.user;
-    if(Student._lessonFilter==='grade'&&u&&u.grade){lessons=lessons.filter(function(l){return l.grade===u.grade})}
-    else if(Student._lessonFilter==='track'&&u&&u.track){lessons=lessons.filter(function(l){return l.track===u.track})}
+    if(u&&u.grade){lessons=lessons.filter(function(l){return l.grade===u.grade})}
     return lessons
   },
   paymentRequestView:function(){
