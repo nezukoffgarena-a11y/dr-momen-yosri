@@ -9,6 +9,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
@@ -494,6 +495,10 @@ table{min-width:800px}
 const FIREBASE_CFG={apiKey:"AIzaSyCbKbi6mE_VS1BZVaCblNb-MntBQvkdy-4",authDomain:"dr-momen-yosri.firebaseapp.com",databaseURL:"https://dr-momen-yosri-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"dr-momen-yosri",storageBucket:"dr-momen-yosri.firebasestorage.app",messagingSenderId:"160270733322",appId:"1:160270733322:web:b75b432c1d5d4556b54ff3"};
 firebase.initializeApp(FIREBASE_CFG);
 var FB_DB=firebase.database();
+const EMAILJS_PUBLIC_KEY=window.EMAILJS_PUBLIC_KEY||'YOUR_PUBLIC_KEY';
+const EMAILJS_SERVICE_ID=window.EMAILJS_SERVICE_ID||'YOUR_SERVICE_ID';
+const EMAILJS_TEMPLATE_ID=window.EMAILJS_TEMPLATE_ID||'YOUR_TEMPLATE_ID';
+if(typeof emailjs!=='undefined')emailjs.init({publicKey:EMAILJS_PUBLIC_KEY});
 const ADMIN_EMAIL="DrMomenYosriTheTopADMINONLY19191#3@ADMIN.COM";
 const ADMIN_PASS="DrMomenYosriTheTopADMINONLY19191#32026/2027";
 const MAX_STUDENTS=4000;
@@ -545,7 +550,7 @@ const I18N={
     loginWelcome:"مرحباً بعودتك! أدخل بياناتك للمتابعة.",
     rememberMe:"تذكر بيانات الدخول",loginLogging:"جاري الدخول...",
     loginNoAccQ:"ليس لديك حساب؟",loginSignUpLink:"إنشاء حساب جديد",
-    loginWrongPass:"كلمة المرور غير صحيحة",loginNotRegistered:"البريد الإلكتروني غير مسجل",loginConnError:"خطأ في الاتصال",
+    loginWrongPass:"كلمة المرور غير صحيحة",loginNotRegistered:"البريد الإلكتروني غير مسجل",loginConnError:"خطأ في الاتصال",loginForgotPass:"نسيت كلمة المرور؟",forgotPassTitle:"استعادة كلمة المرور",forgotPassDesc:"أدخل بريدك الإلكتروني وسنرسل لك كلمة المرور",forgotPassEmail:"البريد الإلكتروني",forgotPassSend:"إرسال كلمة المرور",forgotPassSuccess:"تم إرسال كلمة المرور على بريدك الإلكتروني! 📧",forgotPassNotFound:"البريد الإلكتروني غير مسجل في المنصة",forgotPassError:"حدث خطأ أثناء الإرسال، حاول مرة أخرى",forgotPassSending:"جاري الإرسال...",
     signupWelcome:"سجّل الآن وابدأ رحلتك التعليمية.",
     signupStudentData:"بيانات الطالب",signupFullName:"الاسم الكامل للطالب",signupNamePlaceholder:"الاسم الكامل",
     signupStudentPhone:"رقم هاتف الطالب",signupParentData:"بيانات ولي الأمر",
@@ -791,7 +796,7 @@ const I18N={
     loginWelcome:"Welcome back! Enter your credentials to continue.",
     rememberMe:"Remember login info",loginLogging:"Logging in...",
     loginNoAccQ:"Don't have an account?",loginSignUpLink:"Create new account",
-    loginWrongPass:"Incorrect password",loginNotRegistered:"Email not registered",loginConnError:"Connection error",
+    loginWrongPass:"Incorrect password",loginNotRegistered:"Email not registered",loginConnError:"Connection error",loginForgotPass:"Forgot password?",forgotPassTitle:"Password Recovery",forgotPassDesc:"Enter your email and we'll send you your password",forgotPassEmail:"Email address",forgotPassSend:"Send password",forgotPassSuccess:"Password sent to your email! 📧",forgotPassNotFound:"Email not registered in the platform",forgotPassError:"Error sending email, try again",forgotPassSending:"Sending...",
     signupWelcome:"Sign up now and start your learning journey.",
     signupStudentData:"Student Information",signupFullName:"Student Full Name",signupNamePlaceholder:"Full Name",
     signupStudentPhone:"Student Phone Number",signupParentData:"Parent Information",
@@ -1714,6 +1719,7 @@ const Auth={
     '<form onsubmit="Auth.handleLogin(event)">'+
     '<div class="form-group"><label class="form-label">'+T('loginEmail')+'</label><input class="form-input" type="email" id="loginEmail" required placeholder="example@email.com" dir="ltr" value="'+Utils.escHtml(last.email)+'"></div>'+
     '<div class="form-group"><label class="form-label">'+T('loginPass')+'</label><input class="form-input" type="password" id="loginPass" required placeholder="••••••••" dir="ltr" value="'+Utils.escHtml(last.password)+'"></div>'+
+    '<div style="text-align:left;margin-bottom:14px"><a onclick="Auth.showForgotPassword()" style="color:var(--accent);font-size:0.82rem;cursor:pointer;text-decoration:underline">'+T('loginForgotPass')+'</a></div>'+
     '<div id="loginError" class="form-error" style="display:none;margin-bottom:14px"></div>'+
     '<label style="display:flex;align-items:center;gap:8px;font-size:0.85rem;color:var(--text-secondary);cursor:pointer;margin-bottom:14px"><input type="checkbox" id="rememberMe" checked> '+T('rememberMe')+'</label>'+
     '<button type="submit" class="btn btn-primary btn-block">'+T('loginBtn')+'</button>'+
@@ -1724,6 +1730,60 @@ const Auth={
   fillLogin:function(email,pass){
     var e=document.getElementById('loginEmail');var p=document.getElementById('loginPass');
     if(e)e.value=email;if(p)p.value=pass;
+  },
+  showForgotPassword:function(){
+    var T=Lang.t.bind(Lang);
+    var html='<div class="modal-overlay" id="forgotPassModal" onclick="if(event.target===this)this.remove()"><div class="modal" style="max-width:420px"><button class="modal-close" onclick="document.getElementById(\'forgotPassModal\').remove()">✕</button>'+
+    '<h3 class="modal-title">🔑 '+T('forgotPassTitle')+'</h3>'+
+    '<p style="color:var(--text-secondary);font-size:0.85rem;margin-bottom:18px;line-height:1.7">'+T('forgotPassDesc')+'</p>'+
+    '<div class="form-group"><label class="form-label">'+T('forgotPassEmail')+'</label><input class="form-input" type="email" id="forgotPassEmail" required placeholder="example@email.com" dir="ltr"></div>'+
+    '<div id="forgotPassError" class="form-error" style="display:none;margin-bottom:14px"></div>'+
+    '<div id="forgotPassSuccess" style="display:none;margin-bottom:14px;padding:12px;border-radius:var(--radius-sm);background:rgba(76,175,80,0.12);color:#4CAF50;text-align:center;font-size:0.88rem"></div>'+
+    '<button class="btn btn-primary btn-block" onclick="Auth.handleForgotPassword()" id="forgotPassBtn">'+T('forgotPassSend')+'</button>'+
+    '</div></div>';
+    document.body.insertAdjacentHTML('beforeend',html);
+  },
+  handleForgotPassword:function(){
+    var T=Lang.t.bind(Lang);
+    var emailInput=document.getElementById('forgotPassEmail');
+    var errEl=document.getElementById('forgotPassError');
+    var successEl=document.getElementById('forgotPassSuccess');
+    var btn=document.getElementById('forgotPassBtn');
+    if(!emailInput)return;
+    var email=emailInput.value.trim().toLowerCase();
+    if(!email){errEl.textContent=T('loginNotRegistered');errEl.style.display='block';return}
+    errEl.style.display='none';successEl.style.display='none';
+    if(btn){btn.disabled=true;btn.textContent='⏳ '+T('forgotPassSending')}
+    FB_DB.ref('all_users').once('value').then(function(snap){
+      var users=snap.val()||{};
+      var found=null;
+      Object.keys(users).forEach(function(id){var u=users[id];if(u&&u.email&&u.email.toLowerCase()===email)found=u});
+      if(!found){
+        errEl.textContent=T('forgotPassNotFound');errEl.style.display='block';
+        if(btn){btn.disabled=false;btn.textContent=T('forgotPassSend')}
+        return;
+      }
+      var password=found.password;
+      var userName=found.name||'';
+      if(EMAILJS_SERVICE_ID==='YOUR_SERVICE_ID'){errEl.textContent='⚠️ خدمة البريد غير مكونة بعد. تواصل مع المدير.';errEl.style.display='block';if(btn){btn.disabled=false;btn.textContent=T('forgotPassSend')}return}
+      emailjs.send(EMAILJS_SERVICE_ID,EMAILJS_TEMPLATE_ID,{
+        to_email:email,
+        to_name:userName,
+        password:password,
+        platform_name:'د. مؤمن يسري - منصة العلوم'
+      }).then(function(){
+        successEl.textContent=T('forgotPassSuccess');successEl.style.display='block';
+        if(btn){btn.disabled=false;btn.textContent=T('forgotPassSend')}
+      }).catch(function(err){
+        console.error('EmailJS error:',err);
+        errEl.textContent=T('forgotPassError');errEl.style.display='block';
+        if(btn){btn.disabled=false;btn.textContent=T('forgotPassSend')}
+      });
+    }).catch(function(err){
+      console.error('Firebase lookup error:',err);
+      errEl.textContent=T('forgotPassError');errEl.style.display='block';
+      if(btn){btn.disabled=false;btn.textContent=T('forgotPassSend')}
+    });
   },
   renderSignup(){
     var T=Lang.t.bind(Lang);
