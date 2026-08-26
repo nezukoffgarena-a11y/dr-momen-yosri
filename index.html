@@ -9,13 +9,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
-<script>
-window.EMAILJS_PUBLIC_KEY='6FMS79Styayhzo8H0';
-window.EMAILJS_SERVICE_ID='service_i6txibo';
-window.EMAILJS_TEMPLATE_ID='template_56wp1e1';
-if(typeof emailjs!=='undefined'){emailjs.init({publicKey:window.EMAILJS_PUBLIC_KEY})}else{window.addEventListener('load',function(){if(typeof emailjs!=='undefined')emailjs.init({publicKey:window.EMAILJS_PUBLIC_KEY})})}
-</script>
+<script>window.WEB3FORMS_KEY='YOUR_ACCESS_KEY';</script>
 
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
@@ -501,9 +495,6 @@ table{min-width:800px}
 const FIREBASE_CFG={apiKey:"AIzaSyCbKbi6mE_VS1BZVaCblNb-MntBQvkdy-4",authDomain:"dr-momen-yosri.firebaseapp.com",databaseURL:"https://dr-momen-yosri-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"dr-momen-yosri",storageBucket:"dr-momen-yosri.firebasestorage.app",messagingSenderId:"160270733322",appId:"1:160270733322:web:b75b432c1d5d4556b54ff3"};
 firebase.initializeApp(FIREBASE_CFG);
 var FB_DB=firebase.database();
-const EMAILJS_PUBLIC_KEY=window.EMAILJS_PUBLIC_KEY||'YOUR_PUBLIC_KEY';
-const EMAILJS_SERVICE_ID=window.EMAILJS_SERVICE_ID||'YOUR_SERVICE_ID';
-const EMAILJS_TEMPLATE_ID=window.EMAILJS_TEMPLATE_ID||'YOUR_TEMPLATE_ID';
 const ADMIN_EMAIL="DrMomenYosriTheTopADMINONLY19191#3@ADMIN.COM";
 const ADMIN_PASS="DrMomenYosriTheTopADMINONLY19191#32026/2027";
 const MAX_STUDENTS=4000;
@@ -1770,20 +1761,15 @@ const Auth={
       }
       var password=found.password;
       var userName=found.name||'';
-      if(EMAILJS_SERVICE_ID==='YOUR_SERVICE_ID'){errEl.textContent='⚠️ خدمة البريد غير مكونة بعد. تواصل مع المدير.';errEl.style.display='block';if(btn){btn.disabled=false;btn.textContent=T('forgotPassSend')}return}
-      emailjs.send(EMAILJS_SERVICE_ID,EMAILJS_TEMPLATE_ID,{
-        email:email,
-        to_name:userName,
-        password:password,
-        platform_name:'د. مؤمن يسري - منصة العلوم'
-      },EMAILJS_PUBLIC_KEY).then(function(response){
-        successEl.textContent=T('forgotPassSuccess');successEl.style.display='block';
+      var w3k=window.WEB3FORMS_KEY||'';
+      if(!w3k||w3k==='YOUR_ACCESS_KEY'){errEl.textContent='⚠️ خدمة البريد غير مكونة بعد. تواصل مع المدير.';errEl.style.display='block';if(btn){btn.disabled=false;btn.textContent=T('forgotPassSend')}return}
+      fetch('https://api.web3forms.com/submit',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({access_key:w3k,subject:'🔑 كلمة المرور - منصة د. مؤمن يسري',from_name:'منصة د. مؤمن يسري',email:email,to_name:userName,password:password,platform_name:'د. مؤمن يسري - منصة العلوم',message:'مرحباً '+userName+'\nكلمة المرور الخاصة بك هي: '+password+'\nمنصة د. مؤمن يسري'})}).then(function(r){return r.json()}).then(function(res){
+        if(res.success){successEl.textContent=T('forgotPassSuccess');successEl.style.display='block'}
+        else{var msg=T('forgotPassError');if(res.message)msg+=' — '+res.message;errEl.textContent=msg;errEl.style.display='block'}
         if(btn){btn.disabled=false;btn.textContent=T('forgotPassSend')}
       }).catch(function(err){
-        console.error('EmailJS full error:',JSON.stringify(err));
-        var msg=T('forgotPassError');
-        if(err){if(err.text)msg+=' — '+err.text;else if(err.message)msg+=' — '+err.message;else msg+=' — '+JSON.stringify(err)}
-        errEl.textContent=msg;errEl.style.display='block';
+        console.error('Web3Forms error:',err);
+        errEl.textContent=T('forgotPassError')+' — '+err.message;errEl.style.display='block';
         if(btn){btn.disabled=false;btn.textContent=T('forgotPassSend')}
       });
     }).catch(function(err){
