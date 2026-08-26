@@ -9,12 +9,13 @@
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <script>
 window.EMAILJS_PUBLIC_KEY='6FMS79Styayhzo8H0';
 window.EMAILJS_SERVICE_ID='service_i6txibo';
 window.EMAILJS_TEMPLATE_ID='template_v0dc6qk';
+if(typeof emailjs!=='undefined'){emailjs.init({publicKey:window.EMAILJS_PUBLIC_KEY})}else{window.addEventListener('load',function(){if(typeof emailjs!=='undefined')emailjs.init({publicKey:window.EMAILJS_PUBLIC_KEY})})}
 </script>
-<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
@@ -503,7 +504,6 @@ var FB_DB=firebase.database();
 const EMAILJS_PUBLIC_KEY=window.EMAILJS_PUBLIC_KEY||'YOUR_PUBLIC_KEY';
 const EMAILJS_SERVICE_ID=window.EMAILJS_SERVICE_ID||'YOUR_SERVICE_ID';
 const EMAILJS_TEMPLATE_ID=window.EMAILJS_TEMPLATE_ID||'YOUR_TEMPLATE_ID';
-if(typeof emailjs!=='undefined')emailjs.init({publicKey:EMAILJS_PUBLIC_KEY});
 const ADMIN_EMAIL="DrMomenYosriTheTopADMINONLY19191#3@ADMIN.COM";
 const ADMIN_PASS="DrMomenYosriTheTopADMINONLY19191#32026/2027";
 const MAX_STUDENTS=4000;
@@ -1776,12 +1776,15 @@ const Auth={
         to_name:userName,
         password:password,
         platform_name:'د. مؤمن يسري - منصة العلوم'
-      }).then(function(){
+      },EMAILJS_PUBLIC_KEY).then(function(response){
         successEl.textContent=T('forgotPassSuccess');successEl.style.display='block';
         if(btn){btn.disabled=false;btn.textContent=T('forgotPassSend')}
       }).catch(function(err){
         console.error('EmailJS error:',err);
-        errEl.textContent=T('forgotPassError');errEl.style.display='block';
+        var msg=T('forgotPassError');
+        if(err&&err.text)msg+=' ('+err.text+')';
+        else if(err&&err.message)msg+=' ('+err.message+')';
+        errEl.textContent=msg;errEl.style.display='block';
         if(btn){btn.disabled=false;btn.textContent=T('forgotPassSend')}
       });
     }).catch(function(err){
