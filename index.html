@@ -2341,7 +2341,7 @@ const Admin={
     '</div>'+
     '<div class="form-group"><label class="form-label">فتح الدرس مجاناً لطالب</label>'+
     '<div style="display:flex;gap:6px"><select class="form-select" id="lFreeStudent" style="flex:1"><option value="">— اختر طالب —</option>'+
-    DB.users().filter(function(u){return u.role==='student'&&u.status==='approved'}).map(function(u){return '<option value="'+u.id+'">'+Utils.escHtml(u.name)+' — '+Utils.escHtml(u.grade)+'</option>'}).join('')+
+    DB.users().filter(function(u){return u.role==='student'&&u.status==='approved'&&u.grade===lesson.grade&&u.track===lesson.track}).map(function(u){return '<option value="'+u.id+'">'+Utils.escHtml(u.name)+'</option>'}).join('')+
     '</select><button type="button" class="btn btn-sm btn-accent" onclick="var s=document.getElementById(\'lFreeStudent\');if(!s||!s.value){showToast(\'اختر طالب أولاً\',\'error\');return}document.getElementById(\'lessonForm\').requestSubmit()">🔓 حفظ + فتح</button></div>'+
     '</div></div>':'')+
     '<div style="border-top:1px solid var(--glass-border);margin:16px 0;padding-top:16px">'+
@@ -2402,7 +2402,7 @@ const Admin={
       var msg=editId?Lang.t('toastLessonSaved'):Lang.t('toastLessonAdded');
       if(unlockedNames.length>0)msg+=' — تم فتحه لـ: '+unlockedNames.join(', ');
       showToast(msg);
-      if(!editId)Notify.add('lesson','درس جديد: '+data.title,'تم إضافة درس جديد في '+data.grade+' - '+data.track);
+      if(!editId)Notify.add('lesson','درس جديد: '+data.title,'تم إضافة درس جديد في '+data.grade+' - '+data.track,null,true);
       Admin.switchSection('lessons');
     };
     var readThumb=function(cb){
@@ -2474,13 +2474,14 @@ const Admin={
   },
   showUnlockForStudent:function(lessonId){
     var l=DB.lessons().find(function(x){return x.id===lessonId});if(!l)return;
-    var students=DB.users().filter(function(u){return u.role==='student'&&u.status==='approved'});
+    var students=DB.users().filter(function(u){return u.role==='student'&&u.status==='approved'&&u.grade===l.grade&&u.track===l.track});
     var html='<div class="modal-overlay" id="unlockModal" onclick="if(event.target===this)this.remove()"><div class="modal" style="max-width:500px"><button class="modal-close" onclick="document.getElementById(\'unlockModal\').remove()">✕</button>'+
     '<h3 class="modal-title">🔓 فتح الدرس لطالب</h3>'+
-    '<p style="color:var(--text-muted);font-size:0.85rem;margin-bottom:16px">الدرس: <strong>'+Utils.escHtml(l.title)+'</strong></p>'+
+    '<p style="color:var(--text-muted);font-size:0.85rem;margin-bottom:8px">الدرس: <strong>'+Utils.escHtml(l.title)+'</strong></p>'+
+    '<p style="color:var(--accent);font-size:0.8rem;margin-bottom:16px">'+Utils.escHtml(l.grade)+' — '+Utils.escHtml(l.track)+' ('+students.length+' طالب)</p>'+
     '<div class="form-group"><label class="form-label">اختر الطالب</label>'+
     '<select class="form-select" id="unlockStudent"><option value="">— اختر طالب —</option>'+
-    students.map(function(u){return '<option value="'+u.id+'">'+Utils.escHtml(u.name)+' — '+Utils.escHtml(u.grade)+'</option>'}).join('')+
+    students.map(function(u){return '<option value="'+u.id+'">'+Utils.escHtml(u.name)+'</option>'}).join('')+
     '</select></div>'+
     '<button class="btn btn-primary btn-block" onclick="Admin.unlockForStudent(\''+lessonId+'\')">🔓 فتح الدرس</button></div></div>';
     document.body.insertAdjacentHTML('beforeend',html);
@@ -2566,7 +2567,7 @@ const Admin={
       var files=DB.files();files.push(fileObj);DB.saveFiles(files);
       document.getElementById('fileModal').remove();
       showToast(Lang.t('toastFileUploaded'));
-      Notify.add('file','ملف جديد: '+fileObj.name,'ملف جديد '+fileObj.type.toUpperCase()+' متاح للطلاب');
+      Notify.add('file','ملف جديد: '+fileObj.name,'ملف جديد '+fileObj.type.toUpperCase()+' متاح للطلاب',null,true);
       Admin.switchSection('files');
     };
     reader.readAsDataURL(file);
@@ -2699,7 +2700,7 @@ const Admin={
     var exams=DB.exams();exams.push(exam);DB.saveExams(exams);
     this._qCount=0;document.getElementById('examModal').remove();
     showToast(Lang.t('toastExamCreated'));
-    Notify.add('exam','امتحان جديد: '+exam.title,'امتحان في '+exam.grade+' - '+exam.questions.length+' سؤال - مدة '+exam.timeLimit+' دقيقة');
+    Notify.add('exam','امتحان جديد: '+exam.title,'امتحان في '+exam.grade+' - '+exam.questions.length+' سؤال - مدة '+exam.timeLimit+' دقيقة',null,true);
     this.switchSection('exams');
   },
   deleteExam:function(id){if(!confirm(Lang.t('confirmDeleteExam')))return;DB.saveExams(DB.exams().filter(function(e){return e.id!==id}));showToast(Lang.t('toastExamDeleted'),'error');this.switchSection('exams')},
