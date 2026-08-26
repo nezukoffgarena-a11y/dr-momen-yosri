@@ -1169,14 +1169,17 @@ const DB={
     else if(Object.keys(shared).some(function(k){return Array.isArray(shared[k])&&shared[k].length>0}))console.log('Firebase: skipped shared push (only admin writes shared data)');
     if(hasPersonal)writes.push(FB_DB.ref('users/'+emailKey).set(personal));
     var self=DB;
-    Promise.all(writes).then(function(){DB._pushing=false;DB._pushRetryCount=0;if(DB._pushPending)DB._pushNow()}).catch(function(e){console.log('Firebase push error:',e);DB._pushing=false;if(DB._pushRetryCount<3){DB._pushRetryCount++;setTimeout(function(){DB._pushPending=true;DB._pushNow()},2000)}else{DB._pushRetryCount=0;showToast('⚠️ تعذر حفظ البيانات على السحابة. تحقق من الإنترنت وأعد المحاولة.','error',5000)}});
+    Promise.all(writes).then(function(){DB._pushing=false;DB._pushRetryCount=0;DB._set('pendingDeletes',[]);if(DB._pushPending)DB._pushNow()}).catch(function(e){console.log('Firebase push error:',e);DB._pushing=false;if(DB._pushRetryCount<3){DB._pushRetryCount++;setTimeout(function(){DB._pushPending=true;DB._pushNow()},2000)}else{DB._pushRetryCount=0;showToast('⚠️ تعذر حفظ البيانات على السحابة. تحقق من الإنترنت وأعد المحاولة.','error',5000)}});
   },
   syncFromServer:function(callback){
     var session=DB.session();
     if(!session||!session.email){if(callback)callback();return}
+    var isAdmin=session.role==='admin';
     FB_DB.ref('shared/data').once('value').then(function(snap){
       var res=snap.val()||{};
       var sharedKeys=['lessons','files','exams','notifications','community','users','homeworks','hwSubmissions'];
+      var pendingDeletes=DB._get('pendingDeletes')||[];
+      var pendingDeleteSet={};pendingDeletes.forEach(function(id){pendingDeleteSet[id]=true});
       sharedKeys.forEach(function(k){
         var data=res[k]||[];
         var local=DB._get(k)||[];
@@ -1185,6 +1188,13 @@ const DB={
           }else{
             data=local;
           }
+        }else if(isAdmin&&k!=='users'&&Array.isArray(local)){
+          var remoteById={};data.forEach(function(item){if(item&&item.id)remoteById[item.id]=item});
+          var localById={};local.forEach(function(item){if(item&&item.id)localById[item.id]=item});
+          var merged=[];
+          data.forEach(function(item){if(item&&item.id&&!pendingDeleteSet[item.id])merged.push(item)});
+          local.forEach(function(item){if(item&&item.id&&!remoteById[item.id])merged.push(item)});
+          data=merged;
         }
         if(k==='lessons'&&Array.isArray(data)){data=data.map(function(les){var c=Object.assign({},les);if(c.videoData){var vidData=c.videoData;var lid=c.id;delete c.videoData;c._hasVideo=true;VideoStore.save(lid,vidData,function(ok){if(!ok){console.error('syncFromServer: video save failed for',lid);var ls=DB._get('lessons')||[];var idx=ls.findIndex(function(x){return x.id===lid});if(idx>=0){ls[idx]._hasVideo=false;try{DB._set('lessons',ls)}catch(e){}}}})}else if(!c._hasVideo){delete c._hasVideo}return c})}
         try{DB._set(k,data)}catch(e){console.error('sync write failed:',k,e)}
@@ -2360,7 +2370,7 @@ const Admin={
     }else{readThumb(function(thumbData){doSave(null,thumbData)})}
   },
   editLesson:function(id){var l=DB.lessons().find(function(x){return x.id===id});if(l)this.showAddLessonModal(l)},
-  deleteLesson:function(id){if(!confirm(Lang.t('confirmDeleteLesson')))return;DB.saveLessons(DB.lessons().filter(function(l){return l.id!==id}));showToast(Lang.t('toastLessonDeleted'),'error');this.switchSection('lessons')},
+  deleteLesson:function(id){if(!confirm(Lang.t('confirmDeleteLesson')))return;var pd=DB._get('pendingDeletes')||[];if(!pd.includes(id))pd.push(id);DB._set('pendingDeletes',pd);DB.saveLessons(DB.lessons().filter(function(l){return l.id!==id}));showToast(Lang.t('toastLessonDeleted'),'error');this.switchSection('lessons')},
   showLessonCodes:function(lessonId){
     var l=DB.lessons().find(function(x){return x.id===lessonId});if(!l)return;
     var codes=l.codes||[];
