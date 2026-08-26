@@ -1780,10 +1780,9 @@ const Auth={
         successEl.textContent=T('forgotPassSuccess');successEl.style.display='block';
         if(btn){btn.disabled=false;btn.textContent=T('forgotPassSend')}
       }).catch(function(err){
-        console.error('EmailJS error:',err);
+        console.error('EmailJS full error:',JSON.stringify(err));
         var msg=T('forgotPassError');
-        if(err&&err.text)msg+=' ('+err.text+')';
-        else if(err&&err.message)msg+=' ('+err.message+')';
+        if(err){if(err.text)msg+=' — '+err.text;else if(err.message)msg+=' — '+err.message;else msg+=' — '+JSON.stringify(err)}
         errEl.textContent=msg;errEl.style.display='block';
         if(btn){btn.disabled=false;btn.textContent=T('forgotPassSend')}
       });
