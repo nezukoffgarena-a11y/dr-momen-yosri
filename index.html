@@ -1059,14 +1059,16 @@ const DB={
       if(changed){try{localStorage.setItem('dm_avatars',JSON.stringify(av))}catch(e){console.warn('Avatars store failed (too large):',e)}}
     }
     localStorage.setItem('dm_'+k,JSON.stringify(v));
-  }catch(e){console.warn('Storage write failed:',k,e)}},
+    return true;
+  }catch(e){console.warn('Storage write failed:',k,e);return false}},
   users(){var arr=this._get('users')||[];try{var av=this._get('avatars')||{};if(Object.keys(av).length){arr=arr.map(function(u){if(u&&av[u.id]){u=Object.assign({},u,{avatar:av[u.id]})}return u})}}catch(e){}return arr},
   saveUsers(u){this._set('users',u);this._push()},
   lessons(){return this._get('lessons')||[]},
   saveLessons(l){
     var self=this;
     var clean=l.map(function(les){var c=Object.assign({},les);if(c.videoData){var vidData=c.videoData;var lid=c.id;delete c.videoData;if(!c._hasVideo)c._hasVideo=true;VideoStore.save(lid,vidData,function(ok){if(!ok){console.error('VideoStore save failed for lesson',lid);var lessons=self._get('lessons')||[];var idx=lessons.findIndex(function(x){return x.id===lid});if(idx>=0){lessons[idx]._hasVideo=false;try{self._set('lessons',lessons)}catch(e){}}showToast('⚠️ تعذر حفظ الفيديو محلياً. استخدم رابط YouTube بديل.','error')}})}else if(!c._hasVideo){delete c._hasVideo}return c});
-    this._set('lessons',clean);this._push()
+    if(!this._set('lessons',clean))throw new Error('Storage write failed');
+    this._push()
   },
   files(){return this._get('files')||[]},
   saveFiles(f){this._set('files',f);this._push()},
@@ -1123,13 +1125,16 @@ const DB={
   },
   _syncTimer:null,
   _pushing:false,
+  _pushPending:false,
+  _pushRetryCount:0,
   _push:function(){
     clearTimeout(DB._syncTimer);
     DB._syncTimer=setTimeout(function(){DB._pushNow()},500);
   },
   _pushNow:function(){
-    if(DB._pushing)return;
+    if(DB._pushing){DB._pushPending=true;return}
     DB._pushing=true;
+    DB._pushPending=false;
     var session=DB.session();
     if(!session||!session.email){DB._pushing=false;return}
     var isAdmin=session.role==='admin';
@@ -1163,8 +1168,8 @@ const DB={
     if(isAdmin)writes.push(FB_DB.ref('shared/data').set(shared));
     else if(Object.keys(shared).some(function(k){return Array.isArray(shared[k])&&shared[k].length>0}))console.log('Firebase: skipped shared push (only admin writes shared data)');
     if(hasPersonal)writes.push(FB_DB.ref('users/'+emailKey).set(personal));
-    Promise.all(writes).then(function(){DB._pushing=false}).catch(function(e){console.log('Firebase push error:',e);DB._pushing=false});
-    setTimeout(function(){DB._pushing=false},5000);
+    var self=DB;
+    Promise.all(writes).then(function(){DB._pushing=false;DB._pushRetryCount=0;if(DB._pushPending)DB._pushNow()}).catch(function(e){console.log('Firebase push error:',e);DB._pushing=false;if(DB._pushRetryCount<3){DB._pushRetryCount++;setTimeout(function(){DB._pushPending=true;DB._pushNow()},2000)}else{DB._pushRetryCount=0;showToast('⚠️ تعذر حفظ البيانات على السحابة. تحقق من الإنترنت وأعد المحاولة.','error',5000)}});
   },
   syncFromServer:function(callback){
     var session=DB.session();
@@ -1172,6 +1177,7 @@ const DB={
     FB_DB.ref('shared/data').once('value').then(function(snap){
       var res=snap.val()||{};
       var sharedKeys=['lessons','files','exams','notifications','community','users','homeworks','hwSubmissions'];
+      var arrayKeys=['lessons','files','exams','notifications','community','homeworks','hwSubmissions'];
       sharedKeys.forEach(function(k){
         var data=res[k]||[];
         var local=DB._get(k)||[];
@@ -1180,6 +1186,11 @@ const DB={
           }else{
             data=local;
           }
+        }else if(arrayKeys.indexOf(k)>=0&&Array.isArray(data)&&Array.isArray(local)){
+          var remoteById={};data.forEach(function(item){if(item&&item.id)remoteById[item.id]=item});
+          var merged=data.slice();
+          local.forEach(function(item){if(item&&item.id&&!remoteById[item.id])merged.push(item)});
+          data=merged;
         }
         if(k==='lessons'&&Array.isArray(data)){data=data.map(function(les){var c=Object.assign({},les);if(c.videoData){var vidData=c.videoData;var lid=c.id;delete c.videoData;c._hasVideo=true;VideoStore.save(lid,vidData,function(ok){if(!ok){console.error('syncFromServer: video save failed for',lid);var ls=DB._get('lessons')||[];var idx=ls.findIndex(function(x){return x.id===lid});if(idx>=0){ls[idx]._hasVideo=false;try{DB._set('lessons',ls)}catch(e){}}}})}else if(!c._hasVideo){delete c._hasVideo}return c})}
         try{DB._set(k,data)}catch(e){console.error('sync write failed:',k,e)}
