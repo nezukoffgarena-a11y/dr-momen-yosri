@@ -1088,7 +1088,15 @@ const DB={
   reports(){return this._get('reports')||[]},
   saveReports(r){this._set('reports',r);this._push()},
   notifications(){return this._get('notifications')||[]},
-  saveNotifications(n){this._set('notifications',n);this._push()},
+  saveNotifications(n){
+    var prev=this._get('notifications')||[];
+    var prevIds={};prev.forEach(function(x){if(x&&x.id)prevIds[x.id]=true});
+    var curIds={};n.forEach(function(x){if(x&&x.id)curIds[x.id]=true});
+    var pd=this._get('pendingDeletes')||[];
+    Object.keys(prevIds).forEach(function(id){if(!curIds[id]&&pd.indexOf(id)===-1)pd.push(id)});
+    this._set('pendingDeletes',pd);
+    this._set('notifications',n);this._push()
+  },
   community(){return this._get('community')||[]},
   saveCommunity(c){this._set('community',c);this._push()},
   homeworks(){return this._get('homeworks')||[]},
