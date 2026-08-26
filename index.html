@@ -1073,20 +1073,58 @@ const DB={
   lessons(){return this._get('lessons')||[]},
   saveLessons(l){
     var self=this;
+    var prev=this._get('lessons')||[];
+    var prevIds={};prev.forEach(function(x){if(x&&x.id)prevIds[x.id]=true});
+    var curIds={};l.forEach(function(x){if(x&&x.id)curIds[x.id]=true});
+    var pd=this._get('pendingDeletes')||[];
+    Object.keys(prevIds).forEach(function(id){if(!curIds[id]&&pd.indexOf(id)===-1)pd.push(id)});
+    this._set('pendingDeletes',pd);
     var clean=l.map(function(les){var c=Object.assign({},les);if(c.videoData){var vidData=c.videoData;var lid=c.id;delete c.videoData;if(!c._hasVideo)c._hasVideo=true;VideoStore.save(lid,vidData,function(ok){if(!ok){console.error('VideoStore save failed for lesson',lid);var lessons=self._get('lessons')||[];var idx=lessons.findIndex(function(x){return x.id===lid});if(idx>=0){lessons[idx]._hasVideo=false;try{self._set('lessons',lessons)}catch(e){}}showToast('⚠️ تعذر حفظ الفيديو محلياً. استخدم رابط YouTube بديل.','error')}})}else if(!c._hasVideo){delete c._hasVideo}return c});
     if(!this._set('lessons',clean))throw new Error('Storage write failed');
     this._push()
   },
   files(){return this._get('files')||[]},
-  saveFiles(f){this._set('files',f);this._push()},
+  saveFiles(f){
+    var prev=this._get('files')||[];
+    var prevIds={};prev.forEach(function(x){if(x&&x.id)prevIds[x.id]=true});
+    var curIds={};f.forEach(function(x){if(x&&x.id)curIds[x.id]=true});
+    var pd=this._get('pendingDeletes')||[];
+    Object.keys(prevIds).forEach(function(id){if(!curIds[id]&&pd.indexOf(id)===-1)pd.push(id)});
+    this._set('pendingDeletes',pd);
+    this._set('files',f);this._push()
+  },
   transactions(){return this._get('transactions')||[]},
-  saveTransactions(t){this._set('transactions',t);this._push()},
+  saveTransactions(t){
+    var prev=this._get('transactions')||[];
+    var prevIds={};prev.forEach(function(x){if(x&&x.id)prevIds[x.id]=true});
+    var curIds={};t.forEach(function(x){if(x&&x.id)curIds[x.id]=true});
+    var pd=this._get('pendingDeletes')||[];
+    Object.keys(prevIds).forEach(function(id){if(!curIds[id]&&pd.indexOf(id)===-1)pd.push(id)});
+    this._set('pendingDeletes',pd);
+    this._set('transactions',t);this._push()
+  },
   exams(){return this._get('exams')||[]},
-  saveExams(e){this._set('exams',e);this._push()},
+  saveExams(e){
+    var prev=this._get('exams')||[];
+    var prevIds={};prev.forEach(function(x){if(x&&x.id)prevIds[x.id]=true});
+    var curIds={};e.forEach(function(x){if(x&&x.id)curIds[x.id]=true});
+    var pd=this._get('pendingDeletes')||[];
+    Object.keys(prevIds).forEach(function(id){if(!curIds[id]&&pd.indexOf(id)===-1)pd.push(id)});
+    this._set('pendingDeletes',pd);
+    this._set('exams',e);this._push()
+  },
   examResults(){return this._get('examResults')||[]},
   saveExamResults(r){this._set('examResults',r);this._push()},
   reports(){return this._get('reports')||[]},
-  saveReports(r){this._set('reports',r);this._push()},
+  saveReports(r){
+    var prev=this._get('reports')||[];
+    var prevIds={};prev.forEach(function(x){if(x&&x.id)prevIds[x.id]=true});
+    var curIds={};r.forEach(function(x){if(x&&x.id)curIds[x.id]=true});
+    var pd=this._get('pendingDeletes')||[];
+    Object.keys(prevIds).forEach(function(id){if(!curIds[id]&&pd.indexOf(id)===-1)pd.push(id)});
+    this._set('pendingDeletes',pd);
+    this._set('reports',r);this._push()
+  },
   notifications(){return this._get('notifications')||[]},
   saveNotifications(n){
     var prev=this._get('notifications')||[];
@@ -1098,13 +1136,45 @@ const DB={
     this._set('notifications',n);this._push()
   },
   community(){return this._get('community')||[]},
-  saveCommunity(c){this._set('community',c);this._push()},
+  saveCommunity(c){
+    var prev=this._get('community')||[];
+    var prevIds={};prev.forEach(function(x){if(x&&x.id)prevIds[x.id]=true});
+    var curIds={};c.forEach(function(x){if(x&&x.id)curIds[x.id]=true});
+    var pd=this._get('pendingDeletes')||[];
+    Object.keys(prevIds).forEach(function(id){if(!curIds[id]&&pd.indexOf(id)===-1)pd.push(id)});
+    this._set('pendingDeletes',pd);
+    this._set('community',c);this._push()
+  },
   homeworks(){return this._get('homeworks')||[]},
-  saveHomeworks(h){this._set('homeworks',h);this._push()},
+  saveHomeworks(h){
+    var prev=this._get('homeworks')||[];
+    var prevIds={};prev.forEach(function(x){if(x&&x.id)prevIds[x.id]=true});
+    var curIds={};h.forEach(function(x){if(x&&x.id)curIds[x.id]=true});
+    var pd=this._get('pendingDeletes')||[];
+    Object.keys(prevIds).forEach(function(id){if(!curIds[id]&&pd.indexOf(id)===-1)pd.push(id)});
+    this._set('pendingDeletes',pd);
+    this._set('homeworks',h);this._push()
+  },
   hwSubmissions(){return this._get('hwSubmissions')||[]},
-  saveHwSubmissions(s){this._set('hwSubmissions',s);this._push()},
+  saveHwSubmissions(s){
+    var prev=this._get('hwSubmissions')||[];
+    var prevIds={};prev.forEach(function(x){if(x&&x.id)prevIds[x.id]=true});
+    var curIds={};s.forEach(function(x){if(x&&x.id)curIds[x.id]=true});
+    var pd=this._get('pendingDeletes')||[];
+    Object.keys(prevIds).forEach(function(id){if(!curIds[id]&&pd.indexOf(id)===-1)pd.push(id)});
+    this._set('pendingDeletes',pd);
+    this._set('hwSubmissions',s);this._push()
+  },
   videoViews(){return this._get('videoViews')||[]},
-  saveVideoViews(v){this._set('videoViews',v);this._push()},
+  saveVideoViews(v){
+    var prev=this._get('videoViews')||[];
+    var prevIds={};prev.forEach(function(x){if(x&&x.id)prevIds[x.id]=true});
+    var curIds={};v.forEach(function(x){if(x&&x.id)curIds[x.id]=true});
+    var pd=this._get('pendingDeletes')||[];
+    Object.keys(prevIds).forEach(function(id){if(!curIds[id]&&pd.indexOf(id)===-1)pd.push(id)});
+    this._set('pendingDeletes',pd);
+    this._set('videoViews',v);this._push()
+  },
   logVideoView:function(lessonId,studentId,studentName){
     var views=this.videoViews();
     views.push({id:Utils.uid(),lessonId:lessonId,studentId:studentId,studentName:studentName,viewedAt:Date.now()});
@@ -2442,7 +2512,7 @@ const Admin={
     }else{readThumb(function(thumbData){doSave(null,thumbData)})}
   },
   editLesson:function(id){var l=DB.lessons().find(function(x){return x.id===id});if(l)this.showAddLessonModal(l)},
-  deleteLesson:function(id){if(!confirm(Lang.t('confirmDeleteLesson')))return;var pd=DB._get('pendingDeletes')||[];if(!pd.includes(id))pd.push(id);DB._set('pendingDeletes',pd);DB.saveLessons(DB.lessons().filter(function(l){return l.id!==id}));showToast(Lang.t('toastLessonDeleted'),'error');this.switchSection('lessons')},
+  deleteLesson:function(id){if(!confirm(Lang.t('confirmDeleteLesson')))return;DB.saveLessons(DB.lessons().filter(function(l){return l.id!==id}));showToast(Lang.t('toastLessonDeleted'),'error');this.switchSection('lessons')},
   showLessonCodes:function(lessonId){
     var l=DB.lessons().find(function(x){return x.id===lessonId});if(!l)return;
     var codes=l.codes||[];
