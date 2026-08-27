@@ -2937,13 +2937,13 @@ const Admin={
       var gradePanel='';
       if(!isGraded){
         gradePanel='<div style="margin-top:16px;padding:16px;border-top:1px solid var(--glass-border);display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap">'+
-        '<div style="flex:1;min-width:120px"><label class="form-label">'+Lang.get()==='ar'?'الدرجة':'Grade'+'</label><input class="form-input" type="number" id="grade_'+s.id+'" min="0" max="'+(s.maxScore||100)+'" placeholder="0 / '+(s.maxScore||100)+'"></div>'+
-        '<div style="flex:2;min-width:200px"><label class="form-label">'+Lang.get()==='ar'?'ملاحظات':'Feedback'+'</label><input class="form-input" id="fb_'+s.id+'" placeholder="'+Lang.get()==='ar'?'ملاحظات على التصحيح...':'Correction notes...'+'"></div>'+
-        '<button class="btn btn-primary" onclick="Admin.gradeSubmission(\''+s.id+'\')">'+Lang.get()==='ar'?'تقييم وحفظ':'Grade & Save'+'</button></div>';
+        '<div style="flex:1;min-width:120px"><label class="form-label">'+(Lang.get()==='ar'?'الدرجة':'Grade')+'</label><input class="form-input" type="number" id="grade_'+s.id+'" min="0" max="'+(s.maxScore||100)+'" placeholder="0 / '+(s.maxScore||100)+'"></div>'+
+        '<div style="flex:2;min-width:200px"><label class="form-label">'+(Lang.get()==='ar'?'ملاحظات':'Feedback')+'</label><input class="form-input" id="fb_'+s.id+'" placeholder="'+(Lang.get()==='ar'?'ملاحظات على التصحيح...':'Correction notes...')+'"></div>'+
+        '<button class="btn btn-primary" onclick="Admin.gradeSubmission(\''+s.id+'\')">'+(Lang.get()==='ar'?'تقييم وحفظ':'Grade & Save')+'</button></div>';
       }else{
         gradePanel='<div style="margin-top:16px;padding:14px;border-radius:var(--radius-sm);background:rgba(200,162,78,0.06);border:1px solid rgba(200,162,78,0.15);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px"><div><strong style="color:var(--accent);font-size:1.1rem">'+s.score+' / '+s.maxScore+'</strong>'+
         (s.feedback?'<div style="font-size:0.82rem;color:var(--text-secondary);margin-top:4px">💬 '+Utils.escHtml(s.feedback)+'</div>':'')+'</div>'+
-        (s.annotation?'<div style="font-size:0.75rem;color:var(--text-muted)">📝 '+Lang.get()==='ar'?'يوجد تأشيرات':'Has annotations'+'</div>':'')+'</div>';
+        (s.annotation?'<div style="font-size:0.75rem;color:var(--text-muted)">📝 '+(Lang.get()==='ar'?'يوجد تأشيرات':'Has annotations')+'</div>':'')+'</div>';
       }
       return '<div class="card" style="margin-bottom:16px;overflow:visible"><div class="card-header"><h3 class="card-title">'+Utils.escHtml(s.studentName||'طالب')+' - '+(h?Utils.escHtml(h.title):'')+'</h3>'+
       '<span class="badge '+(isGraded?'badge-accent':'badge-warning')+'">'+(isGraded?'✅ '+s.score+'/'+s.maxScore:'⏳ '+Lang.t('hwPending'))+'</span></div>'+
@@ -3010,7 +3010,8 @@ const Admin={
     if(sub){sub.score=score;sub.feedback=feedback;sub.status='graded';DB.saveHwSubmissions(subs)}
     var hw=DB.homeworks().find(function(h){return sub&&h.id===sub.hwId});
     var notifs=DB.notifications();
-    notifs.push({id:Utils.uid(),title:Lang.get()==='ar'?'تم تقييم واجبك':'Homework Graded',message:(Lang.get()==='ar'?'تم تقييم واجب ':'Homework graded: ')+(hw?hw.title:'')+' — '+Lang.get()==='ar'?'الدرجة: ':'Score: '+score+'/'+(sub?sub.maxScore:100)+(feedback?' — '+feedback:''),type:'info',studentId:sub?sub.studentId:'',date:Date.now()});
+    var isAr3013=Lang.get()==='ar';
+    notifs.push({id:Utils.uid(),title:isAr3013?'تم تقييم واجبك':'Homework Graded',message:(isAr3013?'تم تقييم واجب ':'Homework graded: ')+(hw?hw.title:'')+' — '+(isAr3013?'الدرجة: ':'Score: ')+score+'/'+(sub?sub.maxScore:100)+(feedback?' — '+feedback:''),type:'info',studentId:sub?sub.studentId:'',date:Date.now()});
     DB.saveNotifications(notifs);
     document.getElementById('hwFileOverlay').remove();
     showToast(Lang.get()==='ar'?'تم التقييم بنجاح!':'Graded successfully!','success');
@@ -3579,12 +3580,12 @@ const Student={
       var gradedHtml='';
       if(mySub&&mySub.status==='graded'){
         gradedHtml='<div style="margin-top:14px;padding:14px;border-radius:var(--radius-sm);background:rgba(200,162,78,0.06);border:1px solid rgba(200,162,78,0.15)"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><strong style="color:var(--accent)">'+Lang.t('hwScore')+': '+mySub.score+' / '+hw.maxScore+'</strong><span class="badge badge-accent">✅ '+Lang.t('hwGraded')+'</span></div>'+
-        (mySub.feedback?'<div style="font-size:0.85rem;color:var(--text-secondary);line-height:1.8;margin-top:6px"><strong>'+Lang.get()==='ar'?'ملاحظات المعلم':'Teacher Notes'+':</strong> '+Utils.escHtml(mySub.feedback)+'</div>':'')+'</div>';
+        (mySub.feedback?'<div style="font-size:0.85rem;color:var(--text-secondary);line-height:1.8;margin-top:6px"><strong>'+(Lang.get()==='ar'?'ملاحظات المعلم':'Teacher Notes')+':</strong> '+Utils.escHtml(mySub.feedback)+'</div>':'')+'</div>';
       }
       var subFilesHtml='';
       if(mySub){
         var subFiles=mySub.files||[{data:mySub.fileData,type:mySub.fileType}];
-        subFilesHtml='<div style="margin-top:14px"><div style="font-size:0.82rem;font-weight:700;color:var(--accent);margin-bottom:8px">'+Lang.get()==='ar'?'واجبك المُسلّم':'Submitted Homework'+' ('+subFiles.length+' '+(Lang.get()==='ar'?'ملف':'files')+'):</div>'+
+        subFilesHtml='<div style="margin-top:14px"><div style="font-size:0.82rem;font-weight:700;color:var(--accent);margin-bottom:8px">'+(Lang.get()==='ar'?'واجبك المُسلّم':'Submitted Homework')+' ('+subFiles.length+' '+(Lang.get()==='ar'?'ملف':'files')+'):</div>'+
         '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px">';
         subFiles.forEach(function(sf){
           if(sf.type==='image')subFilesHtml+='<img src="'+sf.data+'" style="width:100%;border-radius:var(--radius-sm);border:1px solid var(--glass-border);cursor:pointer" onclick="window.open(\''+sf.data+'\')">';
@@ -3596,7 +3597,7 @@ const Student={
       (mySub?'<span class="badge '+(mySub.status==='graded'?'badge-accent':'badge-warning')+'">'+(mySub.status==='graded'?Lang.t('hwGraded')+': '+mySub.score+'/'+hw.maxScore:Lang.t('hwPending'))+'</span>':isOverdue?'<span class="badge badge-danger">'+(Lang.get()==='ar'?'منتهي':'Overdue')+'</span>':'<span class="badge badge-warning">'+Lang.t('hwPending')+'</span>')+'</div>'+
       '<div style="font-size:0.88rem;color:var(--text-secondary);line-height:2"><div>📅 '+Lang.t('hwDueDate')+': '+Utils.formatDate(hw.dueDate)+'</div>'+
       (hw.instructions?'<div style="margin-top:8px">'+Utils.escHtml(hw.instructions)+'</div>':'')+
-      '<div style="margin-top:12px;padding:12px;border-radius:var(--radius-sm);background:var(--glass);border:1px solid var(--glass-border)"><strong>'+Lang.get()==='ar'?'السؤال':'Question'+':</strong><br>'+Utils.escHtml(hw.question)+'</div></div>'+
+      '<div style="margin-top:12px;padding:12px;border-radius:var(--radius-sm);background:var(--glass);border:1px solid var(--glass-border)"><strong>'+(Lang.get()==='ar'?'السؤال':'Question')+':</strong><br>'+Utils.escHtml(hw.question)+'</div></div>'+
       subFilesHtml+gradedHtml+
       (!mySub&&!isOverdue?'<div style="margin-top:14px">'+
       '<div class="form-group"><label class="form-label">'+(Lang.get()==='ar'?'ارفع واجبك (صورة أو PDF)':'Upload homework (Image or PDF)')+':</label>'+
@@ -3849,7 +3850,7 @@ const Tournament={
     }).sort(function(a,b){return b.points-a.points});
     var medals=['🥇','🥈','🥉'];
     return '<div style="max-width:900px;margin:0 auto;padding:88px 20px 40px" class="fade-in">'+
-    '<div class="page-header"><h1 class="page-title">🏆 '+Lang.t('tournamentTitle')+'</h1><p class="page-subtitle">'+Lang.get()==='ar'?'أفضل الطلاب أداءً هذا الفصل':'Top performing students this semester'+'</p></div>'+
+    '<div class="page-header"><h1 class="page-title">🏆 '+Lang.t('tournamentTitle')+'</h1><p class="page-subtitle">'+(Lang.get()==='ar'?'أفضل الطلاب أداءً هذا الفصل':'Top performing students this semester')+'</p></div>'+
     (ranked.length===0?'<div class="card empty-state"><div class="empty-icon">🏆</div><p>'+(Lang.get()==='ar'?'لا يوجد طلاب مسجلين':'No students registered')+'</p></div>':'')+
     ranked.map(function(r,i){
       var medal=i<3?medals[i]:'';
