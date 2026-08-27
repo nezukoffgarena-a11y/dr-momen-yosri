@@ -1487,7 +1487,7 @@ const Notify={
   getReadIds:function(){try{return JSON.parse(localStorage.getItem(this._storageKey()))||[]}catch(e){return[]}},
   markRead:function(id){var ids=this.getReadIds();if(ids.indexOf(id)===-1){ids.push(id);localStorage.setItem(this._storageKey(),JSON.stringify(ids))}},
   markAllRead:function(){var notifs=DB.notifications();var ids=notifs.map(function(n){return n.id});localStorage.setItem(this._storageKey(),JSON.stringify(ids))},
-  unreadCount:function(){var ids=this.getReadIds();var u=App.user;var all=DB.notifications();var filtered=u&&u.role!=='admin'?all.filter(function(n){return (!n.studentId||n.studentId===u.id)&&!n.adminOnly}):all;return filtered.filter(function(n){return ids.indexOf(n.id)===-1}).length},
+  unreadCount:function(){var ids=this.getReadIds();var u=App.user;var all=DB.notifications();var filtered=u&&u.role!=='admin'?all.filter(function(n){return (!n.studentId||n.studentId===u.id)&&!n.adminOnly&&!n.deleted}):all.filter(function(n){return !n.deleted});return filtered.filter(function(n){return ids.indexOf(n.id)===-1}).length},
   add:function(type,title,msg,studentId,adminOnly,extra){var notifs=DB.notifications();var n={id:Utils.uid(),type:type,title:title,message:msg,date:Date.now()};if(studentId)n.studentId=studentId;if(adminOnly)n.adminOnly=true;if(extra)for(var k in extra){n[k]=extra[k]}notifs.push(n);DB.saveNotifications(notifs);if(navigator.vibrate)navigator.vibrate(200);this.renderBell()},
   renderBell:function(){
     var c=document.getElementById('notifBellContainer');if(!c)return;
@@ -1506,7 +1506,7 @@ const Notify={
     var allNotifs=DB.notifications().slice().reverse();
     var ids=this.getReadIds();
     var u=App.user;
-    var notifs=u&&u.role!=='admin'?allNotifs.filter(function(n){return (!n.studentId||n.studentId===u.id)&&!n.adminOnly}):allNotifs;
+    var notifs=u&&u.role!=='admin'?allNotifs.filter(function(n){return (!n.studentId||n.studentId===u.id)&&!n.adminOnly&&!n.deleted}):allNotifs.filter(function(n){return !n.deleted});
     var html='<div class="notif-dropdown-header"><h4>🔔 '+('الإشعارات')+'</h4>';
     html+='<button onclick="Notify.markAllRead();Notify.renderBell();Notify.renderPanel()" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:0.75rem">'+('تحديد الكل كمقروء')+'</button></div>';
     html+='<div class="notif-dropdown-body">';
@@ -1578,7 +1578,7 @@ const App={
             if(el)Student.switchSection(App.currentSubView||'overview');
             var unread=Notify.unreadCount();
             if(unread>0&&!Notify._lastShownToast){
-              var latestNotifs=DB.notifications().filter(function(n){return n.studentId===App.user.id}).slice().reverse();
+              var latestNotifs=DB.notifications().filter(function(n){return (n.studentId===App.user.id||!n.studentId)&&!n.deleted&&!n.adminOnly}).slice().reverse();
               if(latestNotifs.length>0){var ln=latestNotifs[0];showToast(ln.title+': '+ln.message,'info');Notify._lastShownToast=ln.id}
             }
           }
@@ -2825,7 +2825,7 @@ const Admin={
   },
   broadcastMgmt:function(){
     var T=Lang.t.bind(Lang);
-    var notifs=DB.notifications();
+    var notifs=DB.notifications().filter(function(n){return !n.deleted});
     return '<div class="fade-in"><div class="card-header"><div><h1 class="page-title">'+T('adminBroadcastPageTitle')+'</h1><p class="page-subtitle">'+T('adminBroadcastSub')+'</p></div>'+
     '<button class="btn btn-primary" onclick="Admin.showBroadcastModal()">+ '+T('adminSendNotif')+'</button></div>'+
     '<div class="card">'+
@@ -2848,7 +2848,18 @@ const Admin={
     showToast(Lang.t('toastNotifSent'));
     this.switchSection('broadcast');
   },
-  deleteNotification:function(id){DB.saveNotifications(DB.notifications().filter(function(n){return n.id!==id}));showToast(Lang.t('toastNotifDeleted'),'error');this.switchSection('broadcast')},
+  deleteNotification:function(id){
+    var notifs=DB.notifications();
+    var found=notifs.find(function(n){return n.id===id});
+    if(found&&!found.studentId){
+      found.deleted=true;
+    }else{
+      notifs=notifs.filter(function(n){return n.id!==id});
+    }
+    DB.saveNotifications(notifs);
+    showToast(Lang.t('toastNotifDeleted'),'error');
+    this.switchSection('broadcast')
+  },
   showAddHw:function(){
     var isAr=Lang.get()==='ar';
     var hws=DB.homeworks();
@@ -3122,7 +3133,7 @@ const Student={
   },
   overview:function(){
     var u=App.user;var lessons=Student.getFilteredLessons();
-    var notifs=DB.notifications().slice(-5).reverse();var results=DB.examResults().filter(function(r){return r.studentId===u.id});
+    var notifs=DB.notifications().filter(function(n){return !n.deleted&&(!n.studentId||n.studentId===u.id)&&!n.adminOnly}).slice(-5).reverse();var results=DB.examResults().filter(function(r){return r.studentId===u.id});
     var userUnlocks=(DB._get('unlocks_'+u.id))||[];
     return '<div class="fade-in"><div class="page-header"><h1 class="page-title">'+Lang.t('welcome')+' '+Utils.escHtml(u.name)+' 👋</h1><p class="page-subtitle">'+Utils.escHtml(u.grade)+' — '+Utils.escHtml(u.track)+'</p></div>'+
     '<div class="stats-grid">'+
