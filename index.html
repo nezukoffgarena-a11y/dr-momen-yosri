@@ -3683,6 +3683,7 @@ const Student={
   getFilteredLessons:function(){
     var lessons=DB.lessons();var u=App.user;
     if(u&&u.grade){lessons=lessons.filter(function(l){return l.grade===u.grade})}
+    if(u&&u.track){lessons=lessons.filter(function(l){return l.track===u.track})}
     return lessons
   },
   paymentRequestView:function(){
