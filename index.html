@@ -2153,15 +2153,6 @@ const Admin={
       });
       DB._set('users',merged);
       if(newPending.length){
-        var existingNotifs=DB.notifications();
-        newPending=newPending.filter(function(u){
-          return !existingNotifs.some(function(n){return n.needApproval&&n.studentId===u.id});
-        });
-      }
-      if(newPending.length){
-        newPending.forEach(function(u){
-          Notify.add('admin','طلب تسجيل جديد 📝','طلب تسجيل جديد من "'+u.name+'" بانتظار المراجعة.',u.id,true,{needApproval:true});
-        });
         if(App.currentView==='admin'&&(App.currentSubView==='pending'||App.currentSubView==='students'||App.currentSubView==='overview')){
           var content=document.getElementById('adminContent');
           if(content){content.innerHTML=Admin.renderSection();Admin.init();}
@@ -2248,7 +2239,6 @@ const Admin={
     var u=DB.getUserById(id);
     if(u){
       FB_DB.ref('all_users/'+id).set(u).catch(function(){});
-      Notify.add('admin','تم قبول طلبك ✅','أهلاً بك على المنصة! تم قبول تسجيلك، يمكنك الدخول الآن.',id);
     }
     FB_DB.ref('pending_users/'+id).remove().catch(function(){});
     DB.saveNotifications(DB.notifications().filter(function(n){return n.studentId!==id||!n.needApproval}));
@@ -2290,7 +2280,6 @@ const Admin={
     var fresh=DB.getUserById(id);
     if(fresh){FB_DB.ref('all_users/'+id).set(fresh).catch(function(){})}
     showToast('تم رفع "'+u.name+'" إلى أدمن بنجاح 👑');
-    Notify.add('admin','تم ترقيتك إلى أدمن 👑','مبروك! أصبح لك كل صلاحيات الإدارة: إضافة الدروس والامتحانات والواجبات وغيرها.',id);
     this.switchSection(App.currentSubView||'students');
   },
   demoteAdmin:function(id){
@@ -2331,7 +2320,6 @@ const Admin={
     var u=DB.restoreUser(id);
     if(u){
       showToast((isAr?'تمت استعادة "':'Restored "')+u.name+(isAr?'" ✅':'" ✅'));
-      Notify.add('admin',(isAr?'تمت استعادة حسابك ✅':'Your account was restored ✅'),(isAr?'تمت استعادة حسابك على المنصة بواسطة الإدارة. أهلاً بعودتك!':'Your account was restored by the admin. Welcome back!'),id);
     }
     this.switchSection('deletedStudents');
   },
@@ -2496,13 +2484,12 @@ const Admin={
       if(freeStudentEl&&freeStudentEl.value){
         var sid=freeStudentEl.value;
         var sUnlocks=(DB._get('unlocks_'+sid))||[];
-        if(!sUnlocks.includes(savedLessonId)){sUnlocks.push(savedLessonId);DB._set('unlocks_'+sid,sUnlocks);var su=DB.getUserById(sid);if(su){unlockedNames.push(su.name);var sek=su.email.replace(/\./g,'_dot_');FB_DB.ref('users/'+sek+'/unlocks/'+sid).set(sUnlocks).catch(function(e){console.log(e)})}Notify.add('unlock','تم فتح درس لك','تم فتح درس "'+data.title+'" لك من الإدارة',sid)}
+        if(!sUnlocks.includes(savedLessonId)){sUnlocks.push(savedLessonId);DB._set('unlocks_'+sid,sUnlocks);var su=DB.getUserById(sid);if(su){unlockedNames.push(su.name);var sek=su.email.replace(/\./g,'_dot_');FB_DB.ref('users/'+sek+'/unlocks/'+sid).set(sUnlocks).catch(function(e){console.log(e)})}}
       }
       document.getElementById('lessonModal').remove();
       var msg=editId?Lang.t('toastLessonSaved'):Lang.t('toastLessonAdded');
       if(unlockedNames.length>0)msg+=' — تم فتحه لـ: '+unlockedNames.join(', ');
       showToast(msg);
-      if(!editId)Notify.add('lesson','درس جديد: '+data.title,'تم إضافة درس جديد في '+data.grade+' - '+data.track,null,true);
       Admin.switchSection('lessons');
     };
     var readThumb=function(cb){
@@ -2597,7 +2584,6 @@ const Admin={
       var l=DB.lessons().find(function(x){return x.id===lessonId});
       var u=DB.getUserById(studentId);
       if(u){var sek=u.email.replace(/\./g,'_dot_');FB_DB.ref('users/'+sek+'/unlocks/'+studentId).set(unlocks).catch(function(e){console.log(e)})}
-      Notify.add('unlock','تم فتح درس لك','تم فتح درس "'+(l?l.title:'')+'" لك من الإدارة',studentId);
       showToast('تم فتح الدرس لـ '+(u?u.name:'الطالب')+'!');
     }else{showToast('الدرس مفتوح بالفعل لهذا الطالب')}
     document.getElementById('unlockModal').remove();
@@ -2667,7 +2653,6 @@ const Admin={
       var files=DB.files();files.push(fileObj);DB.saveFiles(files);
       document.getElementById('fileModal').remove();
       showToast(Lang.t('toastFileUploaded'));
-      Notify.add('file','ملف جديد: '+fileObj.name,'ملف جديد '+fileObj.type.toUpperCase()+' متاح للطلاب',null,true);
       Admin.switchSection('files');
     };
     reader.readAsDataURL(file);
@@ -2800,7 +2785,6 @@ const Admin={
     var exams=DB.exams();exams.push(exam);DB.saveExams(exams);
     this._qCount=0;document.getElementById('examModal').remove();
     showToast(Lang.t('toastExamCreated'));
-    Notify.add('exam','امتحان جديد: '+exam.title,'امتحان في '+exam.grade+' - '+exam.questions.length+' سؤال - مدة '+exam.timeLimit+' دقيقة',null,true);
     this.switchSection('exams');
   },
   deleteExam:function(id){if(!confirm(Lang.t('confirmDeleteExam')))return;DB.saveExams(DB.exams().filter(function(e){return e.id!==id}));showToast(Lang.t('toastExamDeleted'),'error');this.switchSection('exams')},
@@ -3030,11 +3014,6 @@ const Admin={
     var feedback=fb?fb.value.trim():'';
     var subs=DB.hwSubmissions();var sub=subs.find(function(s){return s.id===subId});
     if(sub){sub.score=score;sub.feedback=feedback;sub.status='graded';DB.saveHwSubmissions(subs)}
-    var hw=DB.homeworks().find(function(h){return sub&&h.id===sub.hwId});
-    var notifs=DB.notifications();
-    var isAr3013=Lang.get()==='ar';
-    notifs.push({id:Utils.uid(),title:isAr3013?'تم تقييم واجبك':'Homework Graded',message:(isAr3013?'تم تقييم واجب ':'Homework graded: ')+(hw?hw.title:'')+' — '+(isAr3013?'الدرجة: ':'Score: ')+score+'/'+(sub?sub.maxScore:100)+(feedback?' — '+feedback:''),type:'info',studentId:sub?sub.studentId:'',date:Date.now()});
-    DB.saveNotifications(notifs);
     document.getElementById('hwFileOverlay').remove();
     showToast(Lang.get()==='ar'?'تم التقييم بنجاح!':'Graded successfully!','success');
     Admin.switchSection('homework');
@@ -4267,9 +4246,6 @@ function reportScreenshot(reason){
     userAgent:navigator.userAgent.substring(0,80)
   };
   FB_DB.ref('screenshot_reports/'+entry.id).set(entry).catch(function(){});
-  var notifs=DB.notifications();
-  notifs.push({id:Utils.uid(),type:'screenshot',title:'🚨 محاولة لقطة شاشة',message:App.user.name+' ('+App.user.email+') حاول أخذ لقطة شاشة — '+reason,date:now});
-  DB.saveNotifications(notifs);
 }
 (function(){
   var blockVisible=false;
