@@ -632,7 +632,7 @@ const I18N={
     adminChooseGrade:"اختر الصف",adminLessonTrackLabel:"المسار",adminChooseTrack:"اختر المسار",
     adminVideoUrl:"رابط الفيديو (YouTube / Vimeo / رابط مباشر)",adminVideoUpload:"رفع فيديو MP4 مباشر",
     adminVideoAlt:"رابط الفيديو البديل (اختياري)",adminVideoEmbed:"Embed Code (اختياري - للصق كود embed من YouTube أو أي مصدر)",
-    adminSaveLesson:"حفظ التعديلات",adminAddLessonBtn:"إضافة الدرس",
+    adminSaveLesson:"حفظ التعديلات",adminAddLessonBtn:"إضافة الدرس",adminFilterGrade:"الصف",adminFilterTrack:"المسار",adminAllGrades:"كل الصفوف",adminAllTracks:"كل المسارات",
     toastLessonSaved:"تم تعديل الدرس بنجاح!",toastLessonAdded:"تم إضافة الدرس بنجاح!",
     toastStorageFull:"الذاكرة ممتلئة. جرب حذف بعض الدروس أو استخدم رابط فيديو بدل الرفع المباشر.",
     confirmDeleteLesson:"هل أنت متأكد من حذف هذا الدرس؟",toastLessonDeleted:"تم حذف الدرس",
@@ -878,7 +878,7 @@ const I18N={
     adminChooseGrade:"Choose Grade",adminLessonTrackLabel:"Track",adminChooseTrack:"Choose Track",
     adminVideoUrl:"Video URL (YouTube / Vimeo / Direct Link)",adminVideoUpload:"Upload MP4 Video",
     adminVideoAlt:"Alternative Video URL (Optional)",adminVideoEmbed:"Embed Code (Optional)",
-    adminSaveLesson:"Save Changes",adminAddLessonBtn:"Add Lesson",
+    adminSaveLesson:"Save Changes",adminAddLessonBtn:"Add Lesson",adminFilterGrade:"Grade",adminFilterTrack:"Track",adminAllGrades:"All grades",adminAllTracks:"All tracks",
     toastLessonSaved:"Lesson updated!",toastLessonAdded:"Lesson added!",
     toastStorageFull:"Storage full. Try deleting some lessons or use a video link instead.",
     confirmDeleteLesson:"Are you sure you want to delete this lesson?",toastLessonDeleted:"Lesson deleted",
@@ -2372,8 +2372,19 @@ const Admin={
     var T=Lang.t.bind(Lang);var isAr=Lang.get()==='ar';
     var lessons=DB.lessons();
     var allViews=DB.videoViews();
+    var fg=Admin._lessonFilterGrade||'';
+    var ft=Admin._lessonFilterTrack||'';
+    if(fg)lessons=lessons.filter(function(l){return l.grade===fg});
+    if(ft)lessons=lessons.filter(function(l){return l.track===ft});
+    var gOpts=GRADES.map(function(g){return '<option value="'+g+'" '+(fg===g?'selected':'')+'>'+g+'</option>'}).join('');
+    var tOpts=TRACKS.map(function(t){return '<option value="'+t+'" '+(ft===t?'selected':'')+'>'+t+'</option>'}).join('');
     return '<div class="fade-in"><div class="card-header"><div><h1 class="page-title">'+T('adminLessonsPageTitle')+'</h1><p class="page-subtitle">'+lessons.length+' '+T('lessonsAvailable')+'</p></div>'+
     '<button class="btn btn-primary" onclick="Admin.showAddLessonModal()">+ '+T('adminAddLesson')+'</button></div>'+
+    '<div class="card" style="margin-bottom:16px;padding:14px"><div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">'+
+    '<div style="flex:1;min-width:180px"><label class="form-label" style="font-size:0.75rem;margin-bottom:4px">'+T('adminFilterGrade')+'</label><select class="form-select" id="adminLessonFilterGrade" onchange="Admin.setLessonFilter(\'grade\',this.value)"><option value="">'+T('adminAllGrades')+'</option>'+gOpts+'</select></div>'+
+    '<div style="flex:1;min-width:180px"><label class="form-label" style="font-size:0.75rem;margin-bottom:4px">'+T('adminFilterTrack')+'</label><select class="form-select" id="adminLessonFilterTrack" onchange="Admin.setLessonFilter(\'track\',this.value)"><option value="">'+T('adminAllTracks')+'</option>'+tOpts+'</select></div>'+
+    '<div><button class="btn btn-secondary" onclick="Admin.clearLessonFilter()">'+(isAr?'🔄 عرض الكل':'🔄 Show all')+'</button></div>'+
+    '</div></div>'+
     '<div class="content-grid" id="adminLessonsGrid">'+
     (lessons.length===0?'<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">🎬</div><p>'+T('adminNoLessons')+'</p></div>':'')+
     lessons.map(function(l){var viewCount=allViews.filter(function(v){return v.lessonId===l.id}).length;var codeCount=(l.codes||[]).length;var usedCodes=(l.codes||[]).filter(function(c){return c.usedBy}).length;
@@ -2383,6 +2394,17 @@ const Admin={
     '<div style="display:flex;gap:6px;flex-wrap:wrap;margin:8px 0"><span class="badge badge-info" style="font-size:0.72rem">👁️ '+viewCount+' مشاهدة</span>'+(l.maxViews>0?'<span class="badge badge-danger" style="font-size:0.72rem">🔢 '+l.maxViews+' حد مشاهدات</span>':'')+'<span class="badge badge-accent" style="font-size:0.72rem">🔑 '+usedCodes+'/'+codeCount+' كود</span></div>'+
     '<div class="lesson-footer"><span class="lesson-price">'+Utils.formatMoney(l.price)+'</span><div style="display:flex;gap:4px;flex-wrap:wrap"><button class="btn btn-sm btn-secondary" onclick="Admin.showLessonCodes(\''+l.id+'\')" title="إدارة الأكواد">🔑</button><button class="btn btn-sm btn-secondary" onclick="Admin.showUnlockForStudent(\''+l.id+'\')" title="فتح لطالب">🔓</button><button class="btn btn-sm btn-secondary" onclick="Admin.viewLessonViews(\''+l.id+'\')" title="المشاهدين">👁️</button><button class="btn btn-sm btn-secondary" onclick="Admin.editLesson(\''+l.id+'\')">✏️</button><button class="btn btn-sm btn-danger" onclick="Admin.deleteLesson(\''+l.id+'\')">🗑️</button></div></div></div></div>'}).join('')+
     '</div></div>';
+  },
+  setLessonFilter:function(type,val){
+    if(type==='grade')Admin._lessonFilterGrade=val;
+    else if(type==='track')Admin._lessonFilterTrack=val;
+    var content=document.getElementById('adminContent');
+    if(content){content.innerHTML=Admin.renderSection();Admin.init();Utils.loadVideos()}
+  },
+  clearLessonFilter:function(){
+    Admin._lessonFilterGrade='';Admin._lessonFilterTrack='';
+    var content=document.getElementById('adminContent');
+    if(content){content.innerHTML=Admin.renderSection();Admin.init();Utils.loadVideos()}
   },
   showAddLessonModal:function(lesson){
     var T=Lang.t.bind(Lang);var isEdit=!!lesson;
